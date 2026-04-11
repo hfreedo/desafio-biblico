@@ -218,6 +218,58 @@ const CIRC=465;
 const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true};
 let timerInt=null;
 
+/* ── SUPABASE INTEGRATION FOR REMOTE EVENTS ── */
+const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
+
+let pollInterval=null;
+let lastTs=Date.now();
+let currentRoom='';
+
+async function pollSupabaseEvents(){
+  if(!currentRoom||!SUPABASE_URL) return;
+  try{
+    const url = `${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${currentRoom}&ts=gt.${lastTs}&order=ts.asc`;
+    const r=await fetch(url,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    
+    if(!r.ok) return;
+    
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      console.log('📨 Display received remote events:', data.length);
+      data.forEach(row=>{
+        try{
+          const msg = JSON.parse(row.payload);
+          console.log('📨 Processing remote message:', msg.type);
+          handle(msg); // Process the message like local events
+        }catch(e){
+          console.error('❌ Parse error:', e);
+        }
+      });
+      lastTs=data[data.length-1].ts;
+    }
+  }catch(e){
+    console.error('❌ Remote poll error:', e);
+  }
+}
+
+function startRemoteMode(room){
+  if(!room || room === currentRoom) return;
+  currentRoom = room;
+  lastTs = Date.now();
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(pollSupabaseEvents, 800);
+  console.log('🌐 Display listening to remote room:', room);
+}
+
+function stopRemoteMode(){
+  if(pollInterval) clearInterval(pollInterval);
+  currentRoom = '';
+  console.log('🌐 Display stopped remote mode');
+}
+
 const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
@@ -239,6 +291,8 @@ function handle(m){
     case 'PLAY_YT':       playYT(m.url,m.vol||0.4);break;
     case 'STOP_YT':       stopYT();break;
     case 'FADE_YT':       fadeYT();break;
+    case 'START_REMOTE':  startRemoteMode(m.room);break;
+    case 'STOP_REMOTE':   stopRemoteMode();break;
   }
 }
 

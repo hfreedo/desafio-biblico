@@ -356,15 +356,22 @@ function startSupabaseRoom(){
     toast(`🌐 Sala remota: ${roomCode} — Activa`);
     document.getElementById('roomStatus').textContent=`Sala: ${roomCode}`;
     document.getElementById('roomStatus').style.color='#2ECC71';
+    
+    // Tell display to start remote mode too
+    bcast({type: 'START_REMOTE', room: roomCode});
   }
 }
 
 function stopSupabaseRoom(){
   if(pollInterval){clearInterval(pollInterval);pollInterval=null;}
+  const oldRoom = roomCode;
   roomCode='';
   document.getElementById('roomStatus').textContent='Sin sala remota';
   document.getElementById('roomStatus').style.color='rgba(255,255,255,.45)';
   toast('🌐 Sala remota desconectada');
+  
+  // Tell display to stop remote mode
+  bcast({type: 'STOP_REMOTE'});
 }
 
 /* ── DATA ── */
