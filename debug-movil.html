@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🔧 Debug Móvil - Pulsador</title>
+<style>
+body{font-family:monospace;padding:10px;background:#1a1a1a;color:#fff;font-size:12px;}
+.btn{padding:8px 16px;margin:5px;background:#4a90e2;color:white;border:none;border-radius:5px;cursor:pointer;font-size:14px;}
+.status{background:#333;padding:10px;border-radius:5px;margin:10px 0;white-space:pre-wrap;max-height:200px;overflow-y:auto;}
+.error{background:#5a2727;}.success{background:#2d5a27;}
+input{padding:8px;margin:5px;background:#333;color:#fff;border:1px solid #666;border-radius:3px;width:200px;}
+</style>
+</head>
+<body>
+<h2>🔧 Debug Móvil - Pulsador</h2>
+<p>Herramienta de diagnóstico para celular</p>
+
+<div>
+  <input type="text" id="roomCode" placeholder="Código sala (ej: TEST2025)" maxlength="20">
+  <br>
+  <button class="btn" onclick="testBasic()">1. Test Básico</button>
+  <button class="btn" onclick="testConnection()">2. Test Conexión</button>
+  <button class="btn" onclick="testFullConnect()">3. Conectar Completo</button>
+  <br>
+  <button class="btn" onclick="clearLog()">🗑️ Limpiar</button>
+  <button class="btn" onclick="copyLog()">📋 Copiar Log</button>
+</div>
+
+<div id="log" class="status">📱 Herramienta cargada. Presiona "1. Test Básico" para empezar.\n</div>
+
+<script>
+const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
+
+function log(msg, type = '') {
+  const logDiv = document.getElementById('log');
+  const timestamp = new Date().toLocaleTimeString();
+  logDiv.className = `status ${type}`;
+  logDiv.textContent += `[${timestamp}] ${msg}\n`;
+  logDiv.scrollTop = logDiv.scrollHeight;
+  console.log(msg);
+}
+
+function clearLog() {
+  document.getElementById('log').textContent = '';
+}
+
+function copyLog() {
+  const logText = document.getElementById('log').textContent;
+  navigator.clipboard.writeText(logText).then(() => {
+    alert('📋 Log copiado al portapapeles');
+  }).catch(() => {
+    alert('❌ No se pudo copiar. Selecciona el texto manualmente.');
+  });
+}
+
+function testBasic() {
+  clearLog();
+  log('🔍 INICIANDO TEST BÁSICO MÓVIL');
+  log(`📱 User Agent: ${navigator.userAgent}`);
+  log(`🌐 Online: ${navigator.onLine}`);
+  log(`📍 Location: ${window.location.href}`);
+  log(`⚙️ Viewport: ${window.innerWidth}x${window.innerHeight}`);
+  
+  // Test variables
+  log(`🔑 SUPABASE_URL: ${SUPABASE_URL}`);
+  log(`🔑 API Key length: ${SUPABASE_KEY.length}`);
+  log(`🔑 API Key start: ${SUPABASE_KEY.substring(0, 30)}...`);
+  
+  // Test fetch availability
+  if (typeof fetch === 'undefined') {
+    log('❌ FETCH NO DISPONIBLE', 'error');
+  } else {
+    log('✅ Fetch disponible', 'success');
+  }
+  
+  // Test AbortController
+  if (typeof AbortController === 'undefined') {
+    log('⚠️ AbortController no disponible');
+  } else {
+    log('✅ AbortController disponible', 'success');
+  }
+  
+  log('✅ TEST BÁSICO COMPLETADO');
+}
+
+async function testConnection() {
+  log('🔗 INICIANDO TEST DE CONEXIÓN');
+  
+  const testUrl = `${SUPABASE_URL}/rest/v1/quiz_events?limit=1`;
+  log(`📡 URL: ${testUrl}`);
+  
+  try {
+    log('📤 Enviando petición...');
+    const startTime = Date.now();
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    const endTime = Date.now();
+    log(`⏱️ Tiempo respuesta: ${endTime - startTime}ms`);
+    log(`📡 Status: ${response.status} ${response.statusText}`);
+    log(`📡 OK: ${response.ok}`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      log(`📦 Data length: ${data.length}`, 'success');
+      log(`📦 Data: ${JSON.stringify(data).substring(0, 100)}...`);
+      log('✅ CONEXIÓN EXITOSA', 'success');
+    } else {
+      const errorText = await response.text();
+      log(`❌ Error HTTP: ${response.status}`, 'error');
+      log(`❌ Error text: ${errorText}`, 'error');
+    }
+  } catch (error) {
+    log(`❌ FETCH ERROR: ${error.message}`, 'error');
+    log(`❌ Error name: ${error.name}`, 'error');
+    log(`❌ Error stack: ${error.stack}`, 'error');
+  }
+}
+
+async function testFullConnect() {
+  const code = document.getElementById('roomCode').value.trim();
+  if (!code) {
+    log('❌ Ingresa un código de sala primero', 'error');
+    return;
+  }
+  
+  log(`🎯 CONECTANDO A SALA: ${code}`);
+  
+  try {
+    log('📤 Probando conexión completa...');
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      log('⏱️ Timeout de 10 segundos alcanzado', 'error');
+    }, 10000);
+    
+    const testUrl = `${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${code}&limit=1`;
+    log(`📡 URL con filtro: ${testUrl}`);
+    
+    const response = await fetch(testUrl, {
+      method: 'GET',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      log(`✅ CONEXIÓN COMPLETA EXITOSA`, 'success');
+      log(`📦 Eventos en sala: ${data.length}`);
+      
+      if ('vibrate' in navigator) {
+        navigator.vibrate([200, 100, 200]);
+        log('📳 Vibración de éxito activada');
+      }
+      
+      // Simular envío de evento
+      log('📤 Probando envío de evento...');
+      const eventPayload = {
+        room: code,
+        payload: JSON.stringify({
+          type: 'TEST_MOBILE',
+          device: navigator.userAgent.substring(0, 50),
+          timestamp: Date.now()
+        }),
+        ts: Date.now()
+      };
+      
+      const sendResponse = await fetch(`${SUPABASE_URL}/rest/v1/quiz_events`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(eventPayload)
+      });
+      
+      if (sendResponse.ok) {
+        log('✅ ENVÍO DE EVENTO EXITOSO', 'success');
+        log('🎉 MÓVIL TOTALMENTE FUNCIONAL', 'success');
+      } else {
+        log(`❌ Error enviando evento: ${sendResponse.status}`, 'error');
+      }
+      
+    } else {
+      const errorText = await response.text();
+      log(`❌ Error en conexión completa: ${response.status}`, 'error');
+      log(`❌ Details: ${errorText}`, 'error');
+    }
+  } catch (error) {
+    log(`❌ ERROR COMPLETO: ${error.message}`, 'error');
+    
+    if ('vibrate' in navigator) {
+      navigator.vibrate([500]);
+      log('📳 Vibración de error activada');
+    }
+  }
+}
+
+// Auto-test on load
+window.onload = () => {
+  log('📱 Página cargada en móvil');
+  log('🔍 Ejecuta "Test Básico" para diagnóstico completo');
+};
+</script>
+</body>
+</html>

@@ -108,20 +108,6 @@ input.room-input::placeholder{color:rgba(255,255,255,.25);letter-spacing:1px;}
     </div>
   </div>
 
-  <!-- DISCONNECT PANEL (when connected) -->
-  <div class="setup-panel" id="disconnectPanel" style="display:none">
-    <div class="setup-title">CONECTADO A SALA</div>
-    <div style="background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.3);border-radius:8px;padding:12px;text-align:center;margin:8px 0;">
-      <div style="font-family:'Cinzel Decorative',serif;font-size:16px;color:#2ECC71;letter-spacing:2px;" id="connectedRoom">IGLESIA2025</div>
-      <div style="font-size:11px;color:rgba(46,204,113,.7);margin-top:4px;">Sala activa</div>
-    </div>
-    <button onclick="disconnectNet()" style="background:linear-gradient(135deg,#8B1A1A,#E74C3C);color:#fff;border:none;border-radius:8px;padding:10px;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%">✕ DESCONECTAR</button>
-    <div class="setup-note">
-      Estás conectado y recibiendo eventos del moderador.<br>
-      Puedes desconectarte y conectarte a otra sala si necesitas.
-    </div>
-  </div>
-
   <!-- TEAM PICK -->
   <div class="team-area">
     <div>
@@ -245,142 +231,99 @@ function connectNet(){
     document.getElementById('sTxt').textContent='INGRESA UN CÓDIGO DE SALA';
     return;
   }
-  
-  // Show immediate feedback
-  document.getElementById('sTxt').textContent='CONECTANDO...';
-  document.getElementById('sDot').className='sdot';
-  
-  // Mobile debugging
-  console.log('📱 Mobile connect attempt:', {
-    code: code,
-    userAgent: navigator.userAgent,
-    online: navigator.onLine,
-    url: SUPABASE_URL,
-    keyLength: SUPABASE_KEY.length
-  });
-  
   ST.room=code;ST.connected=true;
   lastTs=Date.now();
   if(pollInterval) clearInterval(pollInterval);
   
+  // Test connection first
+  document.getElementById('sTxt').textContent='CONECTANDO...';
+  document.getElementById('sDot').className='sdot';
+  
+  console.log('🔧 Debug: Testing Supabase connection...');
+  console.log('URL:', SUPABASE_URL);
+  console.log('Key length:', SUPABASE_KEY.length);
+  
   if(SUPABASE_URL){
-    // Mobile-optimized connection test
+    // Test the connection with proper CORS headers
     const testUrl = `${SUPABASE_URL}/rest/v1/quiz_events?limit=1`;
-    console.log('📱 Testing URL:', testUrl);
-    
-    // Add timeout for mobile networks
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+    console.log('🔧 Testing URL:', testUrl);
     
     fetch(testUrl,{
       method: 'GET',
       headers:{
         'apikey': SUPABASE_KEY,
         'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
       },
-      signal: controller.signal
+      mode: 'cors' // Explicitly set CORS mode
     }).then(async response => {
-      clearTimeout(timeoutId);
-      console.log('📱 Response status:', response.status, response.statusText);
+      console.log('🔧 Response status:', response.status);
+      console.log('🔧 Response ok:', response.ok);
       
       if(response.ok){
         const data = await response.json();
-        console.log('📱 Success! Data:', data);
+        console.log('✅ Connection successful! Data length:', data.length);
         
-        pollInterval=setInterval(pollNet,1200); // Slower polling for mobile
+        pollInterval=setInterval(pollNet,800);
         document.getElementById('sTxt').textContent=`SALA: ${code} — CONECTADO`;
         document.getElementById('sDot').className='sdot on';
-        
-        // Hide setup panel and show disconnect option
-        document.getElementById('setupPanel').style.display='none';
-        document.getElementById('disconnectPanel').style.display='flex';
-        document.getElementById('connectedRoom').textContent=code;
-        
-        // Mobile success feedback
-        if('vibrate' in navigator) {
-          navigator.vibrate([200, 100, 200]); // Success vibration pattern
-        }
-        
       } else {
-        clearTimeout(timeoutId);
         const errorText = await response.text();
-        console.error('📱 HTTP Error:', response.status, errorText);
+        console.error('❌ HTTP Error:', response.status, response.statusText);
+        console.error('❌ Error details:', errorText);
         
-        // Mobile-friendly error messages
-        let mobileMsg = '';
+        // Handle specific error codes
         if(response.status === 404) {
-          mobileMsg = 'TABLA NO CREADA';
-          setTimeout(() => alert('❌ Error: Base de datos no configurada.\n\nContacta al administrador del quiz.'), 500);
+          document.getElementById('sTxt').textContent='TABLA NO EXISTE - Ver manual';
         } else if(response.status === 401) {
-          mobileMsg = 'CONFIGURACIÓN INVÁLIDA';
-          setTimeout(() => alert('❌ Error: Configuración del servidor incorrecta.\n\nContacta al administrador.'), 500);
+          document.getElementById('sTxt').textContent='API KEY INVÁLIDA';
         } else if(response.status === 403) {
-          mobileMsg = 'SIN ACCESO';
-          setTimeout(() => alert('❌ Error: Sin permisos de acceso.\n\nContacta al administrador.'), 500);
+          document.getElementById('sTxt').textContent='SIN PERMISOS - RLS';
         } else {
-          mobileMsg = `ERROR ${response.status}`;
-          setTimeout(() => alert(`❌ Error de conexión: ${response.status}\n\nIntenta de nuevo o contacta al administrador.`), 500);
+          document.getElementById('sTxt').textContent=`ERROR ${response.status}`;
         }
         
-        document.getElementById('sTxt').textContent = mobileMsg;
+        // Show detailed error after a delay
+        setTimeout(() => {
+          let helpMsg = '';
+          if(response.status === 404) {
+            helpMsg = 'La tabla "quiz_events" no existe.\n\n1. Ve a Supabase SQL Editor\n2. Ejecuta el script supabase-setup.sql\n3. Intenta conectar nuevamente';
+          } else if(response.status === 403) {
+            helpMsg = 'Sin permisos de acceso.\n\n1. Ve a Authentication > Policies en Supabase\n2. Verifica que RLS esté habilitado para quiz_events\n3. Verifica las políticas de INSERT y SELECT';
+          } else {
+            helpMsg = `Error ${response.status}: ${response.statusText}\n\nDetalles:\n${errorText}`;
+          }
+          alert(helpMsg);
+        }, 500);
       }
     }).catch(error => {
-      clearTimeout(timeoutId);
-      console.error('📱 Network Error:', error);
+      console.error('❌ Network/CORS Error:', error);
       
-      // Mobile-specific error handling
-      let mobileError = '';
-      if(error.name === 'AbortError') {
-        mobileError = 'CONEXIÓN LENTA - REINTENTAR';
-        setTimeout(() => alert('⏱️ Conexión lenta\n\nTu red está lenta. Intenta:\n\n1. Conectarte a WiFi\n2. Reintentar en un momento\n3. Verificar tu conexión a internet'), 500);
-      } else if(error.message.includes('Failed to fetch')) {
-        mobileError = 'SIN INTERNET';
-        setTimeout(() => alert('📱 Sin conexión a internet\n\nVerifica:\n\n1. Que tengas internet\n2. Que no estés en modo avión\n3. Intenta conectarte a WiFi'), 500);
+      // Handle different types of network errors
+      if(error.message.includes('CORS')) {
+        document.getElementById('sTxt').textContent='ERROR CORS - Ver Supabase';
+        setTimeout(() => {
+          alert('Error de CORS detectado.\n\nSoluciones:\n\n1. Ve a Supabase Dashboard > Settings > API\n2. En "CORS Origins" agrega: *\n3. O usa HTTPS para servir los archivos\n4. O prueba desde un servidor web local');
+        }, 500);
+      } else if(error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        document.getElementById('sTxt').textContent='SIN INTERNET O BLOQUEADO';
+        setTimeout(() => {
+          alert('Error de red.\n\nPosibles causas:\n\n1. Sin conexión a internet\n2. Firewall bloqueando Supabase\n3. Antivirus bloqueando la conexión\n4. URL de Supabase incorrecta\n\nIntenta:\n- Verificar conexión a internet\n- Abrir https://cnazxzkbckpqficngjex.supabase.co en el navegador');
+        }, 500);
       } else {
-        mobileError = 'ERROR DE RED';
-        setTimeout(() => alert(`📱 Error de red:\n\n${error.message}\n\nIntenta conectarte a WiFi o reintentar más tarde.`), 500);
-      }
-      
-      document.getElementById('sTxt').textContent = mobileError;
-      
-      // Mobile error vibration
-      if('vibrate' in navigator) {
-        navigator.vibrate([500]); // Error vibration
+        document.getElementById('sTxt').textContent=`ERROR: ${error.message}`;
       }
     });
   } else {
-    console.log('📱 Fallback to local mode');
+    console.log('🔧 Fallback to local mode');
     // Fallback: use BroadcastChannel with room prefix (same-origin cross-tab)
     if(netChannel) netChannel.close();
     netChannel=new BroadcastChannel('quiz_room_'+code);
     netChannel.onmessage=e=>handleMsg(e.data);
     document.getElementById('sTxt').textContent=`SALA: ${code} (local)`;
     document.getElementById('sDot').className='sdot on';
-    
-    // Hide setup panel and show disconnect option
-    document.getElementById('setupPanel').style.display='none';
-    document.getElementById('disconnectPanel').style.display='flex';
-    document.getElementById('connectedRoom').textContent=code;
   }
-}
-
-function disconnectNet(){
-  // Clear connection
-  if(pollInterval) clearInterval(pollInterval);
-  if(netChannel) netChannel.close();
-  ST.room='';ST.connected=false;
-  
-  // Reset UI
-  document.getElementById('sTxt').textContent='ESPERANDO MODERADOR';
-  document.getElementById('sDot').className='sdot';
-  
-  // Show setup panel again
-  document.getElementById('setupPanel').style.display='flex';
-  document.getElementById('disconnectPanel').style.display='none';
-  
-  // Clear room code input
-  document.getElementById('roomCode').value='';
 }
 
 function broadcastBuzzer(msg){
@@ -413,22 +356,8 @@ function setMode(m){
   ST.mode=m;
   document.getElementById('tabLocal').className='mtab'+(m==='local'?' active':'');
   document.getElementById('tabNet').className='mtab'+(m==='net'?' active':'');
-  
-  if(m==='net'){
-    document.getElementById('setupPanel').style.display='flex';
-    document.getElementById('disconnectPanel').style.display='none';
-    document.getElementById('sTxt').textContent='SELECCIONA CÓDIGO DE SALA';
-  } else {
-    // Local mode - hide both panels
-    document.getElementById('setupPanel').style.display='none';
-    document.getElementById('disconnectPanel').style.display='none';
-    document.getElementById('sTxt').textContent='MODO LOCAL';
-    
-    // Disconnect if connected remotely
-    if(ST.connected && ST.room){
-      disconnectNet();
-    }
-  }
+  document.getElementById('setupPanel').style.display=m==='net'?'flex':'none';
+  if(m==='local'){document.getElementById('sTxt').textContent='MODO LOCAL';}
 }
 
 /* ── TEAM ── */

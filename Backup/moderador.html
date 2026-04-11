@@ -144,10 +144,6 @@ input:focus,select:focus{border-color:var(--gold);}
           <button class="btn red btn-sm" id="btnWA" onclick="wrongAns('a')">✗ Incorrecto A</button>
           <button class="btn red btn-sm" id="btnWB" onclick="wrongAns('b')">✗ Incorrecto B</button>
         </div>
-        <div class="brow" style="margin-top:6px">
-          <button class="btn gry btn-sm" onclick="testWrongA()">🧪 Test Visual A</button>
-          <button class="btn gry btn-sm" onclick="testWrongB()">🧪 Test Visual B</button>
-        </div>
       </div>
 
       <!-- TIMER -->
@@ -538,28 +534,9 @@ function awardPoint(t){
   toast(`✓ Punto a ${t==='a'?ST.nameA:ST.nameB}`);
 }
 function wrongAns(t){
-  // Always broadcast the wrong answer effect, regardless of question state
   bcast({type:'WRONG_ANSWER',team:t});
-  
-  // Update question history if there's a selected question
-  if(ST.selQ&&!ST.answered[ST.selQ.id]){
-    ST.answered[ST.selQ.id]={team:t,correct:false};
-    addHist(ST.selQ,t,false);
-    renderList();
-    updStats();
-  }
-  
+  if(ST.selQ&&!ST.answered[ST.selQ.id]){ST.answered[ST.selQ.id]={team:t,correct:false};addHist(ST.selQ,t,false);renderList();updStats();}
   toast(`✗ Respuesta incorrecta de ${t==='a'?ST.nameA:ST.nameB}`);
-}
-
-/* ── TEST FUNCTIONS ── */
-function testWrongA(){
-  bcast({type:'WRONG_ANSWER',team:'a'});
-  toast('🧪 Probando efecto visual para ' + ST.nameA);
-}
-function testWrongB(){
-  bcast({type:'WRONG_ANSWER',team:'b'});
-  toast('🧪 Probando efecto visual para ' + ST.nameB);
 }
 
 /* ── TIMER ── */

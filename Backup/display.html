@@ -389,50 +389,13 @@ function showBuzzer(m){
   setTimeout(()=>b.classList.remove('show'),3500);
 }
 function showWrong(m){
-  console.log('❌ Showing wrong answer for team:', m.team);
-  
-  // Show red flash overlay
   const wf=document.getElementById('wrongFlash');
-  wf.className='wf';
-  void wf.offsetWidth; // Force reflow
-  wf.className='wf show';
-  
-  // Play wrong sound
+  wf.className='wf';void wf.offsetWidth;wf.className='wf show';
   if(S.sounds) playWrong();
-  
-  // Shake the team card
-  const cardId = m.team==='a'?'cardA':'cardB';
-  const card=document.getElementById(cardId);
-  if(card) {
-    card.style.animation='';
-    void card.offsetWidth; // Force reflow
-    card.style.animation='wshake .5s ease';
-    
-    // Also add a temporary red border
-    const originalBorder = card.style.borderColor;
-    card.style.borderColor = '#E74C3C';
-    card.style.borderWidth = '3px';
-    
-    setTimeout(() => {
-      card.style.borderColor = originalBorder;
-      card.style.borderWidth = '2px';
-    }, 1000);
-  }
-  
-  // Show wrong answer banner
-  const banner = document.getElementById('bzBanner');
-  const teamName = m.team==='a'?S.nameA:S.nameB;
-  banner.className = 'bz show';
-  banner.style.background = 'linear-gradient(135deg,#8B1A1A,#E74C3C)';
-  banner.textContent = `❌ ${teamName.toUpperCase()} — ¡RESPUESTA INCORRECTA!`;
-  
-  // Clear effects after animation
-  setTimeout(()=>{
-    wf.className='wf';
-    card.style.animation='';
-    banner.classList.remove('show');
-    banner.style.background = '';
-  }, 1500);
+  const card=document.getElementById(m.team==='a'?'cardA':'cardB');
+  card.style.animation='';void card.offsetWidth;
+  card.style.animation='wshake .5s ease';
+  setTimeout(()=>{wf.className='wf';card.style.animation='';},950);
 }
 function highlightTeam(t){
   document.getElementById('cardA').classList.remove('pa','pb');
