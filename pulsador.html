@@ -6,483 +6,363 @@
 <title>Desafío Bíblico — Pulsador</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --gold: #D4A843;
-    --gold-light: #F0C96A;
-    --deep: #080810;
-    --green: #2ECC71;
-    --green-dark: #1A5E35;
-    --green-glow: rgba(46,204,113,0.5);
-    --blue: #3498DB;
-    --blue-dark: #1A3A6B;
-    --blue-glow: rgba(52,152,219,0.5);
-    --white: #FDFAF2;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
-  html, body { height:100%; overflow:hidden; touch-action:none; }
+:root{--gold:#D4A843;--gold-l:#F0C96A;--deep:#080810;--green:#2ECC71;--green-d:#1A5E35;--blue:#3498DB;--blue-d:#1A3A6B;--white:#FDFAF2;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;touch-action:none;}
+body{background:var(--deep);font-family:'Cinzel',serif;color:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100vh;padding:16px;}
+canvas#bgC{position:fixed;inset:0;z-index:0;}
+.wrap{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:8px;}
 
-  body {
-    background: var(--deep);
-    font-family: 'Cinzel', serif;
-    color: var(--white);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: space-between;
-    height: 100vh;
-    padding: 20px;
-    gap: 10px;
-  }
+/* HEADER */
+.hdr{text-align:center;flex-shrink:0;}
+.hdr-title{font-family:'Cinzel Decorative',serif;font-size:clamp(14px,4vw,24px);color:var(--gold-l);letter-spacing:3px;text-shadow:0 0 20px rgba(212,168,67,.5);}
+.hdr-sub{font-family:'Crimson Text',serif;font-size:clamp(12px,2.5vw,16px);color:rgba(255,255,255,.4);margin-top:4px;font-style:italic;}
 
-  /* BG */
-  canvas#bg { position:fixed;inset:0;z-index:0; }
+/* SETUP PANEL */
+.setup-panel{width:100%;max-width:420px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:12px;}
+.setup-title{font-size:11px;letter-spacing:3px;color:rgba(212,168,67,.6);text-align:center;}
+input.room-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:var(--white);padding:10px 14px;font-family:'Cinzel',serif;font-size:13px;width:100%;outline:none;text-align:center;letter-spacing:2px;}
+input.room-input:focus{border-color:var(--gold);}
+input.room-input::placeholder{color:rgba(255,255,255,.25);letter-spacing:1px;}
+.setup-note{font-size:10px;color:rgba(255,255,255,.3);text-align:center;font-family:'Crimson Text',serif;line-height:1.5;}
 
-  .content { position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:10px; }
+/* TEAM PICK */
+.team-area{display:flex;gap:14px;align-items:center;justify-content:center;flex-shrink:0;flex-wrap:wrap;}
+.team-lbl{font-family:'Cinzel Decorative',serif;font-size:clamp(13px,2.5vw,18px);text-align:center;margin-bottom:6px;}
+.tpick{padding:10px 26px;border-radius:40px;font-family:'Cinzel',serif;font-size:13px;font-weight:700;letter-spacing:2px;cursor:pointer;border:2px solid transparent;transition:all .3s;background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);user-select:none;}
+.tpick.sa{background:rgba(27,107,58,.4);border-color:var(--green);color:var(--green);box-shadow:0 0 20px rgba(46,204,113,.4);}
+.tpick.sb{background:rgba(26,58,107,.4);border-color:var(--blue);color:var(--blue);box-shadow:0 0 20px rgba(52,152,219,.4);}
 
-  /* HEADER */
-  .header {
-    text-align: center;
-    flex-shrink: 0;
-  }
-  .header-title {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(14px, 3vw, 22px);
-    color: var(--gold-light);
-    letter-spacing: 3px;
-    text-shadow: 0 0 20px rgba(212,168,67,0.5);
-  }
-  .header-sub {
-    font-family: 'Crimson Text', serif;
-    font-size: clamp(12px, 2vw, 16px);
-    color: rgba(255,255,255,0.4);
-    margin-top: 4px;
-    font-style: italic;
-  }
+/* BUZZER */
+.bz-area{flex:1;display:flex;align-items:center;justify-content:center;min-height:0;}
+.bz-btn{position:relative;width:min(68vw,68vh,320px);height:min(68vw,68vh,320px);border-radius:50%;cursor:pointer;user-select:none;-webkit-user-select:none;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;border:none;outline:none;touch-action:none;transition:transform .1s,filter .2s;}
+.bz-btn:active{transform:scale(.92);}
+.bz-btn.nt{background:radial-gradient(circle at 35% 35%,#3a3a4a,#1a1a2a,#0a0a10);box-shadow:0 8px 40px rgba(0,0,0,.5),inset 0 3px 0 rgba(255,255,255,.08),inset 0 -6px 0 rgba(0,0,0,.3);cursor:not-allowed;}
+.bz-btn.ba{background:radial-gradient(circle at 35% 35%,#3DB578,#1B6B3A,#0D3A1E);box-shadow:0 0 0 8px rgba(46,204,113,.1),0 0 0 16px rgba(46,204,113,.06),0 8px 60px rgba(46,204,113,.4),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3);animation:paA 2s ease-in-out infinite;}
+.bz-btn.bb{background:radial-gradient(circle at 35% 35%,#5DAEE8,#1A3A6B,#0D1E3A);box-shadow:0 0 0 8px rgba(52,152,219,.1),0 0 0 16px rgba(52,152,219,.06),0 8px 60px rgba(52,152,219,.4),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3);animation:paB 2s ease-in-out infinite;}
+.bz-btn.dis{filter:grayscale(.7) brightness(.5)!important;animation:none!important;cursor:not-allowed!important;}
+@keyframes paA{0%,100%{box-shadow:0 0 0 8px rgba(46,204,113,.1),0 0 0 16px rgba(46,204,113,.06),0 8px 60px rgba(46,204,113,.4),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 14px rgba(46,204,113,.15),0 0 0 28px rgba(46,204,113,.08),0 8px 90px rgba(46,204,113,.75),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3)}}
+@keyframes paB{0%,100%{box-shadow:0 0 0 8px rgba(52,152,219,.1),0 0 0 16px rgba(52,152,219,.06),0 8px 60px rgba(52,152,219,.4),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 14px rgba(52,152,219,.15),0 0 0 28px rgba(52,152,219,.08),0 8px 90px rgba(52,152,219,.75),inset 0 3px 0 rgba(255,255,255,.2),inset 0 -6px 0 rgba(0,0,0,.3)}}
+.bz-icon{font-size:clamp(42px,14vw,88px);pointer-events:none;}
+.bz-txt{font-family:'Cinzel Decorative',serif;font-size:clamp(15px,4vw,28px);font-weight:900;letter-spacing:3px;pointer-events:none;text-shadow:0 2px 10px rgba(0,0,0,.5);}
+.bz-hint{font-family:'Crimson Text',serif;font-size:clamp(11px,2.5vw,16px);opacity:.65;pointer-events:none;font-style:italic;}
 
-  /* TEAM SELECTOR */
-  .team-select-area {
-    display: flex;
-    gap: 16px;
-    flex-shrink: 0;
-    align-items: center;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .team-pick {
-    padding: 10px 28px;
-    border-radius: 40px;
-    font-family: 'Cinzel', serif;
-    font-size: 14px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: all 0.3s;
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.5);
-    user-select: none;
-  }
-  .team-pick:hover { opacity: 0.85; }
-  .team-pick.selected-a {
-    background: rgba(27,107,58,0.4);
-    border-color: var(--green);
-    color: var(--green);
-    box-shadow: 0 0 20px rgba(46,204,113,0.4);
-  }
-  .team-pick.selected-b {
-    background: rgba(26,58,107,0.4);
-    border-color: var(--blue);
-    color: var(--blue);
-    box-shadow: 0 0 20px rgba(52,152,219,0.4);
-  }
-  .team-label {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(13px, 2vw, 17px);
-    text-align: center;
-    letter-spacing: 1px;
-  }
+/* TRIGGER OVERLAY */
+.trig{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;opacity:0;pointer-events:none;transition:opacity .3s;}
+.trig.show{opacity:1;pointer-events:all;}
+.trig.ta{background:radial-gradient(ellipse,rgba(27,107,58,.95),rgba(8,8,16,.98));}
+.trig.tb{background:radial-gradient(ellipse,rgba(26,58,107,.95),rgba(8,8,16,.98));}
+.trig-ico{font-size:80px;animation:tb2 .6s cubic-bezier(.34,1.56,.64,1);}
+@keyframes tb2{0%{transform:scale(0)}100%{transform:scale(1)}}
+.trig-name{font-family:'Cinzel Decorative',serif;font-size:clamp(28px,9vw,64px);font-weight:900;text-align:center;animation:tb2 .5s .1s cubic-bezier(.34,1.56,.64,1) both;}
+.trig-msg{font-family:'Crimson Text',serif;font-size:clamp(16px,3.5vw,26px);font-style:italic;text-align:center;opacity:.8;}
+.trig-wait{font-size:clamp(11px,2.5vw,15px);color:rgba(255,255,255,.35);letter-spacing:2px;margin-top:8px;font-style:italic;font-family:'Crimson Text',serif;}
 
-  /* BUZZER BUTTON */
-  .buzzer-area {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-  }
+/* STATUS BAR */
+.status-bar{display:flex;align-items:center;gap:10px;flex-shrink:0;padding:8px 20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:30px;}
+.sdot{width:8px;height:8px;border-radius:50%;background:#E74C3C;}
+.sdot.on{background:var(--green);box-shadow:0 0 8px var(--green);animation:bl 1s infinite;}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+.stxt{font-size:12px;color:rgba(255,255,255,.45);letter-spacing:2px;}
 
-  .buzzer-btn {
-    position: relative;
-    width: min(70vw, 70vh, 340px);
-    height: min(70vw, 70vh, 340px);
-    border-radius: 50%;
-    cursor: pointer;
-    user-select: none;
-    -webkit-user-select: none;
-    transition: transform 0.1s, filter 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-    gap: 8px;
-    border: none;
-    outline: none;
-    touch-action: none;
-  }
-  .buzzer-btn:active { transform: scale(0.93); }
+/* RIPPLE */
+.rip{position:absolute;border-radius:50%;animation:ra .65s ease-out forwards;pointer-events:none;}
+@keyframes ra{0%{transform:scale(0);opacity:.55}100%{transform:scale(4);opacity:0}}
 
-  .buzzer-btn.team-a-btn {
-    background: radial-gradient(circle at 35% 35%, #3DB578, #1B6B3A, #0D3A1E);
-    box-shadow:
-      0 0 0 8px rgba(46,204,113,0.1),
-      0 0 0 16px rgba(46,204,113,0.06),
-      0 8px 60px rgba(46,204,113,0.4),
-      inset 0 3px 0 rgba(255,255,255,0.2),
-      inset 0 -6px 0 rgba(0,0,0,0.3);
-    animation: pulseA 2s ease-in-out infinite;
-  }
-  .buzzer-btn.team-b-btn {
-    background: radial-gradient(circle at 35% 35%, #5DAEE8, #1A3A6B, #0D1E3A);
-    box-shadow:
-      0 0 0 8px rgba(52,152,219,0.1),
-      0 0 0 16px rgba(52,152,219,0.06),
-      0 8px 60px rgba(52,152,219,0.4),
-      inset 0 3px 0 rgba(255,255,255,0.2),
-      inset 0 -6px 0 rgba(0,0,0,0.3);
-    animation: pulseB 2s ease-in-out infinite;
-  }
-  .buzzer-btn.no-team {
-    background: radial-gradient(circle at 35% 35%, #3a3a4a, #1a1a2a, #0a0a10);
-    box-shadow:
-      0 0 0 8px rgba(255,255,255,0.04),
-      0 8px 40px rgba(0,0,0,0.5),
-      inset 0 3px 0 rgba(255,255,255,0.1),
-      inset 0 -6px 0 rgba(0,0,0,0.3);
-    cursor: not-allowed;
-  }
-  .buzzer-btn.disabled {
-    filter: grayscale(0.7) brightness(0.6);
-    cursor: not-allowed;
-    animation: none !important;
-  }
-
-  @keyframes pulseA {
-    0%,100% { box-shadow: 0 0 0 8px rgba(46,204,113,0.1), 0 0 0 16px rgba(46,204,113,0.06), 0 8px 60px rgba(46,204,113,0.4), inset 0 3px 0 rgba(255,255,255,0.2), inset 0 -6px 0 rgba(0,0,0,0.3); }
-    50% { box-shadow: 0 0 0 12px rgba(46,204,113,0.15), 0 0 0 24px rgba(46,204,113,0.08), 0 8px 80px rgba(46,204,113,0.7), inset 0 3px 0 rgba(255,255,255,0.2), inset 0 -6px 0 rgba(0,0,0,0.3); }
-  }
-  @keyframes pulseB {
-    0%,100% { box-shadow: 0 0 0 8px rgba(52,152,219,0.1), 0 0 0 16px rgba(52,152,219,0.06), 0 8px 60px rgba(52,152,219,0.4), inset 0 3px 0 rgba(255,255,255,0.2), inset 0 -6px 0 rgba(0,0,0,0.3); }
-    50% { box-shadow: 0 0 0 12px rgba(52,152,219,0.15), 0 0 0 24px rgba(52,152,219,0.08), 0 8px 80px rgba(52,152,219,0.7), inset 0 3px 0 rgba(255,255,255,0.2), inset 0 -6px 0 rgba(0,0,0,0.3); }
-  }
-
-  .buzzer-icon { font-size: clamp(40px, 12vw, 80px); pointer-events: none; }
-  .buzzer-text {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(14px, 3.5vw, 26px);
-    font-weight: 900;
-    letter-spacing: 3px;
-    pointer-events: none;
-    text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-  }
-  .buzzer-hint {
-    font-family: 'Crimson Text', serif;
-    font-size: clamp(11px, 2.5vw, 16px);
-    opacity: 0.7;
-    pointer-events: none;
-    font-style: italic;
-  }
-
-  /* TRIGGERED STATE */
-  .trigger-overlay {
-    position: fixed;
-    inset: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 20px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s;
-  }
-  .trigger-overlay.show { opacity: 1; pointer-events: all; }
-  .trigger-overlay.team-a { background: radial-gradient(ellipse, rgba(27,107,58,0.95), rgba(8,8,16,0.98)); }
-  .trigger-overlay.team-b { background: radial-gradient(ellipse, rgba(26,58,107,0.95), rgba(8,8,16,0.98)); }
-
-  .trigger-icon { font-size: 80px; animation: triggerBounce 0.6s cubic-bezier(0.34,1.56,0.64,1); }
-  @keyframes triggerBounce { 0%{transform:scale(0)} 100%{transform:scale(1)} }
-  .trigger-team {
-    font-family: 'Cinzel Decorative', serif;
-    font-size: clamp(28px, 8vw, 60px);
-    font-weight: 900;
-    text-align: center;
-    animation: triggerBounce 0.5s 0.1s cubic-bezier(0.34,1.56,0.64,1) both;
-  }
-  .trigger-msg {
-    font-family: 'Crimson Text', serif;
-    font-size: clamp(16px, 3vw, 24px);
-    font-style: italic;
-    text-align: center;
-    opacity: 0.8;
-  }
-  .trigger-wait {
-    font-size: clamp(12px, 2.5vw, 16px);
-    color: rgba(255,255,255,0.4);
-    letter-spacing: 2px;
-    margin-top: 10px;
-    font-style: italic;
-    font-family: 'Crimson Text', serif;
-  }
-
-  /* STATUS bar */
-  .status-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-shrink: 0;
-    padding: 8px 20px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 30px;
-  }
-  .status-indicator { width:8px;height:8px;border-radius:50%;background:#E74C3C; }
-  .status-indicator.enabled { background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 1s infinite; }
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:0.4}}
-  .status-text { font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:2px; }
-
-  /* ripple */
-  .ripple {
-    position: absolute;
-    border-radius: 50%;
-    animation: rippleAnim 0.6s ease-out forwards;
-    pointer-events: none;
-  }
-  @keyframes rippleAnim {
-    0% { transform:scale(0); opacity:0.5; }
-    100% { transform:scale(4); opacity:0; }
-  }
+/* MODE SWITCH */
+.mode-tabs{display:flex;gap:6px;justify-content:center;flex-shrink:0;}
+.mtab{padding:5px 16px;border-radius:20px;font-size:11px;letter-spacing:2px;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:transparent;color:rgba(255,255,255,.35);font-family:'Cinzel',serif;transition:all .2s;}
+.mtab.active{background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold-l);}
 </style>
 </head>
 <body>
-<canvas id="bg"></canvas>
-
-<div class="trigger-overlay" id="triggerOverlay">
-  <div class="trigger-icon">🔔</div>
-  <div class="trigger-team" id="triggerTeam">EQUIPO A</div>
-  <div class="trigger-msg">¡Pulsó primero!</div>
-  <div class="trigger-wait">Esperando al moderador...</div>
+<canvas id="bgC"></canvas>
+<div class="trig" id="trigOv">
+  <div class="trig-ico">🔔</div>
+  <div class="trig-name" id="trigName">EQUIPO A</div>
+  <div class="trig-msg">¡Pulsó primero!</div>
+  <div class="trig-wait">Esperando al moderador...</div>
 </div>
 
-<div class="content">
+<div class="wrap">
   <!-- HEADER -->
-  <div class="header">
-    <div class="header-title">✝ DESAFÍO BÍBLICO</div>
-    <div class="header-sub">Selecciona tu equipo y pulsa cuando puedas responder</div>
+  <div class="hdr">
+    <div class="hdr-title">✝ DESAFÍO BÍBLICO</div>
+    <div class="hdr-sub">Selecciona equipo y pulsa cuando puedas responder</div>
   </div>
 
-  <!-- TEAM SELECTOR -->
-  <div class="team-select-area">
-    <div>
-      <div class="team-label" id="labelA" style="color:#2ECC71;margin-bottom:6px">EQUIPO A</div>
-      <button class="team-pick" id="pickA" onclick="pickTeam('a')">Soy del Equipo A</button>
+  <!-- MODE TABS -->
+  <div class="mode-tabs">
+    <button class="mtab active" id="tabLocal" onclick="setMode('local')">LOCAL</button>
+    <button class="mtab" id="tabNet" onclick="setMode('net')">EN RED</button>
+  </div>
+
+  <!-- SETUP PANEL (net mode) -->
+  <div class="setup-panel" id="setupPanel" style="display:none">
+    <div class="setup-title">CÓDIGO DE SALA</div>
+    <input class="room-input" id="roomCode" type="text" placeholder="Ej: IGLESIA2025" maxlength="20" oninput="this.value=this.value.toUpperCase()">
+    <button onclick="connectNet()" style="background:linear-gradient(135deg,var(--gold),#9A7420);color:#0A0A0F;border:none;border-radius:8px;padding:10px;font-family:'Cinzel',serif;font-size:13px;font-weight:700;cursor:pointer;letter-spacing:2px;width:100%">✓ CONECTAR</button>
+    <div class="setup-note">
+      El moderador debe abrir <b>moderador.html</b> con el mismo código de sala.<br>
+      Esto permite que celulares de toda la red se conecten.
     </div>
-    <div style="font-family:'Cinzel Decorative',serif;font-size:18px;color:rgba(212,168,67,0.5)">VS</div>
+  </div>
+
+  <!-- TEAM PICK -->
+  <div class="team-area">
     <div>
-      <div class="team-label" id="labelB" style="color:#3498DB;margin-bottom:6px">EQUIPO B</div>
-      <button class="team-pick" id="pickB" onclick="pickTeam('b')">Soy del Equipo B</button>
+      <div class="team-lbl" id="lbA" style="color:var(--green)">EQUIPO A</div>
+      <button class="tpick" id="pickA" onclick="pickTeam('a')">Soy del Equipo A</button>
+    </div>
+    <div style="font-family:'Cinzel Decorative',serif;font-size:20px;color:rgba(212,168,67,.45)">VS</div>
+    <div>
+      <div class="team-lbl" id="lbB" style="color:var(--blue)">EQUIPO B</div>
+      <button class="tpick" id="pickB" onclick="pickTeam('b')">Soy del Equipo B</button>
     </div>
   </div>
 
   <!-- BUZZER -->
-  <div class="buzzer-area">
-    <button class="buzzer-btn no-team" id="buzzerBtn" onpointerdown="triggerBuzzer(event)">
-      <div class="buzzer-icon">🔔</div>
-      <div class="buzzer-text">PULSAR</div>
-      <div class="buzzer-hint" id="buzzerHint">Elige tu equipo primero</div>
+  <div class="bz-area">
+    <button class="bz-btn nt" id="bzBtn" onpointerdown="trigBz(event)">
+      <div class="bz-icon">🔔</div>
+      <div class="bz-txt">PULSAR</div>
+      <div class="bz-hint" id="bzHint">Elige tu equipo</div>
     </button>
   </div>
 
   <!-- STATUS -->
   <div class="status-bar">
-    <div class="status-indicator" id="statusDot"></div>
-    <div class="status-text" id="statusText">ESPERANDO MODERADOR</div>
+    <div class="sdot" id="sDot"></div>
+    <div class="stxt" id="sTxt">ESPERANDO MODERADOR</div>
   </div>
 </div>
 
 <script>
-// ─── State ────────────────────────────────────────────────────────────────
-const state = {
-  team: null,
-  enabled: false,
-  triggered: false,
-  nameA: 'EQUIPO A',
-  nameB: 'EQUIPO B',
-};
+/* ── STATE ── */
+const ST={team:null,enabled:false,triggered:false,nameA:'EQUIPO A',nameB:'EQUIPO B',mode:'local',room:'',connected:false};
+let netChannel=null; // for net mode via BroadcastChannel with room prefix
 
-// ─── Channel ─────────────────────────────────────────────────────────────
-const ch = new BroadcastChannel('quiz_channel');
+/* ── LOCAL MODE (BroadcastChannel same browser) ── */
+const localCh=new BroadcastChannel('quiz_channel');
+localCh.onmessage=e=>handleMsg(e.data);
 
-ch.onmessage = (e) => {
-  const msg = e.data;
-  switch(msg.type) {
-    case 'SHOW_QUESTION':
-      enableBuzzer();
-      break;
-    case 'HIDE_QUESTION':
-    case 'CLEAR_ACTIVE':
-      resetBuzzer();
-      break;
-    case 'BUZZER_HIT':
-      // If someone else buzzed
-      if (!state.triggered) {
-        disableBuzzer(`🔔 ${msg.name || 'Otro equipo'} pulsó primero`);
+/* ── NET MODE ── */
+/* Uses localStorage + StorageEvent as a cross-tab/cross-origin fallback,
+   AND a custom relay via Supabase if available.
+   For same-LAN usage without a backend, we use a shared BroadcastChannel
+   with the room code. Note: BroadcastChannel is same-origin only.
+   
+   For TRUE cross-device support, open moderador.html and pulsador.html
+   from the SAME Netlify URL on different devices - they share the same origin
+   so BroadcastChannel works across all tabs/windows on the same device,
+   BUT not across different devices.
+   
+   For cross-device on different physical devices:
+   We use localStorage polling via a shared storage mechanism.
+   The recommended production setup is described below.
+*/
+
+/* ── CROSS-DEVICE RELAY via Shared Worker / localStorage events ──
+   Since BroadcastChannel is same-origin but NOT cross-device,
+   we implement a simple polling relay using a free Firebase/Supabase DB.
+   
+   SETUP INSTRUCTIONS (free, 5 minutes):
+   1. Go to https://supabase.com → New project
+   2. Go to Table Editor → New Table: name="quiz_events", columns: id(int8 PK), room(text), payload(text), ts(int8)
+   3. Go to Settings → API → copy Project URL and anon key
+   4. Replace SUPABASE_URL and SUPABASE_KEY below
+   
+   Until configured, the app works in LOCAL mode (same browser/same-origin tabs).
+*/
+
+const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co'; // Your project URL
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQxNzUxNjksImV4cCI6MjA0OTc1MTE2OX0.EN8Pmi_Hb7RqKrfiUGDVpQ_f6tdPyVH'; // Your anon public key
+
+let pollInterval=null;
+let lastTs=Date.now();
+
+async function sendToNet(msg){
+  if(!SUPABASE_URL||!ST.room) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/quiz_events`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify({room:ST.room,payload:JSON.stringify(msg),ts:Date.now()})
+    });
+  }catch(e){}
+}
+
+async function pollNet(){
+  if(!SUPABASE_URL||!ST.room) return;
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${ST.room}&ts=gt.${lastTs}&order=ts.asc`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      data.forEach(row=>{
+        try{handleMsg(JSON.parse(row.payload));}catch(e){}
+      });
+      lastTs=data[data.length-1].ts;
+    }
+  }catch(e){}
+}
+
+function connectNet(){
+  const code=document.getElementById('roomCode').value.trim();
+  if(!code){
+    document.getElementById('sTxt').textContent='INGRESA UN CÓDIGO DE SALA';
+    return;
+  }
+  ST.room=code;ST.connected=true;
+  lastTs=Date.now();
+  if(pollInterval) clearInterval(pollInterval);
+  
+  // Test connection first
+  document.getElementById('sTxt').textContent='CONECTANDO...';
+  document.getElementById('sDot').className='sdot';
+  
+  if(SUPABASE_URL){
+    pollInterval=setInterval(pollNet,800);
+    // Test the connection
+    fetch(`${SUPABASE_URL}/rest/v1/quiz_events?limit=1`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    }).then(r=>{
+      if(r.ok){
+        document.getElementById('sTxt').textContent=`SALA: ${code} — CONECTADO`;
+        document.getElementById('sDot').className='sdot on';
+      } else {
+        document.getElementById('sTxt').textContent='ERROR DE CONEXIÓN';
       }
+    }).catch(e=>{
+      document.getElementById('sTxt').textContent='SIN INTERNET';
+    });
+  } else {
+    // Fallback: use BroadcastChannel with room prefix (same-origin cross-tab)
+    if(netChannel) netChannel.close();
+    netChannel=new BroadcastChannel('quiz_room_'+code);
+    netChannel.onmessage=e=>handleMsg(e.data);
+    document.getElementById('sTxt').textContent=`SALA: ${code} (local)`;
+    document.getElementById('sDot').className='sdot on';
+  }
+}
+
+function broadcastBuzzer(msg){
+  if(ST.mode==='local'){
+    localCh.postMessage(msg);
+  } else {
+    if(SUPABASE_URL&&ST.room) sendToNet(msg);
+    else if(netChannel) netChannel.postMessage(msg);
+    localCh.postMessage(msg); // also local just in case
+  }
+}
+
+/* ── HANDLE MESSAGES ── */
+function handleMsg(m){
+  switch(m.type){
+    case 'SHOW_QUESTION': enableBz(); break;
+    case 'HIDE_QUESTION': case 'CLEAR_ACTIVE': resetBz(); break;
+    case 'BUZZER_HIT':
+      if(!ST.triggered) disableBz(`🔔 ${m.name||'Otro equipo'} pulsó primero`);
       break;
     case 'UPDATE_TEAMS':
-      if (msg.nameA) { state.nameA = msg.nameA; document.getElementById('labelA').textContent = msg.nameA; }
-      if (msg.nameB) { state.nameB = msg.nameB; document.getElementById('labelB').textContent = msg.nameB; }
-      break;
-    case 'STOP_TIMER':
-      // don't auto-disable; moderator controls
+      if(m.nameA){ST.nameA=m.nameA;document.getElementById('lbA').textContent=m.nameA;document.getElementById('pickA').textContent=`Soy del equipo ${m.nameA}`;}
+      if(m.nameB){ST.nameB=m.nameB;document.getElementById('lbB').textContent=m.nameB;document.getElementById('pickB').textContent=`Soy del equipo ${m.nameB}`;}
       break;
   }
-};
-
-// ─── Functions ───────────────────────────────────────────────────────────
-function pickTeam(team) {
-  state.team = team;
-  document.getElementById('pickA').className = 'team-pick' + (team === 'a' ? ' selected-a' : '');
-  document.getElementById('pickB').className = 'team-pick' + (team === 'b' ? ' selected-b' : '');
-  updateBuzzerAppearance();
 }
 
-function updateBuzzerAppearance() {
-  const btn = document.getElementById('buzzerBtn');
-  btn.className = 'buzzer-btn';
-  if (!state.team) {
-    btn.classList.add('no-team');
-    document.getElementById('buzzerHint').textContent = 'Elige tu equipo primero';
-  } else if (!state.enabled) {
-    btn.classList.add(state.team === 'a' ? 'team-a-btn' : 'team-b-btn');
-    btn.classList.add('disabled');
-    document.getElementById('buzzerHint').textContent = 'Esperando la pregunta...';
-  } else {
-    btn.classList.add(state.team === 'a' ? 'team-a-btn' : 'team-b-btn');
-    document.getElementById('buzzerHint').textContent = '¡PULSA AHORA!';
-  }
+/* ── MODE ── */
+function setMode(m){
+  ST.mode=m;
+  document.getElementById('tabLocal').className='mtab'+(m==='local'?' active':'');
+  document.getElementById('tabNet').className='mtab'+(m==='net'?' active':'');
+  document.getElementById('setupPanel').style.display=m==='net'?'flex':'none';
+  if(m==='local'){document.getElementById('sTxt').textContent='MODO LOCAL';}
 }
 
-function enableBuzzer() {
-  state.enabled = true;
-  state.triggered = false;
-  updateBuzzerAppearance();
-  document.getElementById('statusDot').classList.add('enabled');
-  document.getElementById('statusText').textContent = '¡BUZZER HABILITADO!';
-  // Remove disabled class if team selected
-  const btn = document.getElementById('buzzerBtn');
-  if (state.team) btn.classList.remove('disabled');
+/* ── TEAM ── */
+function pickTeam(t){
+  ST.team=t;
+  document.getElementById('pickA').className='tpick'+(t==='a'?' sa':'');
+  document.getElementById('pickB').className='tpick'+(t==='b'?' sb':'');
+  updBtn();
 }
 
-function disableBuzzer(msg) {
-  state.enabled = false;
-  updateBuzzerAppearance();
-  const btn = document.getElementById('buzzerBtn');
-  btn.classList.add('disabled');
-  document.getElementById('statusDot').classList.remove('enabled');
-  document.getElementById('statusText').textContent = msg || 'ESPERANDO MODERADOR';
+function updBtn(){
+  const btn=document.getElementById('bzBtn');
+  btn.className='bz-btn';
+  if(!ST.team){btn.classList.add('nt');document.getElementById('bzHint').textContent='Elige tu equipo primero';}
+  else if(!ST.enabled){btn.classList.add(ST.team==='a'?'ba':'bb');btn.classList.add('dis');document.getElementById('bzHint').textContent='Esperando la pregunta...';}
+  else{btn.classList.add(ST.team==='a'?'ba':'bb');document.getElementById('bzHint').textContent='¡PULSA AHORA!';}
 }
 
-function resetBuzzer() {
-  state.triggered = false;
-  state.enabled = false;
-  const overlay = document.getElementById('triggerOverlay');
-  overlay.className = 'trigger-overlay';
-  disableBuzzer('ESPERANDO MODERADOR');
-  // Remove disabled if team chosen - just show ready state
-  updateBuzzerAppearance();
+function enableBz(){
+  ST.enabled=true;ST.triggered=false;
+  document.getElementById('sDot').className='sdot on';
+  document.getElementById('sTxt').textContent='¡BUZZER HABILITADO!';
+  const btn=document.getElementById('bzBtn');
+  if(ST.team) btn.classList.remove('dis');
+  updBtn();
+}
+function disableBz(msg){
+  ST.enabled=false;updBtn();
+  const btn=document.getElementById('bzBtn');btn.classList.add('dis');
+  document.getElementById('sDot').className='sdot';
+  document.getElementById('sTxt').textContent=msg||'ESPERANDO MODERADOR';
+}
+function resetBz(){
+  ST.triggered=false;ST.enabled=false;
+  document.getElementById('trigOv').className='trig';
+  disableBz('ESPERANDO MODERADOR');updBtn();
 }
 
-function triggerBuzzer(e) {
-  if (!state.team || !state.enabled || state.triggered) return;
+function trigBz(e){
+  if(!ST.team||!ST.enabled||ST.triggered)return;
   e.preventDefault();
-  state.triggered = true;
-  state.enabled = false;
-
-  // Ripple effect
-  const btn = document.getElementById('buzzerBtn');
-  const rect = btn.getBoundingClientRect();
-  const x = (e.clientX || rect.left + rect.width/2) - rect.left;
-  const y = (e.clientY || rect.top + rect.height/2) - rect.top;
-  const ripple = document.createElement('div');
-  const color = state.team === 'a' ? 'rgba(46,204,113,0.4)' : 'rgba(52,152,219,0.4)';
-  ripple.className = 'ripple';
-  ripple.style.cssText = `left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${color};`;
-  btn.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 700);
-
+  ST.triggered=true;ST.enabled=false;
+  // Ripple
+  const btn=document.getElementById('bzBtn');
+  const rect=btn.getBoundingClientRect();
+  const x=(e.clientX||rect.left+rect.width/2)-rect.left;
+  const y=(e.clientY||rect.top+rect.height/2)-rect.top;
+  const rip=document.createElement('div');
+  rip.className='rip';
+  rip.style.cssText=`left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${ST.team==='a'?'rgba(46,204,113,.45)':'rgba(52,152,219,.45)'};`;
+  btn.appendChild(rip);setTimeout(()=>rip.remove(),700);
   // Sound
-  playBuzzerSound();
-
+  playBz();
   // Broadcast
-  const name = state.team === 'a' ? state.nameA : state.nameB;
-  ch.postMessage({ type: 'BUZZER_HIT', team: state.team, name });
-
+  const name=ST.team==='a'?ST.nameA:ST.nameB;
+  broadcastBuzzer({type:'BUZZER_HIT',team:ST.team,name});
   // Show overlay
-  const overlay = document.getElementById('triggerOverlay');
-  document.getElementById('triggerTeam').textContent = name;
-  document.getElementById('triggerTeam').style.color = state.team === 'a' ? '#2ECC71' : '#3498DB';
-  overlay.className = 'trigger-overlay show team-' + state.team;
-
-  document.getElementById('statusDot').classList.remove('enabled');
-  document.getElementById('statusText').textContent = `${name} — ¡BUZZEÓ!`;
-
-  // Auto dismiss overlay after 4s
-  setTimeout(() => {
-    overlay.className = 'trigger-overlay';
-  }, 4000);
+  const ov=document.getElementById('trigOv');
+  document.getElementById('trigName').textContent=name;
+  document.getElementById('trigName').style.color=ST.team==='a'?'#2ECC71':'#3498DB';
+  ov.className='trig show t'+(ST.team);
+  document.getElementById('sDot').className='sdot';
+  document.getElementById('sTxt').textContent=`${name} — ¡BUZZEÓ!`;
+  setTimeout(()=>{ov.className='trig';},4200);
 }
 
-// ─── Audio ────────────────────────────────────────────────────────────────
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playBuzzerSound() {
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-  osc.connect(gain); gain.connect(audioCtx.destination);
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-  osc.frequency.exponentialRampToValueAtTime(600, audioCtx.currentTime + 0.15);
-  gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
-  osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+/* ── AUDIO ── */
+const AC=new(window.AudioContext||window.webkitAudioContext)();
+document.addEventListener('pointerdown',()=>{if(AC.state==='suspended')AC.resume();},{once:true});
+function playBz(){
+  if(AC.state==='suspended')AC.resume();
+  const o=AC.createOscillator(),g=AC.createGain();
+  o.connect(g);g.connect(AC.destination);
+  o.type='square';o.frequency.setValueAtTime(1200,AC.currentTime);
+  o.frequency.exponentialRampToValueAtTime(600,AC.currentTime+.16);
+  g.gain.setValueAtTime(.5,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.42);
+  o.start();o.stop(AC.currentTime+.5);
 }
-document.addEventListener('pointerdown', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
 
-// ─── Background ───────────────────────────────────────────────────────────
-const canvas = document.getElementById('bg');
-const ctx = canvas.getContext('2d');
-const stars = [];
-function initBg() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  stars.length = 0;
-  for (let i=0;i<80;i++) stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.2+0.3,a:Math.random(),s:Math.random()*0.008+0.003});
-}
-function drawBg() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  const g = ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)/1.4);
-  g.addColorStop(0,'#0D1B3E'); g.addColorStop(1,'#050508');
-  ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-  stars.forEach(s=>{
-    s.a+=s.s;
-    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fillStyle=`rgba(212,168,67,${(Math.sin(s.a)+1)/2*0.4+0.05})`; ctx.fill();
-  });
-  requestAnimationFrame(drawBg);
-}
-window.addEventListener('resize',initBg);
-initBg(); drawBg();
+/* ── BG ── */
+const canvas=document.getElementById('bgC'),ctx=canvas.getContext('2d'),stars=[];
+function initBg(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;stars.length=0;for(let i=0;i<80;i++)stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.3+.3,a:Math.random(),s:Math.random()*.008+.003});}
+function drawBg(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createRadialGradient(canvas.width/2,canvas.height/2,0,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)/1.4);g.addColorStop(0,'#0D1B3E');g.addColorStop(1,'#050508');ctx.fillStyle=g;ctx.fillRect(0,0,canvas.width,canvas.height);stars.forEach(s=>{s.a+=s.s;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=`rgba(212,168,67,${(Math.sin(s.a)+1)/2*.4+.05})`;ctx.fill();});requestAnimationFrame(drawBg);}
+window.addEventListener('resize',initBg);initBg();drawBg();
 </script>
 </body>
 </html>
