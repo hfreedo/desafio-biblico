@@ -175,8 +175,9 @@ localCh.onmessage=e=>handleMsg(e.data);
    Until configured, the app works in LOCAL mode (same browser/same-origin tabs).
 */
 
-const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co'; // Your project URL
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQxNzUxNjksImV4cCI6MjA0OTc1MTE2OX0.EN8Pmi_Hb7RqKrfiUGDVpQ_f6tdPyVH'; // Your anon public key
+/* ── CORS FIX: Use correct anon key ── */
+const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
 
 let pollInterval=null;
 let lastTs=Date.now();
@@ -195,17 +196,33 @@ async function sendToNet(msg){
 async function pollNet(){
   if(!SUPABASE_URL||!ST.room) return;
   try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${ST.room}&ts=gt.${lastTs}&order=ts.asc`,{
+    const url = `${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${ST.room}&ts=gt.${lastTs}&order=ts.asc`;
+    const r=await fetch(url,{
       headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
     });
+    
+    if(!r.ok){
+      console.error('❌ Poll error:', r.status, r.statusText);
+      return;
+    }
+    
     const data=await r.json();
     if(Array.isArray(data)&&data.length){
+      console.log('📨 Received events:', data.length);
       data.forEach(row=>{
-        try{handleMsg(JSON.parse(row.payload));}catch(e){}
+        try{
+          const msg = JSON.parse(row.payload);
+          console.log('📨 Processing message:', msg);
+          handleMsg(msg);
+        }catch(e){
+          console.error('❌ Parse error:', e);
+        }
       });
       lastTs=data[data.length-1].ts;
     }
-  }catch(e){}
+  }catch(e){
+    console.error('❌ Network poll error:', e);
+  }
 }
 
 function connectNet(){
@@ -222,22 +239,84 @@ function connectNet(){
   document.getElementById('sTxt').textContent='CONECTANDO...';
   document.getElementById('sDot').className='sdot';
   
+  console.log('🔧 Debug: Testing Supabase connection...');
+  console.log('URL:', SUPABASE_URL);
+  console.log('Key length:', SUPABASE_KEY.length);
+  
   if(SUPABASE_URL){
-    pollInterval=setInterval(pollNet,800);
-    // Test the connection
-    fetch(`${SUPABASE_URL}/rest/v1/quiz_events?limit=1`,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    }).then(r=>{
-      if(r.ok){
+    // Test the connection with proper CORS headers
+    const testUrl = `${SUPABASE_URL}/rest/v1/quiz_events?limit=1`;
+    console.log('🔧 Testing URL:', testUrl);
+    
+    fetch(testUrl,{
+      method: 'GET',
+      headers:{
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      mode: 'cors' // Explicitly set CORS mode
+    }).then(async response => {
+      console.log('🔧 Response status:', response.status);
+      console.log('🔧 Response ok:', response.ok);
+      
+      if(response.ok){
+        const data = await response.json();
+        console.log('✅ Connection successful! Data length:', data.length);
+        
+        pollInterval=setInterval(pollNet,800);
         document.getElementById('sTxt').textContent=`SALA: ${code} — CONECTADO`;
         document.getElementById('sDot').className='sdot on';
       } else {
-        document.getElementById('sTxt').textContent='ERROR DE CONEXIÓN';
+        const errorText = await response.text();
+        console.error('❌ HTTP Error:', response.status, response.statusText);
+        console.error('❌ Error details:', errorText);
+        
+        // Handle specific error codes
+        if(response.status === 404) {
+          document.getElementById('sTxt').textContent='TABLA NO EXISTE - Ver manual';
+        } else if(response.status === 401) {
+          document.getElementById('sTxt').textContent='API KEY INVÁLIDA';
+        } else if(response.status === 403) {
+          document.getElementById('sTxt').textContent='SIN PERMISOS - RLS';
+        } else {
+          document.getElementById('sTxt').textContent=`ERROR ${response.status}`;
+        }
+        
+        // Show detailed error after a delay
+        setTimeout(() => {
+          let helpMsg = '';
+          if(response.status === 404) {
+            helpMsg = 'La tabla "quiz_events" no existe.\n\n1. Ve a Supabase SQL Editor\n2. Ejecuta el script supabase-setup.sql\n3. Intenta conectar nuevamente';
+          } else if(response.status === 403) {
+            helpMsg = 'Sin permisos de acceso.\n\n1. Ve a Authentication > Policies en Supabase\n2. Verifica que RLS esté habilitado para quiz_events\n3. Verifica las políticas de INSERT y SELECT';
+          } else {
+            helpMsg = `Error ${response.status}: ${response.statusText}\n\nDetalles:\n${errorText}`;
+          }
+          alert(helpMsg);
+        }, 500);
       }
-    }).catch(e=>{
-      document.getElementById('sTxt').textContent='SIN INTERNET';
+    }).catch(error => {
+      console.error('❌ Network/CORS Error:', error);
+      
+      // Handle different types of network errors
+      if(error.message.includes('CORS')) {
+        document.getElementById('sTxt').textContent='ERROR CORS - Ver Supabase';
+        setTimeout(() => {
+          alert('Error de CORS detectado.\n\nSoluciones:\n\n1. Ve a Supabase Dashboard > Settings > API\n2. En "CORS Origins" agrega: *\n3. O usa HTTPS para servir los archivos\n4. O prueba desde un servidor web local');
+        }, 500);
+      } else if(error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+        document.getElementById('sTxt').textContent='SIN INTERNET O BLOQUEADO';
+        setTimeout(() => {
+          alert('Error de red.\n\nPosibles causas:\n\n1. Sin conexión a internet\n2. Firewall bloqueando Supabase\n3. Antivirus bloqueando la conexión\n4. URL de Supabase incorrecta\n\nIntenta:\n- Verificar conexión a internet\n- Abrir https://cnazxzkbckpqficngjex.supabase.co en el navegador');
+        }, 500);
+      } else {
+        document.getElementById('sTxt').textContent=`ERROR: ${error.message}`;
+      }
     });
   } else {
+    console.log('🔧 Fallback to local mode');
     // Fallback: use BroadcastChannel with room prefix (same-origin cross-tab)
     if(netChannel) netChannel.close();
     netChannel=new BroadcastChannel('quiz_room_'+code);
