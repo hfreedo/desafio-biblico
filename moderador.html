@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desafío Bíblico — Panel de Moderación</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #D4A843;
+    --gold-light: #F0C96A;
+    --bg: #0F1117;
+    --panel: #161B28;
+    --panel2: #1C2236;
+    --border: rgba(212,168,67,0.2);
+    --border2: rgba(255,255,255,0.08);
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --blue: #3498DB;
+    --orange: #E67E22;
+    --parchment: #F5E6C8;
+    --text: #E8E8F0;
+    --text-dim: rgba(232,232,240,0.5);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; background:var(--bg); color:var(--text); font-family:'Cinzel',serif; overflow:hidden; }
+
+  /* LAYOUT */
+  .app { display:grid; grid-template-rows:56px 1fr; height:100vh; }
+  .topbar {
+    background:var(--panel);
+    border-bottom:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    padding:0 20px;
+    gap:20px;
+    flex-shrink:0;
+  }
+  .topbar-title {
+    font-family:'Cinzel Decorative',serif;
+    font-size:15px;
+    color:var(--gold-light);
+    letter-spacing:2px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .badge-mod {
+    background:rgba(231,76,60,0.2);
+    border:1px solid rgba(231,76,60,0.5);
+    color:#E74C3C;
+    font-size:10px;
+    padding:2px 10px;
+    border-radius:20px;
+    letter-spacing:2px;
+  }
+  .topbar-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .status-dot { width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite; }
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+  .status-label { font-size:11px;color:var(--text-dim);letter-spacing:2px; }
+
+  /* MAIN GRID */
+  .main { display:grid; grid-template-columns:340px 1fr 280px; height:100%; overflow:hidden; }
+
+  /* PANEL */
+  .side-panel { overflow-y:auto; border-right:1px solid var(--border2); }
+  .side-panel:last-child { border-right:none; border-left:1px solid var(--border2); }
+  .section {
+    padding:14px 16px;
+    border-bottom:1px solid var(--border2);
+  }
+  .section-title {
+    font-size:10px;
+    letter-spacing:3px;
+    color:var(--text-dim);
+    text-transform:uppercase;
+    margin-bottom:12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border2); }
+
+  /* TEAM CONTROLS */
+  .team-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+  .team-label {
+    font-size:11px;
+    letter-spacing:2px;
+    min-width:20px;
+    text-align:center;
+    font-weight:700;
+  }
+  .lbl-a { color:var(--green); }
+  .lbl-b { color:var(--blue); }
+  input[type="text"], input[type="number"] {
+    background:var(--panel2);
+    border:1px solid var(--border2);
+    border-radius:6px;
+    color:var(--text);
+    padding:7px 10px;
+    font-family:'Cinzel',serif;
+    font-size:12px;
+    width:100%;
+    outline:none;
+    transition:border-color 0.2s;
+  }
+  input:focus { border-color:var(--gold); }
+  .score-ctrl { display:flex; align-items:center; gap:6px; }
+  .score-display {
+    font-family:'Cinzel Decorative',serif;
+    font-size:28px;
+    font-weight:900;
+    min-width:48px;
+    text-align:center;
+  }
+  .sd-a { color:var(--green); text-shadow:0 0 12px rgba(46,204,113,0.5); }
+  .sd-b { color:var(--blue); text-shadow:0 0 12px rgba(52,152,219,0.5); }
+
+  /* BUTTONS */
+  .btn {
+    border:none; border-radius:6px; cursor:pointer;
+    font-family:'Cinzel',serif; font-size:11px;
+    letter-spacing:1px; font-weight:600;
+    padding:8px 14px;
+    transition:all 0.2s;
+    display:flex; align-items:center; gap:6px;
+    white-space:nowrap;
+  }
+  .btn:hover { filter:brightness(1.15); transform:translateY(-1px); }
+  .btn:active { transform:translateY(0); }
+  .btn-gold { background:linear-gradient(135deg,var(--gold),#9A7420); color:#0A0A0F; }
+  .btn-green { background:linear-gradient(135deg,#1B6B3A,#2ECC71); color:white; }
+  .btn-red { background:linear-gradient(135deg,#6B1A1A,#E74C3C); color:white; }
+  .btn-blue { background:linear-gradient(135deg,#1A3A6B,#3498DB); color:white; }
+  .btn-gray { background:rgba(255,255,255,0.08); color:var(--text); border:1px solid var(--border2); }
+  .btn-orange { background:linear-gradient(135deg,#6B3A1A,#E67E22); color:white; }
+  .btn-sm { padding:5px 10px; font-size:10px; }
+  .btn-icon { width:32px;height:32px;padding:0;justify-content:center;border-radius:8px; }
+  .btn-row { display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* TIMER CONTROL */
+  .timer-ctrl { display:flex; align-items:center; gap:10px; }
+  .timer-val {
+    background:var(--panel2);
+    border:1px solid var(--border2);
+    border-radius:6px;
+    color:var(--gold-light);
+    padding:6px 12px;
+    font-family:'Cinzel Decorative',serif;
+    font-size:20px;
+    min-width:60px;
+    text-align:center;
+  }
+
+  /* QUESTION LIST */
+  .center-panel { display:flex; flex-direction:column; overflow:hidden; }
+  .qlist-header {
+    padding:12px 16px;
+    border-bottom:1px solid var(--border2);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-shrink:0;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .search-input {
+    background:var(--panel2);
+    border:1px solid var(--border2);
+    border-radius:6px;
+    color:var(--text);
+    padding:6px 12px;
+    font-family:'Cinzel',serif;
+    font-size:11px;
+    width:180px;
+    outline:none;
+  }
+  .search-input:focus { border-color:var(--gold); }
+  .filter-tabs { display:flex; gap:4px; }
+  .tab {
+    padding:4px 12px;
+    border-radius:4px;
+    font-size:10px;
+    letter-spacing:1px;
+    cursor:pointer;
+    border:1px solid var(--border2);
+    background:transparent;
+    color:var(--text-dim);
+    font-family:'Cinzel',serif;
+    transition:all 0.2s;
+  }
+  .tab.active { background:rgba(212,168,67,0.15); border-color:var(--gold); color:var(--gold-light); }
+  .tab:hover { color:var(--text); }
+
+  .qlist { overflow-y:auto; flex:1; padding:8px; display:grid; grid-template-columns:1fr 1fr; gap:6px; align-content:start; }
+
+  .qcard {
+    background:var(--panel2);
+    border:1px solid var(--border2);
+    border-radius:8px;
+    padding:10px 12px;
+    cursor:pointer;
+    transition:all 0.2s;
+    position:relative;
+  }
+  .qcard:hover { border-color:rgba(212,168,67,0.4); background:#222840; }
+  .qcard.selected { border-color:var(--gold); background:rgba(212,168,67,0.08); }
+  .qcard.answered-a { border-left:3px solid var(--green); opacity:0.7; }
+  .qcard.answered-b { border-left:3px solid var(--blue); opacity:0.7; }
+  .qcard.answered-wrong { border-left:3px solid var(--red); opacity:0.6; }
+  .qcard-header { display:flex; align-items:center; gap:6px; margin-bottom:6px; }
+  .qcard-num { font-size:10px; color:var(--text-dim); min-width:28px; }
+  .diff-pip {
+    width:6px;height:6px;border-radius:50%;flex-shrink:0;
+  }
+  .pip-facil { background:var(--green); }
+  .pip-medio { background:#F1C40F; }
+  .pip-dificil { background:var(--red); }
+  .qcard-text {
+    font-family:'Crimson Text',serif;
+    font-size:12px;
+    color:var(--parchment);
+    line-height:1.4;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .qcard-round { font-size:9px; color:var(--text-dim); letter-spacing:1px; margin-top:4px; }
+  .answered-badge {
+    position:absolute;
+    top:6px;right:6px;
+    font-size:14px;
+  }
+
+  /* RIGHT PANEL */
+  .current-q-display {
+    background:var(--panel2);
+    border:1px solid var(--border);
+    border-radius:8px;
+    padding:12px;
+    margin-bottom:10px;
+  }
+  .cq-question {
+    font-family:'Crimson Text',serif;
+    font-size:14px;
+    color:var(--parchment);
+    line-height:1.5;
+    margin:6px 0;
+  }
+  .cq-answer {
+    font-size:12px;
+    color:var(--gold-light);
+    font-family:'Crimson Text',serif;
+    font-style:italic;
+    margin-top:6px;
+    padding-top:6px;
+    border-top:1px solid var(--border2);
+  }
+
+  /* MUSIC */
+  .music-row { display:flex; gap:6px; }
+  .music-input { flex:1; font-size:10px; }
+
+  /* SCOREBOARD TABLE */
+  .score-table { width:100%; border-collapse:collapse; font-size:11px; }
+  .score-table th { color:var(--text-dim); letter-spacing:1px; font-size:9px; padding:4px 8px; border-bottom:1px solid var(--border2); text-align:left; }
+  .score-table td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.04); font-family:'Crimson Text',serif; font-size:12px; }
+  .score-table tr:hover td { background:rgba(255,255,255,0.03); }
+  .st-a { color:var(--green); }
+  .st-b { color:var(--blue); }
+
+  /* Round selector */
+  .round-select {
+    background:var(--panel2);
+    border:1px solid var(--border2);
+    border-radius:6px;
+    color:var(--text);
+    padding:6px 10px;
+    font-family:'Cinzel',serif;
+    font-size:11px;
+    width:100%;
+    outline:none;
+  }
+
+  /* Live timer display in mod */
+  .mod-timer {
+    font-family:'Cinzel Decorative',serif;
+    font-size:36px;
+    font-weight:900;
+    color:var(--gold-light);
+    text-align:center;
+    text-shadow:0 0 20px rgba(212,168,67,0.4);
+    line-height:1;
+  }
+  .mod-timer.danger { color:var(--red); text-shadow:0 0 20px rgba(231,76,60,0.6); }
+
+  /* Notification toast */
+  .toast {
+    position:fixed;
+    bottom:20px;right:20px;
+    background:var(--panel);
+    border:1px solid var(--gold);
+    border-radius:8px;
+    padding:12px 20px;
+    font-size:13px;
+    color:var(--gold-light);
+    z-index:999;
+    transform:translateX(120%);
+    transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    font-family:'Crimson Text',serif;
+  }
+  .toast.show { transform:translateX(0); }
+
+  ::-webkit-scrollbar { width:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:rgba(212,168,67,0.3); border-radius:4px; }
+
+  .separator { height:1px; background:var(--border2); margin:6px 0; }
+  .small-label { font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-title">
+      ✝ <span>DESAFÍO BÍBLICO</span>
+      <span class="badge-mod">MODERADOR</span>
+    </div>
+    <div class="topbar-right">
+      <div class="status-dot"></div>
+      <div class="status-label">CANAL ACTIVO</div>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- LEFT PANEL -->
+    <div class="side-panel" id="leftPanel">
+
+      <!-- TEAMS -->
+      <div class="section">
+        <div class="section-title">Equipos</div>
+        <div class="team-row">
+          <div class="team-label lbl-a">A</div>
+          <input type="text" id="nameA" value="EQUIPO A" placeholder="Nombre Equipo A">
+          <button class="btn btn-gray btn-sm" onclick="applyTeamNames()">✓</button>
+        </div>
+        <div class="team-row">
+          <div class="team-label lbl-b">B</div>
+          <input type="text" id="nameB" value="EQUIPO B" placeholder="Nombre Equipo B">
+        </div>
+        <div style="margin-top:10px">
+          <div class="small-label">PUNTUACIÓN</div>
+          <div style="display:flex;gap:12px;align-items:center;justify-content:space-between">
+            <div class="score-ctrl">
+              <button class="btn btn-gray btn-icon btn-sm" onclick="changeScore('a',-1)">−</button>
+              <div class="score-display sd-a" id="modScoreA">0</div>
+              <button class="btn btn-green btn-icon btn-sm" onclick="changeScore('a',1)">+</button>
+            </div>
+            <div style="font-size:18px;color:var(--text-dim)">—</div>
+            <div class="score-ctrl">
+              <button class="btn btn-gray btn-icon btn-sm" onclick="changeScore('b',-1)">−</button>
+              <div class="score-display sd-b" id="modScoreB">0</div>
+              <button class="btn btn-blue btn-icon btn-sm" onclick="changeScore('b',1)">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-green btn-sm" onclick="awardPoint('a')">✓ Correcto A</button>
+          <button class="btn btn-blue btn-sm" onclick="awardPoint('b')">✓ Correcto B</button>
+        </div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn btn-red btn-sm" onclick="wrongAnswer('a')">✗ Incorrecto A</button>
+          <button class="btn btn-red btn-sm" onclick="wrongAnswer('b')">✗ Incorrecto B</button>
+        </div>
+      </div>
+
+      <!-- TIMER -->
+      <div class="section">
+        <div class="section-title">Cronómetro</div>
+        <div class="mod-timer" id="modTimer">30</div>
+        <div style="margin-top:8px">
+          <div class="small-label">SEGUNDOS</div>
+          <div class="timer-ctrl">
+            <button class="btn btn-gray btn-icon btn-sm" onclick="adjustTimer(-5)">−5</button>
+            <div class="timer-val" id="timerVal">30</div>
+            <button class="btn btn-gray btn-icon btn-sm" onclick="adjustTimer(5)">+5</button>
+            <input type="number" id="timerInput" value="30" min="5" max="180" style="width:60px;text-align:center">
+          </div>
+        </div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn btn-gold" onclick="sendTimer()">▶ Iniciar</button>
+          <button class="btn btn-red" onclick="stopTimer()">■ Detener</button>
+        </div>
+      </div>
+
+      <!-- QUESTION CONTROL -->
+      <div class="section">
+        <div class="section-title">Control de Pregunta</div>
+        <div class="btn-row" style="margin-bottom:8px">
+          <button class="btn btn-gold" onclick="showSelectedQ()">📢 Mostrar</button>
+          <button class="btn btn-orange" onclick="revealAnswer()">👁 Respuesta</button>
+        </div>
+        <div class="btn-row">
+          <button class="btn btn-gray btn-sm" onclick="hideQuestion()">✕ Ocultar</button>
+          <button class="btn btn-gray btn-sm" onclick="clearActive()">⊘ Limpiar</button>
+        </div>
+      </div>
+
+      <!-- BUZZER -->
+      <div class="section">
+        <div class="section-title">Pulsador Manual</div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="manualBuzzer('a')">🔔 Buzzer A</button>
+          <button class="btn btn-blue" onclick="manualBuzzer('b')">🔔 Buzzer B</button>
+        </div>
+      </div>
+
+      <!-- ROUND -->
+      <div class="section">
+        <div class="section-title">Ronda Activa</div>
+        <select class="round-select" id="roundSelect" onchange="changeRound()">
+          <option value="1">Ronda 1 — Rápido y Preciso</option>
+          <option value="2">Ronda 2 — Completa el Versículo</option>
+          <option value="3">Ronda 3 — ¿Quién soy?</option>
+          <option value="4">Ronda 4 — Verdadero o Falso</option>
+          <option value="5">Ronda 5 — Versus Final</option>
+        </select>
+      </div>
+
+      <!-- MUSIC -->
+      <div class="section">
+        <div class="section-title">Música de Fondo</div>
+        <div class="music-row">
+          <input type="text" id="musicUrl" placeholder="URL de audio directo (.mp3, .ogg...)" class="music-input">
+        </div>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn btn-gold btn-sm" onclick="playMusic()">▶ Reproducir</button>
+          <button class="btn btn-red btn-sm" onclick="stopMusic()">■ Detener</button>
+        </div>
+        <div style="margin-top:8px;font-size:9px;color:var(--text-dim);font-family:'Crimson Text',serif;line-height:1.5">
+          Usa una URL directa a un archivo de audio (.mp3).
+          Puedes usar links de SoundCloud, Dropbox, o tu propio servidor.
+        </div>
+      </div>
+
+      <!-- WINNER -->
+      <div class="section">
+        <div class="section-title">Finalizar Juego</div>
+        <div class="btn-row">
+          <button class="btn btn-green" onclick="declareWinner('a')">🏆 Ganador A</button>
+          <button class="btn btn-blue" onclick="declareWinner('b')">🏆 Ganador B</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CENTER - QUESTION LIST -->
+    <div class="center-panel">
+      <div class="qlist-header">
+        <div style="font-size:12px;color:var(--gold-light);letter-spacing:2px;font-weight:600;">BANCO DE PREGUNTAS</div>
+        <input type="text" class="search-input" id="searchQ" placeholder="Buscar pregunta..." oninput="renderList()">
+        <div class="filter-tabs">
+          <button class="tab active" data-f="all" onclick="setFilter('all',this)">Todas</button>
+          <button class="tab" data-f="facil" onclick="setFilter('facil',this)">Fácil</button>
+          <button class="tab" data-f="medio" onclick="setFilter('medio',this)">Medio</button>
+          <button class="tab" data-f="dificil" onclick="setFilter('dificil',this)">Difícil</button>
+          <button class="tab" data-f="pending" onclick="setFilter('pending',this)">Pendientes</button>
+          <button class="tab" data-f="answered" onclick="setFilter('answered',this)">Respondidas</button>
+        </div>
+        <div style="margin-left:auto;font-size:11px;color:var(--text-dim)" id="qCount"></div>
+      </div>
+      <div class="qlist" id="qList"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="side-panel" id="rightPanel">
+      <div class="section">
+        <div class="section-title">Pregunta Seleccionada</div>
+        <div class="current-q-display" id="selectedQDisplay">
+          <div style="color:var(--text-dim);font-family:'Crimson Text',serif;font-style:italic;font-size:12px;text-align:center;">
+            Selecciona una pregunta de la lista
+          </div>
+        </div>
+      </div>
+
+      <!-- SCOREBOARD HISTORY -->
+      <div class="section">
+        <div class="section-title">Historial de Respuestas</div>
+        <table class="score-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pregunta</th>
+              <th>Equipo</th>
+              <th>✓/✗</th>
+            </tr>
+          </thead>
+          <tbody id="historyBody"></tbody>
+        </table>
+      </div>
+
+      <!-- STATS -->
+      <div class="section">
+        <div class="section-title">Estadísticas</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <div style="background:var(--panel2);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(46,204,113,0.2)">
+            <div style="font-size:22px;font-family:'Cinzel Decorative',serif;color:var(--green)" id="statA">0</div>
+            <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:2px">EQUIPO A</div>
+          </div>
+          <div style="background:var(--panel2);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(52,152,219,0.2)">
+            <div style="font-size:22px;font-family:'Cinzel Decorative',serif;color:var(--blue)" id="statB">0</div>
+            <div style="font-size:9px;color:var(--text-dim);letter-spacing:1px;margin-top:2px">EQUIPO B</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-dim);display:flex;justify-content:space-between">
+          <span>Respondidas: <span style="color:var(--text)" id="statTotal">0</span></span>
+          <span>Pendientes: <span style="color:var(--text)" id="statPending">100</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── QUESTIONS DATA ─────────────────────────────────────────────────────────
+const ROUNDS = [
+  { id: 1, name: 'Rápido y Preciso' },
+  { id: 2, name: 'Completa el Versículo' },
+  { id: 3, name: '¿Quién soy?' },
+  { id: 4, name: 'Verdadero o Falso' },
+  { id: 5, name: 'Versus Final' },
+];
+const QUESTIONS = [
+  // RONDA 1
+  {id:1,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Quién construyó el arca?',a:'Noé — Génesis 6:13-14'},
+  {id:2,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Cuántos discípulos tenía Jesús?',a:'12 — Mateo 10:1-2'},
+  {id:3,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Quién negó a Jesús tres veces?',a:'Pedro — Lucas 22:54-62'},
+  {id:4,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Primer libro de la Biblia?',a:'Génesis — Génesis 1:1'},
+  {id:5,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Último libro de la Biblia?',a:'Apocalipsis — Apocalipsis 1:1'},
+  {id:6,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Quién mató a Goliat?',a:'David — 1 Samuel 17:49'},
+  {id:7,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Fácil',q:'¿Madre de Jesús?',a:'María — Lucas 1:31'},
+  {id:8,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Quién interpretó sueños en Egipto?',a:'José — Génesis 41:15-16'},
+  {id:9,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Monte donde Dios dio la ley?',a:'Sinaí — Éxodo 19:20'},
+  {id:10,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Quién escribió muchos Salmos?',a:'David — Salmos'},
+  {id:11,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Ciudad donde nació Jesús?',a:'Belén — Mateo 2:1'},
+  {id:12,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Quién bautizó a Jesús?',a:'Juan el Bautista — Mateo 3:13'},
+  {id:13,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Cuántos días llovió en el diluvio?',a:'40 días — Génesis 7:12'},
+  {id:14,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Medio',q:'¿Quién liberó a Israel de Egipto?',a:'Moisés — Éxodo 3:10'},
+  {id:15,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Quién fue el padre de Samuel?',a:'Elcana — 1 Samuel 1:1'},
+  {id:16,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Quién fue el rey antes de David?',a:'Saúl — 1 Samuel 10:1'},
+  {id:17,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Quién escribió Lamentaciones?',a:'Jeremías — Lamentaciones 1:1'},
+  {id:18,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Quién fue el sucesor de Moisés?',a:'Josué — Josué 1:1'},
+  {id:19,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Quién fue el padre de Juan el Bautista?',a:'Zacarías — Lucas 1:13'},
+  {id:20,round:'Ronda 1',roundName:'Rápido y Preciso',diff:'Difícil',q:'¿Qué profeta confrontó a David por Betsabé?',a:'Natán — 2 Samuel 12:1'},
+  // RONDA 2
+  {id:21,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'Jehová es mi pastor...',a:'...nada me faltará — Salmo 23:1'},
+  {id:22,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'Todo lo puedo en...',a:'...Cristo que me fortalece — Filipenses 4:13'},
+  {id:23,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'De tal manera amó Dios al mundo...',a:'...que ha dado a su Hijo — Juan 3:16'},
+  {id:24,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'El Señor es mi luz y...',a:'...mi salvación — Salmo 27:1'},
+  {id:25,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'Clama a mí y...',a:'...yo te responderé — Jeremías 33:3'},
+  {id:26,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'Honra a tu padre y...',a:'...a tu madre — Éxodo 20:12'},
+  {id:27,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Fácil',q:'En el principio creó Dios...',a:'...los cielos y la tierra — Génesis 1:1'},
+  {id:28,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'El que habita al abrigo...',a:'...del Altísimo — Salmo 91:1'},
+  {id:29,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'Buscad primeramente...',a:'...el reino de Dios — Mateo 6:33'},
+  {id:30,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'No temas porque...',a:'...yo estoy contigo — Isaías 41:10'},
+  {id:31,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'El corazón alegre...',a:'...hermosea el rostro — Proverbios 15:13'},
+  {id:32,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'Fiel es Dios...',a:'...que no os dejará ser tentados — 1 Corintios 10:13'},
+  {id:33,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'Si confesamos nuestros...',a:'...pecados — 1 Juan 1:9'},
+  {id:34,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Medio',q:'El gozo del Señor...',a:'...es vuestra fuerza — Nehemías 8:10'},
+  {id:35,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'Mi gracia es suficiente...',a:'...para ti — 2 Corintios 12:9'},
+  {id:36,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'Todo tiene su tiempo...',a:'Eclesiastés 3:1'},
+  {id:37,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'Lámpara es a mis pies...',a:'...tu palabra — Salmo 119:105'},
+  {id:38,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'El que cree en mí...',a:'...tiene vida eterna — Juan 6:47'},
+  {id:39,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'Ama a tu prójimo...',a:'...como a ti mismo — Mateo 22:39'},
+  {id:40,round:'Ronda 2',roundName:'Completa el Versículo',diff:'Difícil',q:'Sed santos porque...',a:'...yo soy santo — 1 Pedro 1:16'},
+  // RONDA 3
+  {id:41,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Construí un arca para salvar animales',a:'Noé — Génesis 6:14'},
+  {id:42,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Fui vendido por mis hermanos',a:'José — Génesis 37:28'},
+  {id:43,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Fui rey y escribí salmos',a:'David — 2 Samuel 23:1'},
+  {id:44,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Negué a Jesús tres veces',a:'Pedro — Lucas 22:61'},
+  {id:45,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Traicioné a Jesús por dinero',a:'Judas — Mateo 26:15'},
+  {id:46,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Fui tragado por un pez',a:'Jonás — Jonás 1:17'},
+  {id:47,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Fácil',q:'Fui el más fuerte del mundo',a:'Sansón — Jueces 16:17'},
+  {id:48,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Guié al pueblo fuera de Egipto',a:'Moisés — Éxodo 3:10'},
+  {id:49,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Construí el templo',a:'Salomón — 1 Reyes 6:1'},
+  {id:50,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Bauticé a Jesús',a:'Juan el Bautista — Mateo 3:13'},
+  {id:51,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Vi una escalera al cielo',a:'Jacob — Génesis 28:12'},
+  {id:52,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Fui médico y escribí un evangelio',a:'Lucas — Colosenses 4:14'},
+  {id:53,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Fui perseguidor y luego apóstol',a:'Pablo — Hechos 9:1-6'},
+  {id:54,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Medio',q:'Derribé murallas con trompetas',a:'Josué — Josué 6:20'},
+  {id:55,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Sobreviví al foso de leones',a:'Daniel — Daniel 6:22'},
+  {id:56,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Interpreto sueños en Babilonia',a:'Daniel — Daniel 2:19'},
+  {id:57,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Fui esposa de Abraham',a:'Sara — Génesis 17:15'},
+  {id:58,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Fui madre de Samuel',a:'Ana — 1 Samuel 1:20'},
+  {id:59,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Vi a Jesús resucitado primero',a:'María Magdalena — Juan 20:14'},
+  {id:60,round:'Ronda 3',roundName:'¿Quién soy?',diff:'Difícil',q:'Subí al cielo en un carro de fuego',a:'Elías — 2 Reyes 2:11'},
+  // RONDA 4
+  {id:61,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Moisés entró a la tierra prometida',a:'FALSO — Deuteronomio 34:4-5'},
+  {id:62,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'David fue rey de Israel',a:'VERDADERO — 2 Samuel 5:3'},
+  {id:63,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Jonás obedeció a Dios desde el principio',a:'FALSO — Jonás 1:3'},
+  {id:64,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Jesús tuvo 12 discípulos',a:'VERDADERO — Mateo 10:1'},
+  {id:65,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Pablo escribió Romanos',a:'VERDADERO — Romanos 1:1'},
+  {id:66,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Sansón era débil',a:'FALSO — Jueces 16:17'},
+  {id:67,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Fácil',q:'Noé construyó una torre',a:'FALSO — Génesis 11:4'},
+  {id:68,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'Pedro caminó sobre el agua',a:'VERDADERO — Mateo 14:29'},
+  {id:69,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'Jesús nació en Nazaret',a:'FALSO — Mateo 2:1'},
+  {id:70,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'María era esposa de José',a:'VERDADERO — Mateo 1:18'},
+  {id:71,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'El diluvio duró 10 días',a:'FALSO — Génesis 7:12 (fueron 40)'},
+  {id:72,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'Abraham tuvo un hijo llamado Isaac',a:'VERDADERO — Génesis 21:3'},
+  {id:73,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'Daniel estuvo en el foso de leones',a:'VERDADERO — Daniel 6:16'},
+  {id:74,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Medio',q:'Jesús convirtió agua en vino',a:'VERDADERO — Juan 2:9'},
+  {id:75,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'Judas fue fiel a Jesús',a:'FALSO — Mateo 26:14'},
+  {id:76,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'El Espíritu Santo descendió como paloma',a:'VERDADERO — Mateo 3:16'},
+  {id:77,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'Jesús resucitó al tercer día',a:'VERDADERO — Lucas 24:7'},
+  {id:78,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'La Biblia tiene 66 libros',a:'VERDADERO'},
+  {id:79,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'Goliat era pequeño',a:'FALSO — 1 Samuel 17:4'},
+  {id:80,round:'Ronda 4',roundName:'Verdadero o Falso',diff:'Difícil',q:'El apóstol Juan escribió Apocalipsis',a:'VERDADERO — Apocalipsis 1:1'},
+  // RONDA 5
+  {id:81,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Quién fue el hijo de David que reinó después?',a:'Salomón — 1 Reyes 2:12'},
+  {id:82,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Qué libro sigue a Hechos?',a:'Romanos'},
+  {id:83,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Quién fue la esposa de Isaac?',a:'Rebeca — Génesis 24:67'},
+  {id:84,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Quién negó a Jesús antes que cante el gallo?',a:'Pedro — Mateo 26:74'},
+  {id:85,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Qué apóstol dudó de la resurrección?',a:'Tomás — Juan 20:25'},
+  {id:86,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Quién fue el primer mártir cristiano?',a:'Esteban — Hechos 7:59'},
+  {id:87,round:'Ronda 5',roundName:'Versus Final',diff:'Fácil',q:'¿Qué profeta fue llevado al cielo sin morir?',a:'Elías — 2 Reyes 2:11'},
+  {id:88,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Qué mujer fue jueza de Israel?',a:'Débora — Jueces 4:4'},
+  {id:89,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Quién escribió la mayoría de Proverbios?',a:'Salomón — Proverbios 1:1'},
+  {id:90,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Qué rey tuvo un sueño sobre una estatua?',a:'Nabucodonosor — Daniel 2:1'},
+  {id:91,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Quién era el padre de Juan el Bautista?',a:'Zacarías — Lucas 1:13'},
+  {id:92,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Quién pidió sabiduría a Dios?',a:'Salomón — 1 Reyes 3:9'},
+  {id:93,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Quién luchó con un ángel?',a:'Jacob — Génesis 32:24'},
+  {id:94,round:'Ronda 5',roundName:'Versus Final',diff:'Medio',q:'¿Qué apóstol era cobrador de impuestos?',a:'Mateo — Mateo 9:9'},
+  {id:95,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Quién fue arrojado al horno de fuego?',a:'Sadrac, Mesac y Abed-nego — Daniel 3:23'},
+  {id:96,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Qué libro habla del valle de huesos secos?',a:'Ezequiel — Ezequiel 37:1'},
+  {id:97,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Quién escribió Hebreos?',a:'Autor desconocido'},
+  {id:98,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Qué ángel anunció el nacimiento de Jesús?',a:'Gabriel — Lucas 1:26'},
+  {id:99,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Cuántos años vivió Matusalén?',a:'969 años — Génesis 5:27'},
+  {id:100,round:'Ronda 5',roundName:'Versus Final',diff:'Difícil',q:'¿Qué ciudad fue destruida junto a Sodoma?',a:'Gomorra — Génesis 19:24'},
+];
+
+// ─── State ────────────────────────────────────────────────────────────────
+const state = {
+  scoreA: 0, scoreB: 0,
+  nameA: 'EQUIPO A', nameB: 'EQUIPO B',
+  selectedQ: null,
+  answeredQs: {}, // id -> { team, correct }
+  filter: 'all',
+  history: [],
+  timerSeconds: 30,
+  timerLeft: 30,
+  timerInterval: null,
+};
+
+// ─── Channel ──────────────────────────────────────────────────────────────
+const ch = new BroadcastChannel('quiz_channel');
+
+function broadcast(msg) { ch.postMessage(msg); }
+
+// Listen for buzzer from buzzer page
+ch.onmessage = (e) => {
+  if (e.data.type === 'BUZZER_HIT') {
+    toast(`🔔 ${e.data.team === 'a' ? state.nameA : state.nameB} pulsó el buzzer!`);
+    broadcast(e.data); // relay to display
+  }
+};
+
+// ─── RENDER QUESTIONS ─────────────────────────────────────────────────────
+let currentFilter = 'all';
+let searchTerm = '';
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  searchTerm = document.getElementById('searchQ').value.toLowerCase();
+  const list = document.getElementById('qList');
+  const filtered = QUESTIONS.filter(q => {
+    const matchSearch = !searchTerm || q.q.toLowerCase().includes(searchTerm) || q.a.toLowerCase().includes(searchTerm);
+    const d = q.diff.toLowerCase();
+    const isAnswered = !!state.answeredQs[q.id];
+    if (currentFilter === 'facil') return matchSearch && (d.includes('fácil')||d==='facil');
+    if (currentFilter === 'medio') return matchSearch && (d.includes('medio')||d.includes('media'));
+    if (currentFilter === 'dificil') return matchSearch && d.includes('difícil')||d.includes('dificil');
+    if (currentFilter === 'pending') return matchSearch && !isAnswered;
+    if (currentFilter === 'answered') return matchSearch && isAnswered;
+    return matchSearch;
+  });
+
+  document.getElementById('qCount').textContent = `${filtered.length} preguntas`;
+
+  list.innerHTML = filtered.map(q => {
+    const d = q.diff.toLowerCase();
+    const pipClass = d.includes('fácil')||d==='facil' ? 'pip-facil' : d.includes('medio')||d.includes('media') ? 'pip-medio' : 'pip-dificil';
+    const ans = state.answeredQs[q.id];
+    const ansClass = ans ? (ans.correct ? (ans.team === 'a' ? 'answered-a' : 'answered-b') : 'answered-wrong') : '';
+    const ansBadge = ans ? (ans.correct ? '✓' : '✗') : '';
+    const isSelected = state.selectedQ && state.selectedQ.id === q.id;
+    return `<div class="qcard ${ansClass} ${isSelected?'selected':''}" onclick="selectQ(${q.id})">
+      <div class="qcard-header">
+        <div class="qcard-num">#${q.id}</div>
+        <div class="diff-pip ${pipClass}"></div>
+        <div style="font-size:9px;color:var(--text-dim)">${q.diff}</div>
+        ${ans ? `<div class="answered-badge">${ansBadge}</div>` : ''}
+      </div>
+      <div class="qcard-text">${q.q}</div>
+      <div class="qcard-round">${q.round} · ${q.roundName}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectQ(id) {
+  state.selectedQ = QUESTIONS.find(q => q.id === id);
+  renderList();
+  renderSelectedQ();
+}
+
+function renderSelectedQ() {
+  const q = state.selectedQ;
+  if (!q) return;
+  const d = q.diff.toLowerCase();
+  const diffColor = d.includes('fácil')||d==='facil' ? 'var(--green)' : d.includes('medio')||d.includes('media') ? '#F1C40F' : 'var(--red)';
+  document.getElementById('selectedQDisplay').innerHTML = `
+    <div style="font-size:10px;color:${diffColor};letter-spacing:2px;margin-bottom:6px">${q.diff.toUpperCase()} · ${q.round}</div>
+    <div class="cq-question">${q.q}</div>
+    <div class="cq-answer">✝ ${q.a}</div>
+  `;
+}
+
+// ─── ACTIONS ─────────────────────────────────────────────────────────────
+function applyTeamNames() {
+  state.nameA = document.getElementById('nameA').value.toUpperCase() || 'EQUIPO A';
+  state.nameB = document.getElementById('nameB').value.toUpperCase() || 'EQUIPO B';
+  broadcast({ type: 'UPDATE_TEAMS', nameA: state.nameA, nameB: state.nameB });
+  toast('✓ Nombres de equipo actualizados');
+}
+
+function changeScore(team, delta) {
+  if (team === 'a') { state.scoreA = Math.max(0, state.scoreA + delta); }
+  else { state.scoreB = Math.max(0, state.scoreB + delta); }
+  updateScoreDisplay();
+  broadcast({ type: 'UPDATE_SCORE', scoreA: state.scoreA, scoreB: state.scoreB });
+}
+
+function updateScoreDisplay() {
+  document.getElementById('modScoreA').textContent = state.scoreA;
+  document.getElementById('modScoreB').textContent = state.scoreB;
+  document.getElementById('statA').textContent = state.scoreA;
+  document.getElementById('statB').textContent = state.scoreB;
+}
+
+function awardPoint(team) {
+  changeScore(team, 1);
+  if (state.selectedQ) {
+    state.answeredQs[state.selectedQ.id] = { team, correct: true };
+    addHistory(state.selectedQ, team, true);
+    renderList();
+    updateStats();
+  }
+  broadcast({ type: 'CLEAR_ACTIVE' });
+  broadcast({ type: 'HIGHLIGHT_TEAM', team: null });
+  toast(`✓ Punto asignado a ${team === 'a' ? state.nameA : state.nameB}`);
+}
+
+function wrongAnswer(team) {
+  if (state.selectedQ && !state.answeredQs[state.selectedQ.id]) {
+    state.answeredQs[state.selectedQ.id] = { team, correct: false };
+    addHistory(state.selectedQ, team, false);
+    renderList();
+    updateStats();
+  }
+  broadcast({ type: 'CLEAR_ACTIVE' });
+  toast(`✗ Respuesta incorrecta de ${team === 'a' ? state.nameA : state.nameB}`);
+}
+
+function showSelectedQ() {
+  if (!state.selectedQ) { toast('⚠ Selecciona una pregunta primero'); return; }
+  const q = state.selectedQ;
+  broadcast({
+    type: 'SHOW_QUESTION',
+    question: q.q, answer: q.a,
+    difficulty: q.diff,
+    round: `${q.round} · ${q.roundName}`,
+    index: q.id, total: QUESTIONS.length
+  });
+  broadcast({ type: 'UPDATE_ROUND', round: q.round, name: q.roundName });
+  toast(`📢 Mostrando: Pregunta #${q.id}`);
+}
+
+function revealAnswer() {
+  broadcast({ type: 'SHOW_ANSWER' });
+  toast('👁 Respuesta revelada');
+}
+
+function hideQuestion() {
+  broadcast({ type: 'HIDE_QUESTION' });
+  toast('✕ Pregunta ocultada');
+}
+
+function clearActive() {
+  broadcast({ type: 'CLEAR_ACTIVE' });
+}
+
+function manualBuzzer(team) {
+  const name = team === 'a' ? state.nameA : state.nameB;
+  broadcast({ type: 'BUZZER_HIT', team, name });
+  toast(`🔔 Buzzer: ${name}`);
+}
+
+// ─── TIMER ────────────────────────────────────────────────────────────────
+function adjustTimer(delta) {
+  state.timerSeconds = Math.max(5, Math.min(180, state.timerSeconds + delta));
+  document.getElementById('timerVal').textContent = state.timerSeconds;
+  document.getElementById('timerInput').value = state.timerSeconds;
+}
+
+document.getElementById('timerInput').addEventListener('input', (e) => {
+  const v = parseInt(e.target.value);
+  if (v >= 5 && v <= 180) {
+    state.timerSeconds = v;
+    document.getElementById('timerVal').textContent = v;
+  }
+});
+
+function sendTimer() {
+  const s = parseInt(document.getElementById('timerInput').value) || state.timerSeconds;
+  state.timerLeft = s;
+  broadcast({ type: 'START_TIMER', seconds: s });
+  // Local timer display
+  startLocalTimer(s);
+  toast(`▶ Cronómetro iniciado: ${s}s`);
+}
+
+function stopTimer() {
+  clearInterval(state.timerInterval);
+  document.getElementById('modTimer').classList.remove('danger');
+  broadcast({ type: 'STOP_TIMER' });
+  toast('■ Cronómetro detenido');
+}
+
+function startLocalTimer(s) {
+  clearInterval(state.timerInterval);
+  state.timerLeft = s;
+  updateModTimer();
+  state.timerInterval = setInterval(() => {
+    state.timerLeft--;
+    updateModTimer();
+    if (state.timerLeft <= 0) clearInterval(state.timerInterval);
+  }, 1000);
+}
+
+function updateModTimer() {
+  const el = document.getElementById('modTimer');
+  el.textContent = Math.max(0, state.timerLeft);
+  if (state.timerLeft <= 5) el.classList.add('danger');
+  else el.classList.remove('danger');
+}
+
+// ─── MUSIC ───────────────────────────────────────────────────────────────
+function playMusic() {
+  const url = document.getElementById('musicUrl').value.trim();
+  if (!url) { toast('⚠ Ingresa una URL de audio'); return; }
+  broadcast({ type: 'PLAY_MUSIC', url });
+  toast('▶ Música enviada a la pantalla');
+}
+function stopMusic() {
+  broadcast({ type: 'STOP_MUSIC' });
+  toast('■ Música detenida');
+}
+
+// ─── ROUND ───────────────────────────────────────────────────────────────
+function changeRound() {
+  const v = document.getElementById('roundSelect').value;
+  const r = ROUNDS.find(r => r.id == v);
+  broadcast({ type: 'UPDATE_ROUND', round: `Ronda ${r.id}`, name: r.name });
+  toast(`✓ Ronda actualizada: ${r.name}`);
+}
+
+// ─── WINNER ──────────────────────────────────────────────────────────────
+function declareWinner(team) {
+  const name = team === 'a' ? state.nameA : state.nameB;
+  broadcast({ type: 'SHOW_WINNER', team, name, scoreA: state.scoreA, scoreB: state.scoreB });
+  toast(`🏆 ¡${name} declarado ganador!`);
+}
+
+// ─── HISTORY ─────────────────────────────────────────────────────────────
+function addHistory(q, team, correct) {
+  state.history.unshift({ q, team, correct });
+  renderHistory();
+}
+
+function renderHistory() {
+  const body = document.getElementById('historyBody');
+  body.innerHTML = state.history.slice(0,15).map(h => {
+    const teamColor = h.team === 'a' ? 'st-a' : 'st-b';
+    const teamName = h.team === 'a' ? state.nameA : state.nameB;
+    return `<tr>
+      <td>${h.q.id}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.q.q.substring(0,30)}...</td>
+      <td class="${teamColor}">${teamName}</td>
+      <td>${h.correct ? '✓' : '✗'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  const answered = Object.keys(state.answeredQs).length;
+  document.getElementById('statTotal').textContent = answered;
+  document.getElementById('statPending').textContent = QUESTIONS.length - answered;
+}
+
+// ─── TOAST ───────────────────────────────────────────────────────────────
+let toastTimeout;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 2500);
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────
+renderList();
+updateStats();
+</script>
+</body>
+</html>

@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Desafío Bíblico — Pantalla Principal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #D4A843;
+    --gold-light: #F0C96A;
+    --gold-dark: #9A7420;
+    --deep: #0A0A0F;
+    --navy: #0D1B3E;
+    --navy2: #112255;
+    --crimson: #8B1A1A;
+    --crimson-bright: #C0392B;
+    --parchment: #F5E6C8;
+    --parchment2: #EDD9A3;
+    --green-team: #1B6B3A;
+    --green-bright: #2ECC71;
+    --blue-team: #1A3A6B;
+    --blue-bright: #3498DB;
+    --white: #FDFAF2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+
+  body {
+    background: var(--deep);
+    font-family: 'Cinzel', serif;
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    position: relative;
+  }
+
+  /* Starfield background */
+  .bg-canvas { position: fixed; inset: 0; z-index: 0; }
+
+  /* Golden cross watermark */
+  .cross-bg {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px; height: 600px;
+    opacity: 0.025;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .content { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 30px 10px;
+    border-bottom: 1px solid rgba(212,168,67,0.3);
+    background: linear-gradient(180deg, rgba(13,27,62,0.95) 0%, rgba(13,27,62,0.6) 100%);
+    backdrop-filter: blur(10px);
+    flex-shrink: 0;
+  }
+
+  .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .logo-icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 0 20px rgba(212,168,67,0.5);
+  }
+  .logo-text {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold-light);
+    text-shadow: 0 0 20px rgba(212,168,67,0.6);
+    letter-spacing: 2px;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: rgba(212,168,67,0.6);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-family: 'Crimson Text', serif;
+  }
+
+  .round-badge {
+    background: linear-gradient(135deg, rgba(212,168,67,0.2), rgba(212,168,67,0.05));
+    border: 1px solid rgba(212,168,67,0.4);
+    border-radius: 40px;
+    padding: 6px 20px;
+    font-size: 13px;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+    text-align: center;
+  }
+  .round-name {
+    font-size: 11px;
+    color: rgba(240,201,106,0.7);
+    text-align: center;
+    margin-top: 2px;
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+  }
+
+  /* TEAMS SCOREBOARD */
+  .teams-bar {
+    display: flex;
+    gap: 20px;
+    padding: 10px 30px;
+    flex-shrink: 0;
+    align-items: stretch;
+  }
+
+  .team-card {
+    flex: 1;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s ease;
+  }
+  .team-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    background-size: 20px 20px;
+  }
+  .team-card.team-a {
+    background: linear-gradient(135deg, rgba(27,107,58,0.5), rgba(27,107,58,0.2));
+    border: 1px solid rgba(46,204,113,0.3);
+  }
+  .team-card.team-b {
+    background: linear-gradient(135deg, rgba(26,58,107,0.5), rgba(26,58,107,0.2));
+    border: 1px solid rgba(52,152,219,0.3);
+  }
+  .team-card.active-team-a {
+    border-color: rgba(46,204,113,0.8);
+    box-shadow: 0 0 30px rgba(46,204,113,0.3), inset 0 0 20px rgba(46,204,113,0.05);
+    animation: teamPulse 1.5s ease-in-out infinite;
+  }
+  .team-card.active-team-b {
+    border-color: rgba(52,152,219,0.8);
+    box-shadow: 0 0 30px rgba(52,152,219,0.3), inset 0 0 20px rgba(52,152,219,0.05);
+    animation: teamPulseB 1.5s ease-in-out infinite;
+  }
+  @keyframes teamPulse {
+    0%,100% { box-shadow: 0 0 30px rgba(46,204,113,0.3); }
+    50% { box-shadow: 0 0 50px rgba(46,204,113,0.6), 0 0 80px rgba(46,204,113,0.2); }
+  }
+  @keyframes teamPulseB {
+    0%,100% { box-shadow: 0 0 30px rgba(52,152,219,0.3); }
+    50% { box-shadow: 0 0 50px rgba(52,152,219,0.6), 0 0 80px rgba(52,152,219,0.2); }
+  }
+
+  .team-info { flex: 1; }
+  .team-name-display {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+  }
+  .team-card.team-a .team-name-display { color: var(--green-bright); }
+  .team-card.team-b .team-name-display { color: var(--blue-bright); }
+
+  .team-status {
+    font-size: 11px;
+    margin-top: 2px;
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    opacity: 0.7;
+  }
+  .team-score-display {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 48px;
+    font-weight: 900;
+    line-height: 1;
+    min-width: 70px;
+    text-align: center;
+  }
+  .team-card.team-a .team-score-display { color: var(--green-bright); text-shadow: 0 0 20px rgba(46,204,113,0.5); }
+  .team-card.team-b .team-score-display { color: var(--blue-bright); text-shadow: 0 0 20px rgba(52,152,219,0.5); }
+
+  .score-change {
+    position: absolute;
+    font-size: 28px;
+    font-family: 'Cinzel Decorative', serif;
+    font-weight: 900;
+    pointer-events: none;
+    animation: scoreFloat 1.2s ease-out forwards;
+    z-index: 10;
+  }
+  .score-change.plus { color: #2ECC71; }
+  .score-change.minus { color: #E74C3C; }
+  @keyframes scoreFloat {
+    0% { opacity: 1; transform: translateY(0) scale(1); }
+    100% { opacity: 0; transform: translateY(-60px) scale(1.5); }
+  }
+
+  /* VS divider */
+  .vs-divider {
+    display: flex;
+    align-items: center;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+  .vs-text {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 20px;
+    color: var(--gold);
+    text-shadow: 0 0 20px rgba(212,168,67,0.8);
+    opacity: 0.8;
+  }
+
+  /* MAIN QUESTION AREA */
+  .question-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 40px;
+    gap: 16px;
+    min-height: 0;
+  }
+
+  .diff-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 18px;
+    border-radius: 30px;
+    font-size: 12px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .diff-facil { background: rgba(46,204,113,0.15); border: 1px solid rgba(46,204,113,0.5); color: #2ECC71; }
+  .diff-medio { background: rgba(241,196,15,0.15); border: 1px solid rgba(241,196,15,0.5); color: #F1C40F; }
+  .diff-dificil { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.5); color: #E74C3C; }
+
+  .question-number-display {
+    font-size: 13px;
+    color: rgba(212,168,67,0.6);
+    letter-spacing: 4px;
+    font-family: 'Crimson Text', serif;
+  }
+
+  .question-text {
+    font-family: 'Crimson Text', serif;
+    font-size: clamp(22px, 3.2vw, 42px);
+    font-weight: 600;
+    text-align: center;
+    color: var(--parchment);
+    line-height: 1.4;
+    max-width: 900px;
+    text-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  }
+
+  .round-label {
+    font-size: 12px;
+    color: rgba(212,168,67,0.5);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  /* Decorative line */
+  .deco-line {
+    width: 200px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.6;
+    margin: 4px 0;
+  }
+
+  /* ANSWER REVEAL */
+  .answer-display {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(16px, 2.5vw, 30px);
+    font-weight: 700;
+    color: var(--gold-light);
+    text-align: center;
+    padding: 14px 40px;
+    background: linear-gradient(135deg, rgba(212,168,67,0.15), rgba(212,168,67,0.05));
+    border: 1px solid rgba(212,168,67,0.4);
+    border-radius: 12px;
+    max-width: 800px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.5s ease;
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .answer-display.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .answer-label {
+    font-size: 11px;
+    color: rgba(212,168,67,0.5);
+    letter-spacing: 3px;
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  /* TIMER */
+  .timer-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding: 0 20px 16px;
+  }
+
+  .timer-ring-container {
+    position: relative;
+    width: 130px;
+    height: 130px;
+  }
+  .timer-svg {
+    transform: rotate(-90deg);
+    width: 130px;
+    height: 130px;
+  }
+  .timer-track { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 8; }
+  .timer-progress {
+    fill: none;
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke: var(--gold);
+    transition: stroke-dashoffset 1s linear, stroke 0.5s ease;
+  }
+  .timer-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+  }
+  .timer-number {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--gold-light);
+    line-height: 1;
+    transition: color 0.3s;
+    text-shadow: 0 0 20px rgba(212,168,67,0.5);
+  }
+  .timer-number.danger { color: #E74C3C; text-shadow: 0 0 20px rgba(231,76,60,0.8); animation: dangerPulse 0.5s ease-in-out infinite; }
+  @keyframes dangerPulse {
+    0%,100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+  .timer-label { font-size: 10px; color: rgba(255,255,255,0.4); letter-spacing: 2px; }
+
+  /* IDLE / WAITING */
+  .idle-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    flex: 1;
+  }
+  .idle-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: clamp(30px, 5vw, 64px);
+    font-weight: 900;
+    color: var(--gold-light);
+    text-align: center;
+    text-shadow: 0 0 40px rgba(212,168,67,0.6), 0 0 80px rgba(212,168,67,0.2);
+    letter-spacing: 4px;
+    animation: titleGlow 3s ease-in-out infinite;
+  }
+  @keyframes titleGlow {
+    0%,100% { text-shadow: 0 0 40px rgba(212,168,67,0.6); }
+    50% { text-shadow: 0 0 60px rgba(212,168,67,0.9), 0 0 120px rgba(212,168,67,0.4); }
+  }
+  .idle-sub {
+    font-family: 'Crimson Text', serif;
+    font-style: italic;
+    font-size: 22px;
+    color: rgba(245,230,200,0.6);
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  .idle-ornament { font-size: 60px; opacity: 0.7; animation: float 4s ease-in-out infinite; }
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+  .waiting-dots span {
+    animation: blink 1.4s infinite;
+    opacity: 0;
+  }
+  .waiting-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .waiting-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+
+  /* WINNER overlay */
+  .winner-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    background: radial-gradient(ellipse at center, rgba(13,27,62,0.97) 0%, rgba(10,10,15,0.99) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease;
+  }
+  .winner-overlay.show { opacity: 1; pointer-events: all; }
+  .winner-trophy { font-size: 90px; animation: trophySpin 1s ease-out; }
+  @keyframes trophySpin { 0%{transform:scale(0) rotate(-180deg)} 80%{transform:scale(1.2) rotate(10deg)} 100%{transform:scale(1) rotate(0)} }
+  .winner-title {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 22px;
+    color: var(--gold);
+    letter-spacing: 4px;
+  }
+  .winner-name {
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 56px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--gold-light), var(--gold), var(--gold-dark));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center;
+    animation: winnerGlow 2s ease-in-out infinite;
+  }
+  @keyframes winnerGlow {
+    0%,100% { filter: brightness(1); }
+    50% { filter: brightness(1.3) drop-shadow(0 0 20px rgba(212,168,67,0.8)); }
+  }
+  .winner-score { font-size: 28px; color: var(--parchment2); }
+
+  /* BUZZER notification */
+  .buzzer-alert {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    padding: 18px;
+    text-align: center;
+    font-family: 'Cinzel Decorative', serif;
+    font-size: 24px;
+    font-weight: 900;
+    z-index: 50;
+    transform: translateY(-100%);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    letter-spacing: 2px;
+  }
+  .buzzer-alert.show { transform: translateY(0); }
+  .buzzer-alert.team-a { background: linear-gradient(135deg, #1B6B3A, #2ECC71); color: white; }
+  .buzzer-alert.team-b { background: linear-gradient(135deg, #1A3A6B, #3498DB); color: white; }
+
+  /* Particle canvas */
+  #particles { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+  /* question-wrapper hidden/shown */
+  .question-wrapper { display: none; width: 100%; flex-direction: column; align-items: center; gap: 12px; }
+  .question-wrapper.active { display: flex; }
+
+  /* confetti */
+  .confetti-piece {
+    position: fixed;
+    width: 10px; height: 10px;
+    z-index: 200;
+    pointer-events: none;
+    animation: confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+  }
+</style>
+</head>
+<body>
+
+<canvas class="bg-canvas" id="bgCanvas"></canvas>
+<canvas id="particles"></canvas>
+
+<svg class="cross-bg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="40" y="5" width="20" height="90" fill="white"/>
+  <rect x="10" y="25" width="80" height="20" fill="white"/>
+</svg>
+
+<div class="buzzer-alert" id="buzzerAlert"></div>
+<div class="winner-overlay" id="winnerOverlay"></div>
+
+<div class="content">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo-icon">✝</div>
+      <div>
+        <div class="logo-text">Desafío Bíblico</div>
+        <div class="logo-sub">Quiz Competencia</div>
+      </div>
+    </div>
+    <div>
+      <div class="round-badge" id="roundBadge">RONDA 1</div>
+      <div class="round-name" id="roundName">Rápido y Preciso</div>
+    </div>
+    <div style="width:160px"></div>
+  </div>
+
+  <!-- TEAMS -->
+  <div class="teams-bar">
+    <div class="team-card team-a" id="cardA">
+      <div class="team-info">
+        <div class="team-name-display" id="teamAName">EQUIPO A</div>
+        <div class="team-status" id="statusA">Listos para competir</div>
+      </div>
+      <div class="team-score-display" id="scoreA">0</div>
+    </div>
+    <div class="vs-divider">
+      <div class="vs-text">VS</div>
+    </div>
+    <div class="team-card team-b" id="cardB">
+      <div class="team-score-display" id="scoreB">0</div>
+      <div class="team-info" style="text-align:right">
+        <div class="team-name-display" id="teamBName">EQUIPO B</div>
+        <div class="team-status" id="statusB">Listos para competir</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QUESTION AREA -->
+  <div class="question-area">
+    <!-- IDLE -->
+    <div class="idle-screen" id="idleScreen">
+      <div class="idle-ornament">✝</div>
+      <div class="idle-title">DESAFÍO<br>BÍBLICO</div>
+      <div class="idle-sub">
+        En espera de la próxima pregunta<span class="waiting-dots"><span>.</span><span>.</span><span>.</span></span>
+      </div>
+    </div>
+
+    <!-- QUESTION -->
+    <div class="question-wrapper" id="questionWrapper">
+      <div style="display:flex; align-items:center; gap:16px;">
+        <div class="diff-badge" id="diffBadge">FÁCIL</div>
+        <div class="round-label" id="roundLabel">RONDA 1 · RÁPIDO Y PRECISO</div>
+      </div>
+      <div class="question-number-display" id="qNumber">PREGUNTA 1 DE 100</div>
+      <div class="deco-line"></div>
+      <div class="question-text" id="questionText">¿Quién construyó el arca?</div>
+      <div class="deco-line"></div>
+      <div class="answer-label">RESPUESTA</div>
+      <div class="answer-display" id="answerDisplay">Noé — Génesis 6:13-14</div>
+    </div>
+  </div>
+
+  <!-- TIMER -->
+  <div class="timer-section" id="timerSection" style="display:none">
+    <div class="timer-ring-container">
+      <svg class="timer-svg" viewBox="0 0 130 130">
+        <circle class="timer-track" cx="65" cy="65" r="57"/>
+        <circle class="timer-progress" id="timerRing" cx="65" cy="65" r="57"
+          stroke-dasharray="358.14" stroke-dashoffset="0"/>
+      </svg>
+      <div class="timer-center">
+        <div class="timer-number" id="timerNum">30</div>
+        <div class="timer-label">SEG</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<audio id="sfxBuzzer" preload="auto"></audio>
+<audio id="sfxCorrect" preload="auto"></audio>
+<audio id="sfxWrong" preload="auto"></audio>
+<audio id="sfxTimer" preload="auto"></audio>
+<audio id="sfxBomb" preload="auto"></audio>
+<audio id="bgMusic" loop></audio>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────
+const state = {
+  teamAName: 'EQUIPO A', teamBName: 'EQUIPO B',
+  scoreA: 0, scoreB: 0,
+  currentQ: null, showAnswer: false,
+  timerTotal: 30, timerLeft: 30,
+  roundName: 'Rápido y Preciso',
+  activeTeam: null,
+};
+
+let timerInterval = null;
+const CIRC = 358.14;
+
+// ─── BroadcastChannel ─────────────────────────────────────────────────────
+const ch = new BroadcastChannel('quiz_channel');
+ch.onmessage = (e) => handleMessage(e.data);
+
+function handleMessage(msg) {
+  switch(msg.type) {
+    case 'SHOW_QUESTION': showQuestion(msg); break;
+    case 'SHOW_ANSWER':   revealAnswer(); break;
+    case 'HIDE_QUESTION': hideQuestion(); break;
+    case 'UPDATE_SCORE':  updateScore(msg); break;
+    case 'UPDATE_TEAMS':  updateTeams(msg); break;
+    case 'START_TIMER':   startTimer(msg.seconds); break;
+    case 'STOP_TIMER':    stopTimer(); break;
+    case 'BUZZER_HIT':    showBuzzer(msg); break;
+    case 'SHOW_WINNER':   showWinner(msg); break;
+    case 'PLAY_MUSIC':    playMusic(msg.url); break;
+    case 'STOP_MUSIC':    stopMusic(); break;
+    case 'CLEAR_ACTIVE':  clearActiveTeam(); break;
+    case 'HIGHLIGHT_TEAM': highlightTeam(msg.team); break;
+    case 'UPDATE_ROUND':  updateRound(msg); break;
+  }
+}
+
+// ─── Functions ────────────────────────────────────────────────────────────
+function showQuestion(msg) {
+  state.currentQ = msg;
+  state.showAnswer = false;
+  document.getElementById('idleScreen').style.display = 'none';
+  const qw = document.getElementById('questionWrapper');
+  qw.classList.add('active');
+
+  // Diff badge
+  const db = document.getElementById('diffBadge');
+  const diff = (msg.difficulty||'').toLowerCase();
+  db.className = 'diff-badge';
+  if (diff.includes('fácil')||diff.includes('facil')) db.classList.add('diff-facil');
+  else if (diff.includes('medio')||diff.includes('media')) db.classList.add('diff-medio');
+  else db.classList.add('diff-dificil');
+  db.textContent = msg.difficulty || 'NORMAL';
+
+  document.getElementById('roundLabel').textContent = (msg.round||'').toUpperCase();
+  document.getElementById('qNumber').textContent = `PREGUNTA ${msg.index} DE ${msg.total}`;
+  document.getElementById('questionText').textContent = msg.question;
+  document.getElementById('answerDisplay').textContent = msg.answer;
+  document.getElementById('answerDisplay').classList.remove('visible');
+
+  document.getElementById('timerSection').style.display = 'none';
+  clearActiveTeam();
+}
+
+function revealAnswer() {
+  document.getElementById('answerDisplay').classList.add('visible');
+  playSfx('correct');
+}
+
+function hideQuestion() {
+  document.getElementById('idleScreen').style.display = 'flex';
+  document.getElementById('questionWrapper').classList.remove('active');
+  document.getElementById('timerSection').style.display = 'none';
+  stopTimer();
+  clearActiveTeam();
+}
+
+function updateScore(msg) {
+  const prevA = state.scoreA, prevB = state.scoreB;
+  state.scoreA = msg.scoreA; state.scoreB = msg.scoreB;
+
+  animateScore('scoreA', prevA, msg.scoreA, 'cardA');
+  animateScore('scoreB', prevB, msg.scoreB, 'cardB');
+}
+
+function animateScore(elId, prev, next, cardId) {
+  const el = document.getElementById(elId);
+  el.textContent = next;
+  if (next > prev) {
+    // float +1
+    const card = document.getElementById(cardId);
+    const span = document.createElement('div');
+    span.className = 'score-change plus';
+    span.textContent = '+' + (next - prev);
+    const r = card.getBoundingClientRect();
+    span.style.left = r.left + r.width/2 + 'px';
+    span.style.top = r.top + 'px';
+    document.body.appendChild(span);
+    setTimeout(() => span.remove(), 1200);
+    launchConfetti(cardId === 'cardA' ? '#2ECC71' : '#3498DB');
+  }
+}
+
+function updateTeams(msg) {
+  if (msg.nameA) { state.teamAName = msg.nameA; document.getElementById('teamAName').textContent = msg.nameA; }
+  if (msg.nameB) { state.teamBName = msg.nameB; document.getElementById('teamBName').textContent = msg.nameB; }
+}
+
+function startTimer(seconds) {
+  stopTimer();
+  state.timerTotal = seconds;
+  state.timerLeft = seconds;
+  document.getElementById('timerSection').style.display = 'flex';
+  updateTimerDisplay();
+  timerInterval = setInterval(() => {
+    state.timerLeft--;
+    updateTimerDisplay();
+    if (state.timerLeft <= 0) {
+      stopTimer();
+      playBombSound();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const num = document.getElementById('timerNum');
+  num.classList.remove('danger');
+}
+
+function updateTimerDisplay() {
+  const num = document.getElementById('timerNum');
+  const ring = document.getElementById('timerRing');
+  num.textContent = state.timerLeft;
+  const pct = state.timerLeft / state.timerTotal;
+  ring.style.strokeDashoffset = CIRC * (1 - pct);
+  // Color shift
+  if (pct > 0.5) ring.style.stroke = '#D4A843';
+  else if (pct > 0.25) ring.style.stroke = '#E67E22';
+  else ring.style.stroke = '#E74C3C';
+  if (state.timerLeft <= 5) num.classList.add('danger');
+  else num.classList.remove('danger');
+}
+
+function showBuzzer(msg) {
+  state.activeTeam = msg.team;
+  const alert = document.getElementById('buzzerAlert');
+  alert.className = 'buzzer-alert show team-' + msg.team;
+  const name = msg.team === 'a' ? state.teamAName : state.teamBName;
+  alert.textContent = `🔔 ${name.toUpperCase()} — ¡PULSÓ PRIMERO!`;
+  highlightTeam(msg.team);
+  stopTimer();
+  playSfx('buzzer');
+  setTimeout(() => alert.classList.remove('show'), 3500);
+}
+
+function highlightTeam(team) {
+  document.getElementById('cardA').classList.remove('active-team-a','active-team-b');
+  document.getElementById('cardB').classList.remove('active-team-a','active-team-b');
+  if (team === 'a') {
+    document.getElementById('cardA').classList.add('active-team-a');
+    document.getElementById('statusA').textContent = '🎯 Respondiendo...';
+    document.getElementById('statusB').textContent = 'En espera...';
+  } else if (team === 'b') {
+    document.getElementById('cardB').classList.add('active-team-b');
+    document.getElementById('statusB').textContent = '🎯 Respondiendo...';
+    document.getElementById('statusA').textContent = 'En espera...';
+  }
+}
+
+function clearActiveTeam() {
+  document.getElementById('cardA').classList.remove('active-team-a','active-team-b');
+  document.getElementById('cardB').classList.remove('active-team-a','active-team-b');
+  document.getElementById('statusA').textContent = 'Listos para competir';
+  document.getElementById('statusB').textContent = 'Listos para competir';
+  state.activeTeam = null;
+}
+
+function updateRound(msg) {
+  document.getElementById('roundBadge').textContent = msg.round;
+  document.getElementById('roundName').textContent = msg.name;
+}
+
+function showWinner(msg) {
+  const ov = document.getElementById('winnerOverlay');
+  const color = msg.team === 'a' ? '#2ECC71' : '#3498DB';
+  ov.innerHTML = `
+    <div class="winner-trophy">🏆</div>
+    <div class="winner-title" style="color:var(--gold)">¡CAMPEÓN DEL DESAFÍO BÍBLICO!</div>
+    <div class="winner-name" style="-webkit-text-fill-color:${color}">${msg.name}</div>
+    <div class="winner-score" style="color:var(--parchment2)">${msg.scoreA} — ${msg.scoreB}</div>
+    <div style="font-family:'Crimson Text',serif;font-style:italic;font-size:20px;color:rgba(245,230,200,0.6);margin-top:10px;">
+      "Todo lo puedo en Cristo que me fortalece" — Fil. 4:13
+    </div>
+  `;
+  ov.classList.add('show');
+  for (let i=0; i<80; i++) setTimeout(() => launchConfetti(color), i*80);
+}
+
+function playMusic(url) {
+  const bg = document.getElementById('bgMusic');
+  // Try YouTube embed audio workaround or use direct audio URL
+  if (url) {
+    bg.src = url;
+    bg.volume = 0.3;
+    bg.play().catch(()=>{});
+  }
+}
+function stopMusic() { document.getElementById('bgMusic').pause(); }
+
+// SFX using Web Audio API
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSfx(type) {
+  if (type === 'buzzer') playBuzzerSound();
+  else if (type === 'correct') playCorrectSound();
+}
+
+function playBuzzerSound() {
+  const ctx = audioCtx;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(880, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.1);
+  gain.gain.setValueAtTime(0.4, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+  osc.start(); osc.stop(ctx.currentTime + 0.3);
+}
+
+function playCorrectSound() {
+  const ctx = audioCtx;
+  [523,659,784].forEach((f, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = f;
+    gain.gain.setValueAtTime(0, ctx.currentTime + i*0.12);
+    gain.gain.linearRampToValueAtTime(0.3, ctx.currentTime + i*0.12 + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.12 + 0.3);
+    osc.start(ctx.currentTime + i*0.12);
+    osc.stop(ctx.currentTime + i*0.12 + 0.35);
+  });
+}
+
+function playBombSound() {
+  const ctx = audioCtx;
+  // Beeps crescendo then explosion
+  for (let i=0; i<5; i++) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 800 + i*100;
+    gain.gain.setValueAtTime(0.5, ctx.currentTime + i*0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i*0.15 + 0.1);
+    osc.start(ctx.currentTime + i*0.15);
+    osc.stop(ctx.currentTime + i*0.15 + 0.15);
+  }
+  // Explosion
+  const buf = ctx.createBuffer(1, ctx.sampleRate * 0.8, ctx.sampleRate);
+  const data = buf.getChannelData(0);
+  for (let i=0; i<data.length; i++) data[i] = (Math.random()*2-1) * Math.pow(1-i/data.length, 2);
+  const src = ctx.createBufferSource();
+  src.buffer = buf;
+  const g = ctx.createGain(); g.gain.value = 0.8;
+  src.connect(g); g.connect(ctx.destination);
+  src.start(ctx.currentTime + 0.75);
+}
+
+// ─── Background canvas ────────────────────────────────────────────────────
+const bgCanvas = document.getElementById('bgCanvas');
+const bgCtx = bgCanvas.getContext('2d');
+const stars = [];
+function initBg() {
+  bgCanvas.width = window.innerWidth;
+  bgCanvas.height = window.innerHeight;
+  stars.length = 0;
+  for (let i=0; i<120; i++) stars.push({
+    x: Math.random()*bgCanvas.width, y: Math.random()*bgCanvas.height,
+    r: Math.random()*1.5+0.3, a: Math.random(), s: Math.random()*0.01+0.005
+  });
+}
+function drawBg() {
+  const w = bgCanvas.width, h = bgCanvas.height;
+  bgCtx.clearRect(0,0,w,h);
+  const grad = bgCtx.createRadialGradient(w/2,h/2,0,w/2,h/2,Math.max(w,h)/1.5);
+  grad.addColorStop(0,'#0D1B3E');
+  grad.addColorStop(0.5,'#0A0A1A');
+  grad.addColorStop(1,'#060608');
+  bgCtx.fillStyle = grad;
+  bgCtx.fillRect(0,0,w,h);
+  stars.forEach(s => {
+    s.a += s.s;
+    const alpha = (Math.sin(s.a)+1)/2*0.6+0.1;
+    bgCtx.beginPath();
+    bgCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    bgCtx.fillStyle = `rgba(212,168,67,${alpha})`;
+    bgCtx.fill();
+  });
+  requestAnimationFrame(drawBg);
+}
+window.addEventListener('resize', initBg);
+initBg(); drawBg();
+
+// ─── Confetti ─────────────────────────────────────────────────────────────
+function launchConfetti(color) {
+  const el = document.createElement('div');
+  el.className = 'confetti-piece';
+  el.style.cssText = `
+    left:${Math.random()*100}vw;
+    top:-20px;
+    background:${color};
+    border-radius:${Math.random()>0.5?'50%':'2px'};
+    width:${Math.random()*10+5}px;
+    height:${Math.random()*10+5}px;
+    animation-duration:${Math.random()*2+2}s;
+    animation-delay:${Math.random()*0.5}s;
+  `;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 5000);
+}
+
+// Resume audio ctx on interaction
+document.addEventListener('click', () => { if (audioCtx.state === 'suspended') audioCtx.resume(); }, {once:true});
+</script>
+</body>
+</html>
