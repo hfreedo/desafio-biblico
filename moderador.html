@@ -366,9 +366,16 @@ async function pollSupabase(){
       data.forEach(row=>{
         try{
           const msg=JSON.parse(row.payload);
-          // Skip events we sent ourselves
           if(msg._sender==='mod') return;
-          if(msg.type==='BUZZER_HIT') handle(msg);
+          if(msg.type==='BUZZER_HIT'){
+            const nm=msg.team==='a'?ST.nameA:ST.nameB;
+            ST.activeBuzzerTeam=msg.team;
+            updBuzzerStatus('respondiendo', nm);
+            // Stop local timer — remote buzzer hit
+            if(ST.timerInt){ clearInterval(ST.timerInt); ST.timerInt=null; }
+            document.getElementById('modTimer').classList.remove('dng');
+            toast(nm+' activó el buzzer');
+          }
         }catch(e){}
       });
       lastTs=data[data.length-1].ts;
@@ -554,7 +561,8 @@ function saveState(){
       nameA:ST.nameA,nameB:ST.nameB,
       answered:ST.answered,
       history:ST.history.slice(0,30),
-      timerSec:ST.timerSec
+      timerSec:ST.timerSec,
+      timerLeft:ST.timerLeft
     }));
   }catch(e){}
 }
@@ -563,7 +571,7 @@ const ST={
   scoreA:_sv.scoreA||0, scoreB:_sv.scoreB||0,
   nameA:_sv.nameA||'EQUIPO A', nameB:_sv.nameB||'EQUIPO B',
   selQ:null, answered:_sv.answered||{}, history:_sv.history||[],
-  timerSec:_sv.timerSec||30, timerLeft:_sv.timerSec||30,
+  timerSec:_sv.timerSec||30, timerLeft:_sv.timerLeft||_sv.timerSec||30,
   timerInt:null, sounds:true,
   activeBuzzerTeam:null,
   questionActive:false,
@@ -715,6 +723,7 @@ function stopTimerMod(){
   clearInterval(ST.timerInt);ST.timerInt=null;
   document.getElementById('modTimer').classList.remove('dng');
   bcast({type:'STOP_TIMER'});
+  saveState(); // persist timerLeft at stopped position
   pushStateSnapshot();
   toast('Cronómetro detenido');
 }
@@ -800,8 +809,19 @@ function _createPlayer(url,vol){
         setTimeout(()=>{updateTrackInfo();loadQueueList();},1500);
       },
       onStateChange(e){
-        if(e.data===YT.PlayerState.PLAYING){setTimeout(()=>{updateTrackInfo();loadQueueList();},800);}
-        if(e.data===YT.PlayerState.PAUSED){updMusicStatus('paused');}
+        if(e.data===YT.PlayerState.PLAYING){
+          musicPaused=false;
+          updMusicStatus('playing');
+          setTimeout(()=>{updateTrackInfo();loadQueueList();},800);
+        }
+        if(e.data===YT.PlayerState.PAUSED){
+          musicPaused=true;
+          updMusicStatus('paused');
+        }
+        if(e.data===YT.PlayerState.ENDED){
+          musicPaused=false;
+          updMusicStatus('stopped');
+        }
       },
       onError(e){document.getElementById('trackInfo').textContent='Error al cargar — verifica el link';}
     }
@@ -949,8 +969,11 @@ function prevTrack(){
 
 function nextTrack(){
   if(!ytPlayer){toast('No hay música activa');return;}
-  try{ytPlayer.nextVideo();setTimeout(updateTrackInfo,1000);}
-  catch(e){toast('No disponible para este video');}
+  try{
+    musicPaused=false;
+    ytPlayer.nextVideo();
+    setTimeout(()=>{updateTrackInfo();loadQueueList();},1000);
+  }catch(e){toast('No disponible para este video');}
 }
 
 /*  SOUND TOGGLE  */

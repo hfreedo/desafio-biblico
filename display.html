@@ -396,12 +396,9 @@ function startRemoteMode(room){
   if(!room) return;
   if(room===currentRoom&&pollInterval) return; // already connected
   currentRoom=room;
-  // Don't reset lastTs here — autoRecoverState already set it correctly
-  if(!pollInterval) lastTs=Date.now()-5000;
   if(pollInterval) clearInterval(pollInterval);
+  // lastTs is set by autoRecoverState — don't overwrite it here
   pollInterval=setInterval(pollSupabaseEvents,800);
-  // Only fetch snapshot if we don't already have state from autoRecoverState
-  if(!S.nameA||S.nameA==='EQUIPO A') fetchStateSnapshot(room);
 }
 function stopRemoteMode(){if(pollInterval)clearInterval(pollInterval);currentRoom='';}
 async function fetchStateSnapshot(room){
@@ -427,7 +424,7 @@ async function autoRecoverState(){
       const snap=JSON.parse(data[0].payload);
       handle(snap);
       if(snap.room){
-        // Poll from 2s after snapshot to catch events that happened after it
+        // Poll from the moment of snapshot — catch events that happened after it
         lastTs=snap.ts;
         startRemoteMode(snap.room);
       }
@@ -441,7 +438,11 @@ function handle(m){
     case 'SHOW_QUESTION':showQ(m);break;case 'SHOW_ANSWER':revealAns();break;case 'HIDE_QUESTION':hideQ();break;
     case 'UPDATE_SCORE':updScore(m);break;case 'UPDATE_TEAMS':updTeams(m);break;
     case 'STATE_SNAPSHOT':
-      updTeams(m);updScore(m);
+      updTeams(m);
+      // Set scores silently — no animation/confetti on late-join
+      S.scoreA=m.scoreA||0; S.scoreB=m.scoreB||0;
+      document.getElementById('scoreA').textContent=S.scoreA;
+      document.getElementById('scoreB').textContent=S.scoreB;
       if(m.round)updRound({round:m.round,name:m.roundName});
       // Restore active question
       if(m.questionActive&&m.currentQuestion){
