@@ -790,10 +790,10 @@ function loadQueueList(){
     const list=ytPlayer.getPlaylist();
     const idx=ytPlayer.getPlaylistIndex();
     const el=document.getElementById('queueList');
-    if(!list||!list.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);font-family:'Crimson Text',serif;font-style:italic;">Video individual — sin cola</div>';return;}
+    if(!list||!list.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);font-family:monospace;font-style:italic;">Video individual — sin cola</div>';return;}
     el.innerHTML=list.map((vid,i)=>{
       const isCurrent=(i===idx);
-      return `<button onclick="jumpToTrack(${i})" style="text-align:left;background:${isCurrent?'rgba(212,168,67,.12)':'rgba(255,255,255,.03)'};border:1px solid ${isCurrent?'var(--gold)':'var(--border2)'};border-radius:5px;padding:5px 8px;font-family:'Crimson Text',serif;font-size:11px;color:${isCurrent?'var(--gold-l)':'var(--text)'};cursor:pointer;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+      return `<button onclick="jumpToTrack(${i})" style="text-align:left;background:${isCurrent?'rgba(212,168,67,.12)':'rgba(255,255,255,.03)'};border:1px solid ${isCurrent?'var(--gold)':'var(--border2)'};border-radius:5px;padding:5px 8px;font-family:monospace;font-size:11px;color:${isCurrent?'var(--gold-l)':'var(--text)'};cursor:pointer;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
         ${isCurrent?'&rsaquo; ':''}${i+1}. Tema ${i+1}
       </button>`;
     }).join('');
@@ -889,7 +889,7 @@ function _stopPlayer(){
   if(ytPlayer){try{ytPlayer.stopVideo();ytPlayer.destroy();}catch(e){}ytPlayer=null;}
   document.getElementById('ytHolder').innerHTML='';
   document.getElementById('trackInfo').textContent='';
-  document.getElementById('queueList').innerHTML='<div style="font-size:10px;color:var(--dim);font-style:italic;font-family:'Crimson Text',serif;">Sin reproducción activa</div>';
+  document.getElementById('queueList').innerHTML='<div style="font-size:10px;color:var(--dim);font-style:italic;">Sin reproducción activa</div>';
   updMusicStatus('stopped');
 }
 function stopMusic(){clearInterval(ytFadeInt);_stopPlayer();toast('Música detenida');}
