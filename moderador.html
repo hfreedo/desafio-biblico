@@ -273,8 +273,11 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Finalizar</div>
         <div class="brow">
-          <button class="btn grn" id="winA" onclick="declWinner('a')">Ganador A</button>
-          <button class="btn blu" id="winB" onclick="declWinner('b')">Ganador B</button>
+          <button class="btn grn" id="winA" onclick="declWinner('a')" style="flex:1">Ganador A</button>
+          <button class="btn blu" id="winB" onclick="declWinner('b')" style="flex:1">Ganador B</button>
+        </div>
+        <div style="margin-top:6px">
+          <button class="btn red btn-sm" onclick="newGame()" style="width:100%">Nueva partida</button>
         </div>
       </div>
     </div><!-- /LEFT -->

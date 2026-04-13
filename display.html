@@ -470,7 +470,9 @@ function handle(m){
           left=Math.max(0,left-elapsed);
         }
         S.timerLeft=left;
-        if(left>0){
+        // Only show timer if it was actually started (running, or stopped mid-way)
+        const wasStarted = m.timerRunning || (left > 0 && left < m.timerTotal);
+        if(wasStarted && left>0){
           document.getElementById('timerSec').style.display='flex';
           renderTimer();
           if(m.timerRunning){
@@ -481,17 +483,10 @@ function handle(m){
               if(S.timerLeft<=0){stopTimer();bombExplosion();}
             },1000);
           }
-        } else if(m.timerRunning){
-          // Timer expired while we were loading
+        } else if(m.timerRunning && left<=0){
           bombExplosion();
         } else {
-          S.timerLeft=left;
-          if(left>0){
-            document.getElementById('timerSec').style.display='flex';
-            renderTimer();
-          } else {
-            document.getElementById('timerSec').style.display='none';
-          }
+          document.getElementById('timerSec').style.display='none';
         }
       }
       break;
