@@ -230,6 +230,19 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 <canvas id="bgC"></canvas>
 <div class="ambient"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
 
+<!-- Activación de audio (requerido por políticas del navegador) -->
+<div id="audioGate" style="position:fixed;inset:0;z-index:200;background:rgba(7,8,15,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;backdrop-filter:blur(10px);">
+  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+    <rect x="20" y="2" width="8" height="44" rx="4" fill="#F5C842"/>
+    <rect x="2" y="16" width="44" height="8" rx="4" fill="#F5C842"/>
+  </svg>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#F6F4FF;letter-spacing:0.04em;">Desafío Bíblico</div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:rgba(246,244,255,0.5);">Pantalla de presentación — efectos de sonido del juego</div>
+  <button onclick="activateAudio()" style="margin-top:12px;background:linear-gradient(135deg,#F5C842,#C9A12F);color:#07080F;border:none;border-radius:12px;padding:14px 40px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.1em;cursor:pointer;">
+    Iniciar pantalla
+  </button>
+</div>
+
 <!-- Curtain -->
 <div class="curtain" id="curtain">
   <div class="curtain-bar"></div><div class="curtain-bar"></div><div class="curtain-bar"></div>
@@ -241,13 +254,13 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 <div class="bz-tint" id="bzTint"></div>
 <div class="bz" id="bzBanner"></div>
 <div class="shockwave" id="shockwave"></div>
-<div class="wf" id="wrongFlash"><div class="wi">✗</div></div>
-<div class="bomb-ov" id="bombOv"><div class="bomb-ico">💥</div></div>
+<div class="wf" id="wrongFlash"><div class="wi"></div></div>
+<div class="bomb-ov" id="bombOv"><div class="bomb-ico"></div></div>
 
 <!-- WINNER -->
 <div class="won-ov" id="wonOv">
   <div class="won-burst"></div>
-  <div class="won-trophy">🏆</div>
+  <div class="won-trophy"></div>
   <div class="won-label">¡CAMPEÓN DEL DESAFÍO BÍBLICO!</div>
   <div class="won-name" id="wonName">EQUIPO A</div>
   <div class="won-score" id="wonScore">0 — 0</div>
@@ -343,7 +356,7 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
       <div class="q-divider"></div>
       <div class="ans-lbl">RESPUESTA</div>
       <div class="ans-box" id="ansBox">
-        <div class="ans-lock">🔒</div>
+        <div class="ans-lock">[]</div>
         Noé — Génesis 6:13-14
       </div>
     </div>
@@ -364,7 +377,6 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
   </div>
 </div>
 
-<div id="ytHolder" style="position:fixed;bottom:-300px;left:-300px;width:1px;height:1px;overflow:hidden;pointer-events:none"></div>
 
 <script>
 const CIRC=427;
@@ -406,7 +418,6 @@ function handle(m){
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
     case 'UPDATE_ROUND':updRound(m);break;case 'SOUND_TOGGLE':S.sounds=m.enabled;break;
-    case 'PLAY_YT':playYT(m.url,m.vol||.4);break;case 'STOP_YT':stopYT();break;case 'FADE_YT':fadeYT();break;
     case 'START_REMOTE':startRemoteMode(m.room);break;case 'STOP_REMOTE':stopRemoteMode();break;
   }
 }
@@ -437,7 +448,7 @@ function showQ(m){
   // Lock answer box
   const ab=document.getElementById('ansBox');
   ab.classList.remove('show');
-  ab.innerHTML=`<div class="ans-lock">🔒</div>${m.answer||''}`;
+  ab.innerHTML=`<div class="ans-lock">[]</div>${m.answer||''}`;
 
   document.getElementById('qWrap').classList.add('active');
   document.getElementById('timerSec').style.display='none';
@@ -509,7 +520,7 @@ function showBuzzer(m){
   const nm=isA?S.nameA:S.nameB;
   const b=document.getElementById('bzBanner');
   b.className='bz show '+(isA?'ba':'bb');
-  b.textContent='🔔  '+nm.toUpperCase()+'  —  ¡PULSÓ PRIMERO!';
+  b.textContent='"'+nm.toUpperCase()+'  —  ¡PULSÓ PRIMERO!';
   // Tint
   const tint=document.getElementById('bzTint');
   tint.className='bz-tint '+(isA?'show-a':'show-b');
@@ -532,15 +543,15 @@ function showWrong(m){
   if(card){card.style.animation='';void card.offsetWidth;card.style.animation='wshake .5s ease';const ob=card.style.borderColor;card.style.borderColor='var(--red)';setTimeout(()=>{card.style.borderColor=ob;card.style.animation='';},1000);}
   const b=document.getElementById('bzBanner');const nm=m.team==='a'?S.nameA:S.nameB;
   b.style.cssText='background:rgba(248,113,113,.12);border-bottom:1px solid rgba(248,113,113,.4);color:#F87171;';
-  b.className='bz show';b.textContent='✗  '+nm.toUpperCase()+'  —  ¡RESPUESTA INCORRECTA!';
+  b.className='bz show';b.textContent='X  '+nm.toUpperCase()+'  —  ¡RESPUESTA INCORRECTA!';
   setTimeout(()=>{wf.className='wf';if(card)card.style.animation='';b.classList.remove('show');b.style.cssText='';},1500);
 }
 
 function highlightTeam(t){
   document.getElementById('cardA').classList.remove('pa','pb');
   document.getElementById('cardB').classList.remove('pa','pb');
-  if(t==='a'){document.getElementById('cardA').classList.add('pa');document.getElementById('stA').textContent='🎯 Respondiendo...';document.getElementById('stB').textContent='En espera...';}
-  else if(t==='b'){document.getElementById('cardB').classList.add('pb');document.getElementById('stB').textContent='🎯 Respondiendo...';document.getElementById('stA').textContent='En espera...';}
+  if(t==='a'){document.getElementById('cardA').classList.add('pa');document.getElementById('stA').textContent=' Respondiendo...';document.getElementById('stB').textContent='En espera...';}
+  else if(t==='b'){document.getElementById('cardB').classList.add('pb');document.getElementById('stB').textContent=' Respondiendo...';document.getElementById('stA').textContent='En espera...';}
 }
 function clearActive(){
   document.getElementById('cardA').classList.remove('pa','pb');
@@ -586,20 +597,6 @@ function bombExplosion(){
   setTimeout(()=>{ov.className='bomb-ov';},2200);
 }
 
-/* YOUTUBE */
-let ytFade=null;
-function playYT(url,vol=.4){
-  stopYT();
-  const mv=url.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);const ml=url.match(/list=([^&?\s]+)/);
-  let src='';
-  if(ml)src=`https://www.youtube-nocookie.com/embed/videoseries?list=${ml[1]}&autoplay=1&loop=1&controls=0&rel=0`;
-  else if(mv)src=`https://www.youtube-nocookie.com/embed/${mv[1]}?autoplay=1&loop=1&playlist=${mv[1]}&controls=0&rel=0`;
-  else return;
-  document.getElementById('ytHolder').innerHTML=`<iframe width="200" height="100" src="${src}&origin=${location.origin}" frameborder="0" allow="autoplay;encrypted-media" allowfullscreen></iframe>`;
-}
-function stopYT(){clearInterval(ytFade);document.getElementById('ytHolder').innerHTML='';}
-function fadeYT(){setTimeout(stopYT,2000);}
-
 /* AUDIO */
 const AC=new(window.AudioContext||window.webkitAudioContext)();
 document.addEventListener('click',()=>{if(AC.state==='suspended')AC.resume();},{once:true});
@@ -624,8 +621,15 @@ const ss=document.createElement('style');
 ss.textContent='@keyframes wshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-14px)}40%,80%{transform:translateX(14px)}}';
 document.head.appendChild(ss);
 
-// Open curtain on page load
-setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
+function activateAudio(){
+  // User gesture — satisfies browser autoplay policy for both WebAudio and YouTube
+  if(AC.state==='suspended') AC.resume();
+  document.getElementById('audioGate').style.display='none';
+  setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
+}
+
+// Don't auto-open curtain on load anymore — wait for user click
+// setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
 </script>
 </body>
 </html>
