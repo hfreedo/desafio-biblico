@@ -524,12 +524,31 @@ const QQ=[
 ];
 
 /*  STATE  */
+function loadSavedState(){
+  try{return JSON.parse(localStorage.getItem('quiz_mod_state')||'{}');}
+  catch(e){return {};}
+}
+function saveState(){
+  try{
+    localStorage.setItem('quiz_mod_state',JSON.stringify({
+      scoreA:ST.scoreA,scoreB:ST.scoreB,
+      nameA:ST.nameA,nameB:ST.nameB,
+      answered:ST.answered,
+      history:ST.history.slice(0,30),
+      timerSec:ST.timerSec
+    }));
+  }catch(e){}
+}
+const _sv=loadSavedState();
 const ST={
-  scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',
-  selQ:null,answered:{},filter:'all',history:[],
-  timerSec:30,timerLeft:30,timerInt:null,sounds:true,
-  activeBuzzerTeam:null,  // 'a' | 'b' | null
+  scoreA:_sv.scoreA||0, scoreB:_sv.scoreB||0,
+  nameA:_sv.nameA||'EQUIPO A', nameB:_sv.nameB||'EQUIPO B',
+  selQ:null, answered:_sv.answered||{}, history:_sv.history||[],
+  timerSec:_sv.timerSec||30, timerLeft:_sv.timerSec||30,
+  timerInt:null, sounds:true,
+  activeBuzzerTeam:null,
   questionActive:false,
+  currentRound:'', currentRoundName:'',
 };
 
 const ch=new BroadcastChannel('quiz_channel');
@@ -539,14 +558,16 @@ function bcast(m){
   if(roomCode) sendToSupabase(m);
 }
 
-// Listen for buzzer from buzzer page
+// Listen for buzzer from pulsador (local broadcast channel)
 ch.onmessage=e=>{
-  if(e.data.type==='BUZZER_HIT'){
-    const nm=e.data.team==='a'?ST.nameA:ST.nameB;
-    ST.activeBuzzerTeam=e.data.team;
+  const msg=e.data;
+  if(msg.type==='BUZZER_HIT'){
+    const nm=msg.team==='a'?ST.nameA:ST.nameB;
+    ST.activeBuzzerTeam=msg.team;
     updBuzzerStatus('respondiendo', nm);
     toast(nm+' activó el buzzer');
-    bcast(e.data);
+    // Forward to display via Supabase (display may be on another device)
+    if(roomCode) sendToSupabase(msg);
   }
 };
 
@@ -582,23 +603,65 @@ function updScoreDisplay(){
 }
 function awardPoint(t){
   chScore(t,1);
-  if(ST.selQ){ST.answered[ST.selQ.id]={team:t,correct:true};addHist(ST.selQ,t,true);renderList();updStats();}
+  ST.activeBuzzerTeam=null;
+  updBuzzerStatus('libre');
+  if(ST.selQ){ST.answered[ST.selQ.id]={team:t,correct:true};addHist(ST.selQ,t,true);renderList();updStats();saveState();}
   bcast({type:'CLEAR_ACTIVE'});
-  toast("Punto a "+(t==="a"?ST.nameA:ST.nameB));
+  toast('Punto a '+(t==='a'?ST.nameA:ST.nameB));
 }
+function updBuzzerStatus(state, teamName){
+  const el=document.getElementById('buzzerStatus');
+  if(!el) return;
+  if(state==='respondiendo'){
+    el.textContent=(teamName||'Equipo')+' respondiendo...';
+    el.style.background='rgba(251,146,60,0.15)';
+    el.style.borderColor='rgba(251,146,60,0.5)';
+    el.style.color='var(--orange)';
+  } else if(state==='bloqueado'){
+    el.textContent='Buzzer bloqueado — decidir veredicto';
+    el.style.background='rgba(248,113,113,0.12)';
+    el.style.borderColor='rgba(248,113,113,0.4)';
+    el.style.color='var(--red)';
+  } else {
+    el.textContent='Buzzer libre';
+    el.style.background='rgba(255,255,255,.04)';
+    el.style.borderColor='var(--border2)';
+    el.style.color='var(--dim)';
+  }
+}
+
 function wrongAns(t){
-  // Always broadcast the wrong answer effect, regardless of question state
   bcast({type:'WRONG_ANSWER',team:t});
-  
-  // Update question history if there's a selected question
+  ST.activeBuzzerTeam=null;
+  updBuzzerStatus('libre');
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:t,correct:false};
     addHist(ST.selQ,t,false);
     renderList();
     updStats();
+    saveState();
   }
-  
-  toast("Respuesta incorrecta  "+(t==="a"?ST.nameA:ST.nameB));
+  toast('Respuesta incorrecta: '+(t==='a'?ST.nameA:ST.nameB));
+}
+
+function passTurn(wrongTeam){
+  bcast({type:'WRONG_ANSWER',team:wrongTeam});
+  if(ST.selQ&&!ST.answered[ST.selQ.id]){
+    ST.answered[ST.selQ.id]={team:wrongTeam,correct:false};
+    addHist(ST.selQ,wrongTeam,false);renderList();updStats();saveState();
+  }
+  ST.activeBuzzerTeam=null;
+  updBuzzerStatus('libre');
+  setTimeout(()=>{
+    if(ST.selQ){
+      bcast({type:'SHOW_QUESTION',
+        question:ST.selQ.q, answer:ST.selQ.a, difficulty:ST.selQ.d,
+        round:ST.selQ.r+' · '+ST.selQ.rn,
+        index:ST.selQ.id, total:QQ.length
+      });
+    }
+  }, 500);
+  toast('Turno pasado al equipo contrario');
 }
 
 /*  TEST FUNCTIONS  */
