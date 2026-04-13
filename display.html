@@ -392,7 +392,17 @@ async function pollSupabaseEvents(){
     if(Array.isArray(data)&&data.length){data.forEach(row=>{try{handle(JSON.parse(row.payload))}catch(e){}});lastTs=data[data.length-1].ts;}
   }catch(e){}
 }
-function startRemoteMode(room){if(!room||room===currentRoom)return;currentRoom=room;lastTs=Date.now();if(pollInterval)clearInterval(pollInterval);pollInterval=setInterval(pollSupabaseEvents,800);fetchStateSnapshot(room);}
+function startRemoteMode(room){
+  if(!room) return;
+  if(room===currentRoom&&pollInterval) return; // already connected
+  currentRoom=room;
+  // Don't reset lastTs here — autoRecoverState already set it correctly
+  if(!pollInterval) lastTs=Date.now()-5000;
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval=setInterval(pollSupabaseEvents,800);
+  // Only fetch snapshot if we don't already have state from autoRecoverState
+  if(!S.nameA||S.nameA==='EQUIPO A') fetchStateSnapshot(room);
+}
 function stopRemoteMode(){if(pollInterval)clearInterval(pollInterval);currentRoom='';}
 async function fetchStateSnapshot(room){
   try{
@@ -449,25 +459,38 @@ function handle(m){
       // Restore buzzer/turn state
       if(m.activeBuzzerTeam) highlightTeam(m.activeBuzzerTeam);
       else clearActive();
-      // Restore timer state
+      // Restore timer — interpolate elapsed time since snapshot
       if(m.timerTotal&&m.timerTotal>0){
         S.timerTotal=m.timerTotal;
-        S.timerLeft=Math.max(0,m.timerLeft||0);
-        if(S.timerLeft>0){
+        let left=Math.max(0,m.timerLeft||0);
+        // If timer was running, subtract seconds elapsed since snapshot was taken
+        if(m.timerRunning&&m.timerSnapTs){
+          const elapsed=Math.floor((Date.now()-m.timerSnapTs)/1000);
+          left=Math.max(0,left-elapsed);
+        }
+        S.timerLeft=left;
+        if(left>0){
           document.getElementById('timerSec').style.display='flex';
-          renderTimer(); // show at correct position
+          renderTimer();
           if(m.timerRunning){
-            // Start counting from current timerLeft
             stopTimer();
             timerInt=setInterval(()=>{
-              S.timerLeft--;
-              renderTimer();
-              if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds) playTick();
+              S.timerLeft--;renderTimer();
+              if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();
               if(S.timerLeft<=0){stopTimer();bombExplosion();}
             },1000);
           }
+        } else if(m.timerRunning){
+          // Timer expired while we were loading
+          bombExplosion();
         } else {
-          document.getElementById('timerSec').style.display='none';
+          S.timerLeft=left;
+          if(left>0){
+            document.getElementById('timerSec').style.display='flex';
+            renderTimer();
+          } else {
+            document.getElementById('timerSec').style.display='none';
+          }
         }
       }
       break;

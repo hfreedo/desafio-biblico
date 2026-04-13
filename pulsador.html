@@ -321,13 +321,14 @@ function handleMsg(m){
       break;
     case 'HIDE_QUESTION':
     case 'CLEAR_ACTIVE':
+      ST.triggered=false;
       resetBz();
       break;
     case 'WRONG_ANSWER':
       disableBz('Respuesta incorrecta');
       break;
     case 'PASS_TURN':
-      // Only enable if we are the team that gets the turn
+      ST.triggered=false; // always reset triggered on pass
       if(ST.team===m.toTeam){
         enableBz();
       } else {
@@ -347,6 +348,23 @@ function handleMsg(m){
     case 'STATE_SNAPSHOT':
       if(m.nameA){ST.nameA=m.nameA;document.getElementById('lbA').textContent=m.nameA;}
       if(m.nameB){ST.nameB=m.nameB;document.getElementById('lbB').textContent=m.nameB;}
+      // Restore buzzer state — if question is active and no team has the buzzer, enable
+      if(m.questionActive && !m.activeBuzzerTeam){
+        // Question is live and buzzer is free — enable if team is picked
+        ST.triggered=false;
+        enableBz();
+      } else if(m.activeBuzzerTeam && m.activeBuzzerTeam!==ST.team){
+        // Other team has the buzzer
+        ST.triggered=false;
+        disableBz('Turno del otro equipo');
+      } else if(m.activeBuzzerTeam && m.activeBuzzerTeam===ST.team){
+        // We have the buzzer already
+        ST.triggered=true;
+        disableBz('Tu equipo respondiendo...');
+      } else if(!m.questionActive){
+        // No active question — reset
+        resetBz();
+      }
       break;
   }
 }
@@ -356,7 +374,7 @@ function connectNet(){
   const code=document.getElementById('roomCodeInput').value.trim();
   if(!code){document.getElementById('sTxt').textContent='INGRESA UN CÓDIGO DE SALA';return;}
   document.getElementById('sTxt').textContent='CONECTANDO...';
-  ST.room=code; ST.connected=true; lastTs=Date.now();
+  ST.room=code; ST.connected=true; lastTs=Date.now()-10000;
   if(pollInterval) clearInterval(pollInterval);
 
   const controller=new AbortController();

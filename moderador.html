@@ -392,6 +392,7 @@ async function pushStateSnapshot(){
     timerLeft:ST.timerLeft,
     timerTotal:ST.timerSec,
     timerRunning:!!(ST.timerInt),
+    timerSnapTs:Date.now(),
   };
   try{
     await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
@@ -410,14 +411,16 @@ function startSupabaseRoom(){
 }
 function activateRoom(code){
   roomCode=code;
-  lastTs=Date.now()-5000; // look back 5s to catch recent events
+  lastTs=Date.now()-10000; // look back 10s
   if(pollInterval) clearInterval(pollInterval);
   pollInterval=setInterval(pollSupabase,800);
   saveRoom(code);
   document.getElementById('roomStatus').textContent='Sala: '+code;
   document.getElementById('roomStatus').style.color='#2ECC71';
+  // Broadcast START_REMOTE so display/pulsador on same browser reconnect
   bcast({type:'START_REMOTE',room:code});
-  pushStateSnapshot();
+  // Push full state snapshot so remote devices catch up
+  setTimeout(pushStateSnapshot, 300);
   toast('Sala activa: '+code);
 }
 
@@ -582,8 +585,10 @@ ch.onmessage=e=>{
     const nm=msg.team==='a'?ST.nameA:ST.nameB;
     ST.activeBuzzerTeam=msg.team;
     updBuzzerStatus('respondiendo', nm);
+    // Stop local timer when buzzer hit — sync with display
+    if(ST.timerInt){ clearInterval(ST.timerInt); ST.timerInt=null; }
+    document.getElementById('modTimer').classList.remove('dng');
     toast(nm+' activó el buzzer');
-    // Forward to display via Supabase (display may be on another device)
     if(roomCode) sendToSupabase(msg);
   }
 };
@@ -651,6 +656,8 @@ function updBuzzerStatus(state, teamName){
 
 function wrongAns(t){
   bcast({type:'WRONG_ANSWER',team:t});
+  // Remove the team highlight — buzzer stays blocked, moderador decides next
+  setTimeout(()=>bcast({type:'CLEAR_ACTIVE'}), 1200);
   ST.activeBuzzerTeam=null;
   updBuzzerStatus('bloqueado');
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
@@ -817,13 +824,20 @@ function loadQueueList(){
   try{
     const list=ytPlayer.getPlaylist();
     const idx=ytPlayer.getPlaylistIndex();
+    const dur=ytPlayer.getDuration();
     const el=document.getElementById('queueList');
-    if(!list||!list.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);font-family:monospace;font-style:italic;">Video individual — sin cola</div>';return;}
+    if(!list||!list.length){
+      el.innerHTML='<div style="font-size:10px;color:var(--dim);font-style:italic;">Video individual</div>';
+      return;
+    }
+    // Get current title
+    const curData=ytPlayer.getVideoData();
     el.innerHTML=list.map((vid,i)=>{
       const isCurrent=(i===idx);
-      return `<button onclick="jumpToTrack(${i})" style="text-align:left;background:${isCurrent?'rgba(212,168,67,.12)':'rgba(255,255,255,.03)'};border:1px solid ${isCurrent?'var(--gold)':'var(--border2)'};border-radius:5px;padding:5px 8px;font-family:monospace;font-size:11px;color:${isCurrent?'var(--gold-l)':'var(--text)'};cursor:pointer;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
-        ${isCurrent?'&rsaquo; ':''}${i+1}. Tema ${i+1}
-      </button>`;
+      const label=isCurrent&&curData&&curData.title
+        ? `${i+1}. ${curData.title}${dur?' ('+Math.floor(dur/60)+"'"+String(Math.floor(dur%60)).padStart(2,'0')+'")':''}`
+        : `${i+1}. ${vid}`;
+      return `<button onclick="jumpToTrack(${i})" style="text-align:left;background:${isCurrent?'rgba(212,168,67,.12)':'rgba(255,255,255,.03)'};border:1px solid ${isCurrent?'var(--gold)':'var(--border2)'};border-radius:5px;padding:5px 8px;font-size:11px;color:${isCurrent?'var(--gold-l)':'var(--text)'};cursor:pointer;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:inherit;">${isCurrent?'> ':''}${label}</button>`;
     }).join('');
   }catch(e){}
 }
@@ -929,7 +943,7 @@ function setVol(v){
 
 function prevTrack(){
   if(!ytPlayer){toast('No hay música activa');return;}
-  try{ytPlayer.previousVideo();setTimeout(updateTrackInfo,1000);}
+  try{musicPaused=false;ytPlayer.previousVideo();setTimeout(()=>{updateTrackInfo();loadQueueList();},1000);}
   catch(e){toast('No disponible para este video');}
 }
 
@@ -950,6 +964,26 @@ function toggleSound(){
 }
 
 /*  WINNER  */
+function newGame(){
+  if(!confirm('Reiniciar todo el juego? Se borran puntajes e historial.')) return;
+  ST.scoreA=0; ST.scoreB=0;
+  ST.answered={}; ST.history=[];
+  ST.selQ=null; ST.questionActive=false;
+  ST.activeBuzzerTeam=null; ST.answerRevealed=false;
+  ST.timerLeft=ST.timerSec;
+  if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+  updScoreDisplay();
+  updBuzzerStatus('libre');
+  renderList(); updStats(); renderHist();
+  document.getElementById('modTimer').textContent=ST.timerSec;
+  document.getElementById('modTimer').classList.remove('dng');
+  bcast({type:'HIDE_QUESTION'});
+  bcast({type:'UPDATE_SCORE',scoreA:0,scoreB:0});
+  saveState();
+  pushStateSnapshot();
+  toast('Nuevo juego iniciado');
+}
+
 function declWinner(t){
   const name=t==='a'?ST.nameA:ST.nameB;
   bcast({type:'SHOW_WINNER',team:t,name,scoreA:ST.scoreA,scoreB:ST.scoreB});
