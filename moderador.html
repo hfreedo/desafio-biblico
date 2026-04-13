@@ -371,6 +371,9 @@ async function pollSupabase(){
           const msg=JSON.parse(row.payload);
           if(msg._sender==='mod') return;
           if(msg.type==='BUZZER_HIT'){
+            // Dedup: ignore if already someone has the buzzer
+            if(ST.activeBuzzerTeam) return;
+            if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
             const nm=msg.team==='a'?ST.nameA:ST.nameB;
             ST.activeBuzzerTeam=msg.team;
             updBuzzerStatus('respondiendo', nm);
@@ -423,7 +426,7 @@ function activateRoom(code){
   roomCode=code;
   lastTs=Date.now()-10000; // look back 10s
   if(pollInterval) clearInterval(pollInterval);
-  pollInterval=setInterval(pollSupabase,800);
+  pollInterval=setInterval(pollSupabase,350);
   saveRoom(code);
   document.getElementById('roomStatus').textContent='Sala: '+code;
   document.getElementById('roomStatus').style.color='#2ECC71';
@@ -593,10 +596,13 @@ function bcast(m){
 ch.onmessage=e=>{
   const msg=e.data;
   if(msg.type==='BUZZER_HIT'){
+    // Dedup: ignore if a team already has the buzzer for this question
+    if(ST.activeBuzzerTeam) return;
+    // Ignore if questionId doesn't match current question (stale event)
+    if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
     const nm=msg.team==='a'?ST.nameA:ST.nameB;
     ST.activeBuzzerTeam=msg.team;
     updBuzzerStatus('respondiendo', nm);
-    // Stop local timer when buzzer hit — sync with display
     if(ST.timerInt){ clearInterval(ST.timerInt); ST.timerInt=null; }
     document.getElementById('modTimer').classList.remove('dng');
     toast(nm+' activó el buzzer');

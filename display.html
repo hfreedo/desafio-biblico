@@ -376,7 +376,7 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 
 <script>
 const CIRC=427;
-const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true};
+const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true,buzzerLocked:false,currentQuestionId:null};
 let timerInt=null;
 
 /* SUPABASE */
@@ -398,7 +398,7 @@ function startRemoteMode(room){
   currentRoom=room;
   if(pollInterval) clearInterval(pollInterval);
   // lastTs is set by autoRecoverState — don't overwrite it here
-  pollInterval=setInterval(pollSupabaseEvents,800);
+  pollInterval=setInterval(pollSupabaseEvents,350);
 }
 function stopRemoteMode(){if(pollInterval)clearInterval(pollInterval);currentRoom='';}
 async function fetchStateSnapshot(room){
@@ -501,6 +501,8 @@ function handle(m){
 
 /* ══ SHOW QUESTION — cinematic curtain entry ══ */
 function showQ(m){
+  S.buzzerLocked=false;
+  S.currentQuestionId=m.index||null;
   const idle=document.getElementById('idle');
   idle.classList.remove('visible');
 
@@ -552,7 +554,7 @@ function revealAns(){
 }
 
 /* ══ HIDE → back to idle with curtain ══ */
-function hideQ(){
+function hideQ(){S.buzzerLocked=false;S.currentQuestionId=null;
   const curtain=document.getElementById('curtain');
   curtain.classList.remove('open');
   setTimeout(()=>{
@@ -602,6 +604,10 @@ function handlePassTurn(m){
 }
 
 function showBuzzer(m){
+  // Dedup: only the first buzzer hit per question counts
+  if(S.buzzerLocked) return;
+  if(m.questionId && S.currentQuestionId && m.questionId!==S.currentQuestionId) return;
+  S.buzzerLocked=true;
   const isA=m.team==='a';
   const nm=isA?S.nameA:S.nameB;
   const b=document.getElementById('bzBanner');
@@ -640,6 +646,7 @@ function highlightTeam(t){
   else if(t==='b'){document.getElementById('cardB').classList.add('pb');document.getElementById('stB').textContent=' Respondiendo...';document.getElementById('stA').textContent='En espera...';}
 }
 function clearActive(){
+  S.buzzerLocked=false;
   document.getElementById('cardA').classList.remove('pa','pb');
   document.getElementById('cardB').classList.remove('pa','pb');
   document.getElementById('stA').textContent='Listos para competir';
