@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Desafío Bíblico — Moderador</title>
+<title>Desafío Bíblico  Moderador</title>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 <style>
 :root{--gold:#D4A843;--gold-l:#F0C96A;--bg:#0F1117;--panel:#161B28;--panel2:#1C2236;--border:rgba(212,168,67,.18);--border2:rgba(255,255,255,.07);--green:#2ECC71;--red:#E74C3C;--blue:#3498DB;--orange:#E67E22;--parchment:#F5E6C8;--text:#E8E8F0;--dim:rgba(232,232,240,.45);}
@@ -56,7 +56,7 @@ input:focus,select:focus{border-color:var(--gold);}
 .tab{padding:4px 11px;border-radius:4px;font-size:10px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--dim);font-family:'Cinzel',serif;transition:all .2s;}
 .tab.active{background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold-l);}
 .tab:hover{color:var(--text);}
-.qlist{overflow-y:auto;flex:1;padding:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;align-content:start;}
+.qlist{overflow-y:auto;flex:1;padding:8px;display:grid;grid-template-columns:1fr;gap:6px;align-content:start;}
 .qcard{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;cursor:pointer;transition:all .2s;position:relative;}
 .qcard:hover{border-color:rgba(212,168,67,.4);background:#222840;}
 .qcard.sel{border-color:var(--gold);background:rgba(212,168,67,.07);}
@@ -101,7 +101,7 @@ input:focus,select:focus{border-color:var(--gold);}
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="tb-title">✝ <span>DESAFÍO BÍBLICO</span><span class="badge-mod">MODERADOR</span></div>
+    <div class="tb-title"><span>DESAFÍO BÍBLICO</span><span class="badge-mod">MODERADOR</span></div>
     <div class="tb-right"><div class="dot"></div><span style="font-size:11px;color:var(--dim);letter-spacing:2px;">ACTIVO</span></div>
   </div>
   <div class="main">
@@ -120,33 +120,33 @@ input:focus,select:focus{border-color:var(--gold);}
           <div class="tlbl lb">B</div>
           <input type="text" id="nameB" value="EQUIPO B" placeholder="Nombre B" oninput="liveTeamName('b',this.value)">
         </div>
-        <div class="brow" style="margin-top:8px"><button class="btn gold btn-sm" onclick="applyTeams()">✓ Aplicar nombres</button></div>
+        <div class="brow" style="margin-top:8px"><button class="btn gold btn-sm" onclick="applyTeams()">Aplicar nombres</button></div>
         <div class="sep"></div>
         <div class="slim">PUNTUACIÓN MANUAL</div>
         <div style="display:flex;gap:14px;align-items:center;justify-content:space-between">
           <div class="sc-row">
-            <button class="btn gry icon-btn btn-sm" onclick="chScore('a',-1)">−</button>
+            <button class="btn gry icon-btn btn-sm" onclick="chScore('a',-1)"></button>
             <div class="snum sna" id="mScA">0</div>
             <button class="btn grn icon-btn btn-sm" onclick="chScore('a',1)">+</button>
           </div>
-          <div style="font-size:20px;color:var(--dim)">—</div>
+          <div style="font-size:20px;color:var(--dim)"></div>
           <div class="sc-row">
-            <button class="btn gry icon-btn btn-sm" onclick="chScore('b',-1)">−</button>
+            <button class="btn gry icon-btn btn-sm" onclick="chScore('b',-1)"></button>
             <div class="snum snb" id="mScB">0</div>
             <button class="btn blu icon-btn btn-sm" onclick="chScore('b',1)">+</button>
           </div>
         </div>
         <div class="brow" style="margin-top:8px">
-          <button class="btn grn btn-sm" id="btnCA" onclick="awardPoint('a')">✓ Correcto A</button>
-          <button class="btn blu btn-sm" id="btnCB" onclick="awardPoint('b')">✓ Correcto B</button>
+          <button class="btn grn btn-sm" id="btnCA" onclick="awardPoint('a')">Correcto A</button>
+          <button class="btn blu btn-sm" id="btnCB" onclick="awardPoint('b')">Correcto B</button>
         </div>
         <div class="brow" style="margin-top:6px">
-          <button class="btn red btn-sm" id="btnWA" onclick="wrongAns('a')">✗ Incorrecto A</button>
-          <button class="btn red btn-sm" id="btnWB" onclick="wrongAns('b')">✗ Incorrecto B</button>
+          <button class="btn red btn-sm" id="btnWA" onclick="wrongAns('a')">Incorrecto A</button>
+          <button class="btn red btn-sm" id="btnWB" onclick="wrongAns('b')">Incorrecto B</button>
         </div>
         <div class="brow" style="margin-top:6px">
-          <button class="btn gry btn-sm" onclick="testWrongA()">🧪 Test Visual A</button>
-          <button class="btn gry btn-sm" onclick="testWrongB()">🧪 Test Visual B</button>
+          <button class="btn gry btn-sm" onclick="testWrongA()">Test Visual A</button>
+          <button class="btn gry btn-sm" onclick="testWrongB()">Test Visual B</button>
         </div>
       </div>
 
@@ -157,8 +157,8 @@ input:focus,select:focus{border-color:var(--gold);}
         <div style="margin-top:8px">
           <div class="slim">SEGUNDOS</div>
           <div style="display:flex;align-items:center;gap:8px">
-            <button class="btn gry btn-sm" onclick="adjTimer(-10)">−10</button>
-            <button class="btn gry btn-sm" onclick="adjTimer(-5)">−5</button>
+            <button class="btn gry btn-sm" onclick="adjTimer(-10)">10</button>
+            <button class="btn gry btn-sm" onclick="adjTimer(-5)">5</button>
             <div class="tv" id="timerVal">30</div>
             <button class="btn gry btn-sm" onclick="adjTimer(5)">+5</button>
             <button class="btn gry btn-sm" onclick="adjTimer(10)">+10</button>
@@ -166,8 +166,8 @@ input:focus,select:focus{border-color:var(--gold);}
           <input type="number" id="timerInput" value="30" min="5" max="180" style="margin-top:6px;text-align:center" oninput="setTimerVal(this.value)">
         </div>
         <div class="brow" style="margin-top:10px">
-          <button class="btn gold" onclick="sendTimer()">▶ Iniciar</button>
-          <button class="btn red" onclick="stopTimerMod()">■ Detener</button>
+          <button class="btn gold" onclick="sendTimer()">Iniciar</button>
+          <button class="btn red" onclick="stopTimerMod()">Detener</button>
         </div>
       </div>
 
@@ -175,12 +175,12 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Control de Pregunta</div>
         <div class="brow" style="margin-bottom:8px">
-          <button class="btn gold" onclick="showSelQ()">📢 Mostrar</button>
-          <button class="btn orn" onclick="revealAns()">👁 Respuesta</button>
+          <button class="btn gold" onclick="showSelQ()">Mostrar</button>
+          <button class="btn orn" onclick="revealAns()">Revelar respuesta</button>
         </div>
         <div class="brow">
-          <button class="btn gry btn-sm" onclick="hideQ()">✕ Ocultar</button>
-          <button class="btn gry btn-sm" onclick="clearActive()">⊘ Limpiar</button>
+          <button class="btn gry btn-sm" onclick="hideQ()">Ocultar</button>
+          <button class="btn gry btn-sm" onclick="clearActive()">Limpiar</button>
         </div>
       </div>
 
@@ -188,8 +188,8 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Buzzer Manual</div>
         <div class="brow">
-          <button class="btn grn" id="bzA" onclick="manualBz('a')">🔔 Buzzer A</button>
-          <button class="btn blu" id="bzB" onclick="manualBz('b')">🔔 Buzzer B</button>
+          <button class="btn grn" id="bzA" onclick="manualBz('a')">Buzzer A</button>
+          <button class="btn blu" id="bzB" onclick="manualBz('b')">Buzzer B</button>
         </div>
       </div>
 
@@ -198,14 +198,11 @@ input:focus,select:focus{border-color:var(--gold);}
         <div class="stitle">Sala Remota</div>
         <div style="margin-bottom:8px;font-size:11px;color:var(--dim)" id="roomStatus">Sin sala remota</div>
         <div class="brow">
-          <button class="btn gold btn-sm" onclick="startSupabaseRoom()">🌐 Crear sala</button>
-          <button class="btn red btn-sm" onclick="stopSupabaseRoom()">✕ Cerrar</button>
-        </div>
-        <div class="brow" style="margin-top:6px">
-          <button class="btn gry btn-sm" onclick="setupStateTable()" title="Crea la tabla quiz_state si no existe">⚙ Setup BD</button>
+          <button class="btn gold btn-sm" onclick="startSupabaseRoom()">Crear sala</button>
+          <button class="btn red btn-sm" onclick="stopSupabaseRoom()">Cerrar</button>
         </div>
         <div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,.3);line-height:1.4">
-          Permite que gente desde otros dispositivos se conecte usando el código de sala. Ejecutá "Setup BD" una vez al inicio.
+          Permite que gente desde otros dispositivos se conecte usando el código de sala.
         </div>
       </div>
 
@@ -213,11 +210,11 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Ronda Activa</div>
         <select id="roundSel" onchange="changeRound()">
-          <option value="1">Ronda 1 — Rápido y Preciso</option>
-          <option value="2">Ronda 2 — Completa el Versículo</option>
-          <option value="3">Ronda 3 — ¿Quién soy?</option>
-          <option value="4">Ronda 4 — Verdadero o Falso</option>
-          <option value="5">Ronda 5 — Versus Final</option>
+          <option value="1">Ronda 1  Rápido y Preciso</option>
+          <option value="2">Ronda 2  Completa el Versículo</option>
+          <option value="3">Ronda 3  ¿Quién soy?</option>
+          <option value="4">Ronda 4  Verdadero o Falso</option>
+          <option value="5">Ronda 5  Versus Final</option>
         </select>
       </div>
 
@@ -226,20 +223,21 @@ input:focus,select:focus{border-color:var(--gold);}
         <div class="stitle">Música de Fondo</div>
         <input type="text" id="musicUrl" placeholder="Link de YouTube (video o playlist)">
         <div class="brow" style="margin-top:6px">
-          <button class="btn gold btn-sm" onclick="playMusic()">▶ Reproducir</button>
-          <button class="btn orn btn-sm" onclick="fadeMusic()">↓ Fade out</button>
-          <button class="btn red btn-sm" onclick="stopMusic()">■ Detener</button>
+          <button class="btn gold btn-sm" onclick="playMusic()">Reproducir</button>
+          <button class="btn orn btn-sm" onclick="fadeMusic()">Fade</button>
+          <button class="btn red btn-sm" onclick="stopMusic()">Detener</button>
         </div>
         <div class="slim" style="margin-top:8px">SUGERENCIAS RÁPIDAS</div>
         <div class="music-presets">
-          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=4S_GHmAzI0I')">🎵 Música Cristiana Instrumental</button>
-          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=WtVHobWTePE')">🎵 Worship Background Music</button>
-          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=2cTJjT6aMso')">🎵 Epic Bible Music</button>
+          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=4S_GHmAzI0I')">Música Cristiana Instrumental</button>
+          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=WtVHobWTePE')">Worship Background Music</button>
+          <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=2cTJjT6aMso')">Epic Bible Music</button>
         </div>
         <div style="margin-top:8px;font-size:9px;color:var(--dim);font-family:'Crimson Text',serif;line-height:1.6">
-          Pega cualquier link de YouTube. La música suena en la pantalla display.<br>
-          El fade apaga gradualmente en 2 segundos.
+          La música se reproduce en esta pantalla de moderación.<br>
+          El fade baja el volumen gradualmente antes de detener.
         </div>
+        <div id="ytHolder" style="position:fixed;bottom:0;right:0;width:2px;height:2px;overflow:hidden;opacity:0.01;pointer-events:none;z-index:1;"></div>
       </div>
 
       <!-- SOUND TOGGLE -->
@@ -257,8 +255,8 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Finalizar</div>
         <div class="brow">
-          <button class="btn grn" id="winA" onclick="declWinner('a')">🏆 Ganador A</button>
-          <button class="btn blu" id="winB" onclick="declWinner('b')">🏆 Ganador B</button>
+          <button class="btn grn" id="winA" onclick="declWinner('a')">Ganador A</button>
+          <button class="btn blu" id="winB" onclick="declWinner('b')">Ganador B</button>
         </div>
       </div>
     </div><!-- /LEFT -->
@@ -318,60 +316,13 @@ input:focus,select:focus{border-color:var(--gold);}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ── SUPABASE INTEGRATION ── */
+/*  SUPABASE INTEGRATION  */
 const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
 
 let pollInterval=null;
 let lastTs=Date.now();
 let roomCode='';
-
-/* ── STATE SNAPSHOT — save to Supabase so late-joiners can catch up ── */
-async function pushStateSnapshot(){
-  if(!roomCode) return;
-  const snapshot={
-    type:'STATE_SNAPSHOT',
-    nameA:ST.nameA, nameB:ST.nameB,
-    scoreA:ST.scoreA, scoreB:ST.scoreB,
-    room:roomCode,
-    ts:Date.now()
-  };
-  try{
-    await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
-      method:'POST',
-      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'resolution=merge-duplicates'},
-      body:JSON.stringify({room:roomCode, payload:JSON.stringify(snapshot), ts:Date.now()})
-    });
-  }catch(e){}
-}
-
-/* Creates quiz_state table via RPC if it doesn't exist yet */
-async function setupStateTable(){
-  try{
-    // Try a simple insert/upsert — if table doesn't exist Supabase returns 404
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?limit=1`,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    });
-    if(r.ok){
-      toast('✓ Tabla quiz_state lista');
-    } else if(r.status===404||r.status===400){
-      toast('⚠ Tabla quiz_state no existe — ver instrucciones');
-      setTimeout(()=>alert(
-        'Tabla quiz_state no encontrada.\n\n'+
-        'En tu panel de Supabase → SQL Editor → ejecutá:\n\n'+
-        'CREATE TABLE IF NOT EXISTS quiz_state (\n'+
-        '  room TEXT PRIMARY KEY,\n'+
-        '  payload TEXT,\n'+
-        '  ts BIGINT\n'+
-        ');\n\n'+
-        'ALTER TABLE quiz_state ENABLE ROW LEVEL SECURITY;\n'+
-        'CREATE POLICY "allow_all" ON quiz_state FOR ALL USING (true) WITH CHECK (true);'
-      ),300);
-    } else {
-      toast(`⚠ Error ${r.status} al verificar BD`);
-    }
-  }catch(e){toast('⚠ Error de conexión');}
-}
 
 async function sendToSupabase(msg){
   if(!roomCode) return;
@@ -381,7 +332,7 @@ async function sendToSupabase(msg){
       headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
       body:JSON.stringify({room:roomCode,payload:JSON.stringify(msg),ts:Date.now()})
     });
-  }catch(e){console.error('Supabase send error:',e);}
+  }catch(e){}
 }
 
 async function pollSupabase(){
@@ -390,6 +341,7 @@ async function pollSupabase(){
     const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${roomCode}&ts=gt.${lastTs}&order=ts.asc`,{
       headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
     });
+    if(!r.ok) return;
     const data=await r.json();
     if(Array.isArray(data)&&data.length){
       data.forEach(row=>{
@@ -397,143 +349,151 @@ async function pollSupabase(){
       });
       lastTs=data[data.length-1].ts;
     }
-  }catch(e){console.error('Supabase poll error:',e);}
+  }catch(e){}
+}
+
+async function pushStateSnapshot(){
+  if(!roomCode) return;
+  const snap={type:'STATE_SNAPSHOT',nameA:ST.nameA,nameB:ST.nameB,scoreA:ST.scoreA,scoreB:ST.scoreB,room:roomCode,ts:Date.now()};
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({room:roomCode,payload:JSON.stringify(snap),ts:Date.now()})
+    });
+  }catch(e){}
 }
 
 function startSupabaseRoom(){
-  const code=prompt('Ingresa código de sala para buzzers remotos (opcional):');
+  const code=prompt('Ingresa código de sala:');
   if(code&&code.trim()){
     roomCode=code.trim().toUpperCase();
     lastTs=Date.now();
     if(pollInterval) clearInterval(pollInterval);
     pollInterval=setInterval(pollSupabase,800);
-    toast(`🌐 Sala remota: ${roomCode} — Activa`);
-    document.getElementById('roomStatus').textContent=`Sala: ${roomCode}`;
+    toast('Sala remota activa: '+roomCode);
+    document.getElementById('roomStatus').textContent='Sala: '+roomCode;
     document.getElementById('roomStatus').style.color='#2ECC71';
     bcast({type:'START_REMOTE',room:roomCode});
-    // Publish current state immediately so late-joiners get it
     pushStateSnapshot();
   }
 }
 
 function stopSupabaseRoom(){
   if(pollInterval){clearInterval(pollInterval);pollInterval=null;}
-  const oldRoom = roomCode;
   roomCode='';
   document.getElementById('roomStatus').textContent='Sin sala remota';
   document.getElementById('roomStatus').style.color='rgba(255,255,255,.45)';
-  toast('🌐 Sala remota desconectada');
-  
-  // Tell display to stop remote mode
-  bcast({type: 'STOP_REMOTE'});
+  toast('Sala remota desconectada');
+  bcast({type:'STOP_REMOTE'});
 }
 
-/* ── DATA ── */
+/*  DATA  */
 const ROUNDS=[{id:1,name:'Rápido y Preciso'},{id:2,name:'Completa el Versículo'},{id:3,name:'¿Quién soy?'},{id:4,name:'Verdadero o Falso'},{id:5,name:'Versus Final'}];
 const QQ=[
-  {id:1,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién construyó el arca?',a:'Noé — Génesis 6:13-14'},
-  {id:2,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Cuántos discípulos tenía Jesús?',a:'12 — Mateo 10:1-2'},
-  {id:3,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién negó a Jesús tres veces?',a:'Pedro — Lucas 22:54-62'},
-  {id:4,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Primer libro de la Biblia?',a:'Génesis — Génesis 1:1'},
-  {id:5,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Último libro de la Biblia?',a:'Apocalipsis — Apocalipsis 1:1'},
-  {id:6,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién mató a Goliat?',a:'David — 1 Samuel 17:49'},
-  {id:7,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Madre de Jesús?',a:'María — Lucas 1:31'},
-  {id:8,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién interpretó sueños en Egipto?',a:'José — Génesis 41:15-16'},
-  {id:9,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Monte donde Dios dio la ley?',a:'Sinaí — Éxodo 19:20'},
-  {id:10,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién escribió muchos Salmos?',a:'David — Salmos'},
-  {id:11,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Ciudad donde nació Jesús?',a:'Belén — Mateo 2:1'},
-  {id:12,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién bautizó a Jesús?',a:'Juan el Bautista — Mateo 3:13'},
-  {id:13,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Cuántos días llovió en el diluvio?',a:'40 días — Génesis 7:12'},
-  {id:14,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién liberó a Israel de Egipto?',a:'Moisés — Éxodo 3:10'},
-  {id:15,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el padre de Samuel?',a:'Elcana — 1 Samuel 1:1'},
-  {id:16,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el rey antes de David?',a:'Saúl — 1 Samuel 10:1'},
-  {id:17,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién escribió Lamentaciones?',a:'Jeremías — Lamentaciones 1:1'},
-  {id:18,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el sucesor de Moisés?',a:'Josué — Josué 1:1'},
-  {id:19,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el padre de Juan el Bautista?',a:'Zacarías — Lucas 1:13'},
-  {id:20,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Qué profeta confrontó a David por Betsabé?',a:'Natán — 2 Samuel 12:1'},
-  {id:21,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Jehová es mi pastor...',a:'...nada me faltará — Salmo 23:1'},
-  {id:22,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Todo lo puedo en...',a:'...Cristo que me fortalece — Filipenses 4:13'},
-  {id:23,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'De tal manera amó Dios al mundo...',a:'...que ha dado a su Hijo — Juan 3:16'},
-  {id:24,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'El Señor es mi luz y...',a:'...mi salvación — Salmo 27:1'},
-  {id:25,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Clama a mí y...',a:'...yo te responderé — Jeremías 33:3'},
-  {id:26,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Honra a tu padre y...',a:'...a tu madre — Éxodo 20:12'},
-  {id:27,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'En el principio creó Dios...',a:'...los cielos y la tierra — Génesis 1:1'},
-  {id:28,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El que habita al abrigo...',a:'...del Altísimo — Salmo 91:1'},
-  {id:29,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Buscad primeramente...',a:'...el reino de Dios — Mateo 6:33'},
-  {id:30,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'No temas porque...',a:'...yo estoy contigo — Isaías 41:10'},
-  {id:31,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El corazón alegre...',a:'...hermosea el rostro — Proverbios 15:13'},
-  {id:32,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Fiel es Dios...',a:'...que no os dejará ser tentados — 1 Corintios 10:13'},
-  {id:33,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Si confesamos nuestros...',a:'...pecados — 1 Juan 1:9'},
-  {id:34,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El gozo del Señor...',a:'...es vuestra fuerza — Nehemías 8:10'},
-  {id:35,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Mi gracia es suficiente...',a:'...para ti — 2 Corintios 12:9'},
+  {id:1,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién construyó el arca?',a:'Noé  Génesis 6:13-14'},
+  {id:2,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Cuántos discípulos tenía Jesús?',a:'12  Mateo 10:1-2'},
+  {id:3,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién negó a Jesús tres veces?',a:'Pedro  Lucas 22:54-62'},
+  {id:4,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Primer libro de la Biblia?',a:'Génesis  Génesis 1:1'},
+  {id:5,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Último libro de la Biblia?',a:'Apocalipsis  Apocalipsis 1:1'},
+  {id:6,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Quién mató a Goliat?',a:'David  1 Samuel 17:49'},
+  {id:7,r:'Ronda 1',rn:'Rápido y Preciso',d:'Fácil',q:'¿Madre de Jesús?',a:'María  Lucas 1:31'},
+  {id:8,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién interpretó sueños en Egipto?',a:'José  Génesis 41:15-16'},
+  {id:9,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Monte donde Dios dio la ley?',a:'Sinaí  Éxodo 19:20'},
+  {id:10,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién escribió muchos Salmos?',a:'David  Salmos'},
+  {id:11,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Ciudad donde nació Jesús?',a:'Belén  Mateo 2:1'},
+  {id:12,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién bautizó a Jesús?',a:'Juan el Bautista  Mateo 3:13'},
+  {id:13,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Cuántos días llovió en el diluvio?',a:'40 días  Génesis 7:12'},
+  {id:14,r:'Ronda 1',rn:'Rápido y Preciso',d:'Medio',q:'¿Quién liberó a Israel de Egipto?',a:'Moisés  Éxodo 3:10'},
+  {id:15,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el padre de Samuel?',a:'Elcana  1 Samuel 1:1'},
+  {id:16,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el rey antes de David?',a:'Saúl  1 Samuel 10:1'},
+  {id:17,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién escribió Lamentaciones?',a:'Jeremías  Lamentaciones 1:1'},
+  {id:18,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el sucesor de Moisés?',a:'Josué  Josué 1:1'},
+  {id:19,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Quién fue el padre de Juan el Bautista?',a:'Zacarías  Lucas 1:13'},
+  {id:20,r:'Ronda 1',rn:'Rápido y Preciso',d:'Difícil',q:'¿Qué profeta confrontó a David por Betsabé?',a:'Natán  2 Samuel 12:1'},
+  {id:21,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Jehová es mi pastor...',a:'...nada me faltará  Salmo 23:1'},
+  {id:22,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Todo lo puedo en...',a:'...Cristo que me fortalece  Filipenses 4:13'},
+  {id:23,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'De tal manera amó Dios al mundo...',a:'...que ha dado a su Hijo  Juan 3:16'},
+  {id:24,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'El Señor es mi luz y...',a:'...mi salvación  Salmo 27:1'},
+  {id:25,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Clama a mí y...',a:'...yo te responderé  Jeremías 33:3'},
+  {id:26,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'Honra a tu padre y...',a:'...a tu madre  Éxodo 20:12'},
+  {id:27,r:'Ronda 2',rn:'Completa el Versículo',d:'Fácil',q:'En el principio creó Dios...',a:'...los cielos y la tierra  Génesis 1:1'},
+  {id:28,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El que habita al abrigo...',a:'...del Altísimo  Salmo 91:1'},
+  {id:29,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Buscad primeramente...',a:'...el reino de Dios  Mateo 6:33'},
+  {id:30,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'No temas porque...',a:'...yo estoy contigo  Isaías 41:10'},
+  {id:31,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El corazón alegre...',a:'...hermosea el rostro  Proverbios 15:13'},
+  {id:32,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Fiel es Dios...',a:'...que no os dejará ser tentados  1 Corintios 10:13'},
+  {id:33,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'Si confesamos nuestros...',a:'...pecados  1 Juan 1:9'},
+  {id:34,r:'Ronda 2',rn:'Completa el Versículo',d:'Medio',q:'El gozo del Señor...',a:'...es vuestra fuerza  Nehemías 8:10'},
+  {id:35,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Mi gracia es suficiente...',a:'...para ti  2 Corintios 12:9'},
   {id:36,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Todo tiene su tiempo...',a:'Eclesiastés 3:1'},
-  {id:37,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Lámpara es a mis pies...',a:'...tu palabra — Salmo 119:105'},
-  {id:38,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'El que cree en mí...',a:'...tiene vida eterna — Juan 6:47'},
-  {id:39,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Ama a tu prójimo...',a:'...como a ti mismo — Mateo 22:39'},
-  {id:40,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Sed santos porque...',a:'...yo soy santo — 1 Pedro 1:16'},
-  {id:41,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Construí un arca para salvar animales',a:'Noé — Génesis 6:14'},
-  {id:42,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui vendido por mis hermanos',a:'José — Génesis 37:28'},
-  {id:43,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui rey y escribí salmos',a:'David — 2 Samuel 23:1'},
-  {id:44,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Negué a Jesús tres veces',a:'Pedro — Lucas 22:61'},
-  {id:45,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Traicioné a Jesús por dinero',a:'Judas — Mateo 26:15'},
-  {id:46,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui tragado por un pez',a:'Jonás — Jonás 1:17'},
-  {id:47,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui el más fuerte del mundo',a:'Sansón — Jueces 16:17'},
-  {id:48,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Guié al pueblo fuera de Egipto',a:'Moisés — Éxodo 3:10'},
-  {id:49,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Construí el templo',a:'Salomón — 1 Reyes 6:1'},
-  {id:50,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Bauticé a Jesús',a:'Juan el Bautista — Mateo 3:13'},
-  {id:51,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Vi una escalera al cielo',a:'Jacob — Génesis 28:12'},
-  {id:52,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Fui médico y escribí un evangelio',a:'Lucas — Colosenses 4:14'},
-  {id:53,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Fui perseguidor y luego apóstol',a:'Pablo — Hechos 9:1-6'},
-  {id:54,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Derribé murallas con trompetas',a:'Josué — Josué 6:20'},
-  {id:55,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Sobreviví al foso de leones',a:'Daniel — Daniel 6:22'},
-  {id:56,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Interpreto sueños en Babilonia',a:'Daniel — Daniel 2:19'},
-  {id:57,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Fui esposa de Abraham',a:'Sara — Génesis 17:15'},
-  {id:58,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Fui madre de Samuel',a:'Ana — 1 Samuel 1:20'},
-  {id:59,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Vi a Jesús resucitado primero',a:'María Magdalena — Juan 20:14'},
-  {id:60,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Subí al cielo en un carro de fuego',a:'Elías — 2 Reyes 2:11'},
-  {id:61,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Moisés entró a la tierra prometida',a:'FALSO — Deuteronomio 34:4-5'},
-  {id:62,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'David fue rey de Israel',a:'VERDADERO — 2 Samuel 5:3'},
-  {id:63,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Jonás obedeció a Dios desde el principio',a:'FALSO — Jonás 1:3'},
-  {id:64,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Jesús tuvo 12 discípulos',a:'VERDADERO — Mateo 10:1'},
-  {id:65,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Pablo escribió Romanos',a:'VERDADERO — Romanos 1:1'},
-  {id:66,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Sansón era débil',a:'FALSO — Jueces 16:17'},
-  {id:67,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Noé construyó una torre',a:'FALSO — Génesis 11:4'},
-  {id:68,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Pedro caminó sobre el agua',a:'VERDADERO — Mateo 14:29'},
-  {id:69,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Jesús nació en Nazaret',a:'FALSO — Mateo 2:1'},
-  {id:70,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'María era esposa de José',a:'VERDADERO — Mateo 1:18'},
-  {id:71,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'El diluvio duró 10 días',a:'FALSO — Génesis 7:12 (fueron 40)'},
-  {id:72,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Abraham tuvo un hijo llamado Isaac',a:'VERDADERO — Génesis 21:3'},
-  {id:73,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Daniel estuvo en el foso de leones',a:'VERDADERO — Daniel 6:16'},
-  {id:74,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Jesús convirtió agua en vino',a:'VERDADERO — Juan 2:9'},
-  {id:75,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Judas fue fiel a Jesús',a:'FALSO — Mateo 26:14'},
-  {id:76,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'El Espíritu Santo descendió como paloma',a:'VERDADERO — Mateo 3:16'},
-  {id:77,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Jesús resucitó al tercer día',a:'VERDADERO — Lucas 24:7'},
+  {id:37,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Lámpara es a mis pies...',a:'...tu palabra  Salmo 119:105'},
+  {id:38,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'El que cree en mí...',a:'...tiene vida eterna  Juan 6:47'},
+  {id:39,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Ama a tu prójimo...',a:'...como a ti mismo  Mateo 22:39'},
+  {id:40,r:'Ronda 2',rn:'Completa el Versículo',d:'Difícil',q:'Sed santos porque...',a:'...yo soy santo  1 Pedro 1:16'},
+  {id:41,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Construí un arca para salvar animales',a:'Noé  Génesis 6:14'},
+  {id:42,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui vendido por mis hermanos',a:'José  Génesis 37:28'},
+  {id:43,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui rey y escribí salmos',a:'David  2 Samuel 23:1'},
+  {id:44,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Negué a Jesús tres veces',a:'Pedro  Lucas 22:61'},
+  {id:45,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Traicioné a Jesús por dinero',a:'Judas  Mateo 26:15'},
+  {id:46,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui tragado por un pez',a:'Jonás  Jonás 1:17'},
+  {id:47,r:'Ronda 3',rn:'¿Quién soy?',d:'Fácil',q:'Fui el más fuerte del mundo',a:'Sansón  Jueces 16:17'},
+  {id:48,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Guié al pueblo fuera de Egipto',a:'Moisés  Éxodo 3:10'},
+  {id:49,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Construí el templo',a:'Salomón  1 Reyes 6:1'},
+  {id:50,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Bauticé a Jesús',a:'Juan el Bautista  Mateo 3:13'},
+  {id:51,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Vi una escalera al cielo',a:'Jacob  Génesis 28:12'},
+  {id:52,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Fui médico y escribí un evangelio',a:'Lucas  Colosenses 4:14'},
+  {id:53,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Fui perseguidor y luego apóstol',a:'Pablo  Hechos 9:1-6'},
+  {id:54,r:'Ronda 3',rn:'¿Quién soy?',d:'Medio',q:'Derribé murallas con trompetas',a:'Josué  Josué 6:20'},
+  {id:55,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Sobreviví al foso de leones',a:'Daniel  Daniel 6:22'},
+  {id:56,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Interpreto sueños en Babilonia',a:'Daniel  Daniel 2:19'},
+  {id:57,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Fui esposa de Abraham',a:'Sara  Génesis 17:15'},
+  {id:58,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Fui madre de Samuel',a:'Ana  1 Samuel 1:20'},
+  {id:59,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Vi a Jesús resucitado primero',a:'María Magdalena  Juan 20:14'},
+  {id:60,r:'Ronda 3',rn:'¿Quién soy?',d:'Difícil',q:'Subí al cielo en un carro de fuego',a:'Elías  2 Reyes 2:11'},
+  {id:61,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Moisés entró a la tierra prometida',a:'FALSO  Deuteronomio 34:4-5'},
+  {id:62,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'David fue rey de Israel',a:'VERDADERO  2 Samuel 5:3'},
+  {id:63,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Jonás obedeció a Dios desde el principio',a:'FALSO  Jonás 1:3'},
+  {id:64,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Jesús tuvo 12 discípulos',a:'VERDADERO  Mateo 10:1'},
+  {id:65,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Pablo escribió Romanos',a:'VERDADERO  Romanos 1:1'},
+  {id:66,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Sansón era débil',a:'FALSO  Jueces 16:17'},
+  {id:67,r:'Ronda 4',rn:'Verdadero o Falso',d:'Fácil',q:'Noé construyó una torre',a:'FALSO  Génesis 11:4'},
+  {id:68,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Pedro caminó sobre el agua',a:'VERDADERO  Mateo 14:29'},
+  {id:69,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Jesús nació en Nazaret',a:'FALSO  Mateo 2:1'},
+  {id:70,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'María era esposa de José',a:'VERDADERO  Mateo 1:18'},
+  {id:71,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'El diluvio duró 10 días',a:'FALSO  Génesis 7:12 (fueron 40)'},
+  {id:72,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Abraham tuvo un hijo llamado Isaac',a:'VERDADERO  Génesis 21:3'},
+  {id:73,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Daniel estuvo en el foso de leones',a:'VERDADERO  Daniel 6:16'},
+  {id:74,r:'Ronda 4',rn:'Verdadero o Falso',d:'Medio',q:'Jesús convirtió agua en vino',a:'VERDADERO  Juan 2:9'},
+  {id:75,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Judas fue fiel a Jesús',a:'FALSO  Mateo 26:14'},
+  {id:76,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'El Espíritu Santo descendió como paloma',a:'VERDADERO  Mateo 3:16'},
+  {id:77,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Jesús resucitó al tercer día',a:'VERDADERO  Lucas 24:7'},
   {id:78,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'La Biblia tiene 66 libros',a:'VERDADERO'},
-  {id:79,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Goliat era pequeño',a:'FALSO — 1 Samuel 17:4'},
-  {id:80,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'El apóstol Juan escribió Apocalipsis',a:'VERDADERO — Apocalipsis 1:1'},
-  {id:81,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue el hijo de David que reinó después?',a:'Salomón — 1 Reyes 2:12'},
+  {id:79,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'Goliat era pequeño',a:'FALSO  1 Samuel 17:4'},
+  {id:80,r:'Ronda 4',rn:'Verdadero o Falso',d:'Difícil',q:'El apóstol Juan escribió Apocalipsis',a:'VERDADERO  Apocalipsis 1:1'},
+  {id:81,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue el hijo de David que reinó después?',a:'Salomón  1 Reyes 2:12'},
   {id:82,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Qué libro sigue a Hechos?',a:'Romanos'},
-  {id:83,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue la esposa de Isaac?',a:'Rebeca — Génesis 24:67'},
-  {id:84,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién negó a Jesús antes que cante el gallo?',a:'Pedro — Mateo 26:74'},
-  {id:85,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Qué apóstol dudó de la resurrección?',a:'Tomás — Juan 20:25'},
-  {id:86,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue el primer mártir cristiano?',a:'Esteban — Hechos 7:59'},
-  {id:87,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Qué profeta fue llevado al cielo sin morir?',a:'Elías — 2 Reyes 2:11'},
-  {id:88,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué mujer fue jueza de Israel?',a:'Débora — Jueces 4:4'},
-  {id:89,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién escribió la mayoría de Proverbios?',a:'Salomón — Proverbios 1:1'},
-  {id:90,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué rey tuvo un sueño sobre una estatua?',a:'Nabucodonosor — Daniel 2:1'},
-  {id:91,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién era el padre de Juan el Bautista?',a:'Zacarías — Lucas 1:13'},
-  {id:92,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién pidió sabiduría a Dios?',a:'Salomón — 1 Reyes 3:9'},
-  {id:93,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién luchó con un ángel?',a:'Jacob — Génesis 32:24'},
-  {id:94,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué apóstol era cobrador de impuestos?',a:'Mateo — Mateo 9:9'},
-  {id:95,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Quién fue arrojado al horno de fuego?',a:'Sadrac, Mesac y Abed-nego — Daniel 3:23'},
-  {id:96,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué libro habla del valle de huesos secos?',a:'Ezequiel — Ezequiel 37:1'},
+  {id:83,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue la esposa de Isaac?',a:'Rebeca  Génesis 24:67'},
+  {id:84,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién negó a Jesús antes que cante el gallo?',a:'Pedro  Mateo 26:74'},
+  {id:85,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Qué apóstol dudó de la resurrección?',a:'Tomás  Juan 20:25'},
+  {id:86,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Quién fue el primer mártir cristiano?',a:'Esteban  Hechos 7:59'},
+  {id:87,r:'Ronda 5',rn:'Versus Final',d:'Fácil',q:'¿Qué profeta fue llevado al cielo sin morir?',a:'Elías  2 Reyes 2:11'},
+  {id:88,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué mujer fue jueza de Israel?',a:'Débora  Jueces 4:4'},
+  {id:89,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién escribió la mayoría de Proverbios?',a:'Salomón  Proverbios 1:1'},
+  {id:90,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué rey tuvo un sueño sobre una estatua?',a:'Nabucodonosor  Daniel 2:1'},
+  {id:91,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién era el padre de Juan el Bautista?',a:'Zacarías  Lucas 1:13'},
+  {id:92,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién pidió sabiduría a Dios?',a:'Salomón  1 Reyes 3:9'},
+  {id:93,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Quién luchó con un ángel?',a:'Jacob  Génesis 32:24'},
+  {id:94,r:'Ronda 5',rn:'Versus Final',d:'Medio',q:'¿Qué apóstol era cobrador de impuestos?',a:'Mateo  Mateo 9:9'},
+  {id:95,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Quién fue arrojado al horno de fuego?',a:'Sadrac, Mesac y Abed-nego  Daniel 3:23'},
+  {id:96,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué libro habla del valle de huesos secos?',a:'Ezequiel  Ezequiel 37:1'},
   {id:97,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Quién escribió Hebreos?',a:'Autor desconocido'},
-  {id:98,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué ángel anunció el nacimiento de Jesús?',a:'Gabriel — Lucas 1:26'},
-  {id:99,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Cuántos años vivió Matusalén?',a:'969 años — Génesis 5:27'},
-  {id:100,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué ciudad fue destruida junto a Sodoma?',a:'Gomorra — Génesis 19:24'},
+  {id:98,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué ángel anunció el nacimiento de Jesús?',a:'Gabriel  Lucas 1:26'},
+  {id:99,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Cuántos años vivió Matusalén?',a:'969 años  Génesis 5:27'},
+  {id:100,r:'Ronda 5',rn:'Versus Final',d:'Difícil',q:'¿Qué ciudad fue destruida junto a Sodoma?',a:'Gomorra  Génesis 19:24'},
 ];
 
-/* ── STATE ── */
+/*  STATE  */
 const ST={
   scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',
   selQ:null,answered:{},filter:'all',history:[],
@@ -550,26 +510,26 @@ function bcast(m){
 // Listen for buzzer from buzzer page
 ch.onmessage=e=>{
   if(e.data.type==='BUZZER_HIT'){
-    toast(`🔔 ${e.data.team==='a'?ST.nameA:ST.nameB} pulsó el buzzer!`);
+    toast(` ${e.data.team==='a'?ST.nameA:ST.nameB} pulsó el buzzer!`);
     bcast(e.data);
   }
 };
 
-/* ── TEAM NAMES ── */
+/*  TEAM NAMES  */
 function liveTeamName(t,v){
   const upper=v.toUpperCase();
-  if(t==='a'){ST.nameA=upper;document.getElementById('btnCA').textContent=`✓ Correcto ${upper}`;document.getElementById('btnWA').textContent=`✗ Incorrecto ${upper}`;document.getElementById('bzA').textContent=`🔔 Buzzer ${upper}`;document.getElementById('winA').textContent=`🏆 ${upper}`;document.getElementById('statNA').textContent=upper;}
-  else{ST.nameB=upper;document.getElementById('btnCB').textContent=`✓ Correcto ${upper}`;document.getElementById('btnWB').textContent=`✗ Incorrecto ${upper}`;document.getElementById('bzB').textContent=`🔔 Buzzer ${upper}`;document.getElementById('winB').textContent=`🏆 ${upper}`;document.getElementById('statNB').textContent=upper;}
+  if(t==='a'){ST.nameA=upper;document.getElementById('btnCA').textContent="Correcto "+upper;document.getElementById('btnWA').textContent="Incorrecto "+upper;document.getElementById('bzA').textContent="Buzzer "+upper;document.getElementById('winA').textContent=upper;document.getElementById('statNA').textContent=upper;}
+  else{ST.nameB=upper;document.getElementById('btnCB').textContent="Correcto "+upper;document.getElementById('btnWB').textContent="Incorrecto "+upper;document.getElementById('bzB').textContent="Buzzer "+upper;document.getElementById('winB').textContent=upper;document.getElementById('statNB').textContent=upper;}
 }
 function applyTeams(){
   ST.nameA=document.getElementById('nameA').value.toUpperCase()||'EQUIPO A';
   ST.nameB=document.getElementById('nameB').value.toUpperCase()||'EQUIPO B';
   bcast({type:'UPDATE_TEAMS',nameA:ST.nameA,nameB:ST.nameB});
   pushStateSnapshot();
-  toast('✓ Nombres actualizados en pantalla');
+  toast('Nombres actualizados');
 }
 
-/* ── SCORE ── */
+/*  SCORE  */
 function chScore(t,d){
   if(t==='a') ST.scoreA=Math.max(0,ST.scoreA+d);
   else ST.scoreB=Math.max(0,ST.scoreB+d);
@@ -587,7 +547,7 @@ function awardPoint(t){
   chScore(t,1);
   if(ST.selQ){ST.answered[ST.selQ.id]={team:t,correct:true};addHist(ST.selQ,t,true);renderList();updStats();}
   bcast({type:'CLEAR_ACTIVE'});
-  toast(`✓ Punto a ${t==='a'?ST.nameA:ST.nameB}`);
+  toast("Punto a "+(t==="a"?ST.nameA:ST.nameB));
 }
 function wrongAns(t){
   // Always broadcast the wrong answer effect, regardless of question state
@@ -601,86 +561,138 @@ function wrongAns(t){
     updStats();
   }
   
-  toast(`✗ Respuesta incorrecta de ${t==='a'?ST.nameA:ST.nameB}`);
+  toast("Respuesta incorrecta  "+(t==="a"?ST.nameA:ST.nameB));
 }
 
-/* ── TEST FUNCTIONS ── */
+/*  TEST FUNCTIONS  */
 function testWrongA(){
   bcast({type:'WRONG_ANSWER',team:'a'});
-  toast('🧪 Probando efecto visual para ' + ST.nameA);
+  toast(' Probando efecto visual para ' + ST.nameA);
 }
 function testWrongB(){
   bcast({type:'WRONG_ANSWER',team:'b'});
-  toast('🧪 Probando efecto visual para ' + ST.nameB);
+  toast(' Probando efecto visual para ' + ST.nameB);
 }
 
-/* ── TIMER ── */
+/*  TIMER  */
 function adjTimer(d){ST.timerSec=Math.max(5,Math.min(180,ST.timerSec+d));document.getElementById('timerVal').textContent=ST.timerSec;document.getElementById('timerInput').value=ST.timerSec;}
 function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;document.getElementById('timerVal').textContent=n;}}
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
-  ST.timerLeft=s;bcast({type:'START_TIMER',seconds:s});startLocalTimer(s);toast(`▶ Cronómetro: ${s}s`);
+  ST.timerLeft=s;bcast({type:'START_TIMER',seconds:s});startLocalTimer(s);toast("Cronómetro iniciado: "+s+"s");
 }
-function stopTimerMod(){clearInterval(ST.timerInt);document.getElementById('modTimer').classList.remove('dng');bcast({type:'STOP_TIMER'});toast('■ Cronómetro detenido');}
+function stopTimerMod(){clearInterval(ST.timerInt);document.getElementById('modTimer').classList.remove('dng');bcast({type:'STOP_TIMER'});toast(' Cronómetro detenido');}
 function startLocalTimer(s){
   clearInterval(ST.timerInt);ST.timerLeft=s;updModTimer();
   ST.timerInt=setInterval(()=>{ST.timerLeft--;updModTimer();if(ST.timerLeft<=0)clearInterval(ST.timerInt);},1000);
 }
 function updModTimer(){const e=document.getElementById('modTimer');e.textContent=Math.max(0,ST.timerLeft);e.classList.toggle('dng',ST.timerLeft<=5);}
 
-/* ── QUESTION CTRL ── */
+/*  QUESTION CTRL  */
 function showSelQ(){
-  if(!ST.selQ){toast('⚠ Selecciona una pregunta');return;}
+  if(!ST.selQ){toast(' Selecciona una pregunta');return;}
   const q=ST.selQ;
   bcast({type:'SHOW_QUESTION',question:q.q,answer:q.a,difficulty:q.d,round:`${q.r} · ${q.rn}`,index:q.id,total:QQ.length});
   bcast({type:'UPDATE_ROUND',round:q.r,name:q.rn});
   // sync round selector
   const rv=q.r.replace('Ronda ','');
   document.getElementById('roundSel').value=rv;
-  toast(`📢 Pregunta #${q.id} en pantalla`);
+  toast("Pregunta #"+q.id+" en pantalla");
 }
-function revealAns(){bcast({type:'SHOW_ANSWER'});toast('👁 Respuesta revelada');}
-function hideQ(){bcast({type:'HIDE_QUESTION'});toast('✕ Pregunta ocultada');}
+function revealAns(){bcast({type:'SHOW_ANSWER'});toast('Revelar respuesta revelada');}
+function hideQ(){bcast({type:'HIDE_QUESTION'});toast(' Pregunta ocultada');}
 function clearActive(){bcast({type:'CLEAR_ACTIVE'});}
-function manualBz(t){const name=t==='a'?ST.nameA:ST.nameB;bcast({type:'BUZZER_HIT',team:t,name});toast(`🔔 Buzzer: ${name}`);}
+function manualBz(t){const name=t==='a'?ST.nameA:ST.nameB;bcast({type:'BUZZER_HIT',team:t,name});toast("Buzzer: "+name);}
 
-/* ── ROUND ── */
+/*  ROUND  */
 function changeRound(){
   const v=document.getElementById('roundSel').value;
   const r=ROUNDS.find(x=>x.id==v);
   bcast({type:'UPDATE_ROUND',round:`Ronda ${r.id}`,name:r.name});
-  pushStateSnapshot();
-  toast(`✓ Ronda: ${r.name}`);
+  toast("Ronda: "+r.name);
 }
 
-/* ── MUSIC ── */
+/*  MUSIC — reproducción local en moderador  */
+let ytPlayer=null, ytReady=false, ytPendingUrl=null, ytPendingVol=0.4, ytFadeInt=null;
+
+(function(){
+  if(document.getElementById('yt-api')) return;
+  const s=document.createElement('script');
+  s.id='yt-api';s.src='https://www.youtube.com/iframe_api';
+  document.head.appendChild(s);
+})();
+
+window.onYouTubeIframeAPIReady=function(){
+  ytReady=true;
+  if(ytPendingUrl){_createPlayer(ytPendingUrl,ytPendingVol);ytPendingUrl=null;}
+};
+
+function _createPlayer(url,vol){
+  if(ytPlayer){try{ytPlayer.destroy();}catch(e){}ytPlayer=null;}
+  const holder=document.getElementById('ytHolder');
+  const div=document.createElement('div');div.id='yt-el';
+  holder.innerHTML='';holder.appendChild(div);
+  const mv=url.match(/(?:v=|youtu\.be\/)([^&?/\s]+)/);
+  const ml=url.match(/list=([^&?\s]+)/);
+  if(!mv&&!ml)return;
+  const cfg={
+    width:'2',height:'2',
+    playerVars:{autoplay:1,controls:0,rel:0,loop:1,enablejsapi:1,origin:location.origin||'http://localhost'},
+    events:{
+      onReady(e){e.target.setVolume(Math.round(vol*100));e.target.playVideo();},
+      onError(e){console.warn('YT error:',e.data);}
+    }
+  };
+  if(ml){cfg.playerVars.list=ml[1];cfg.playerVars.listType='playlist';if(mv)cfg.videoId=mv[1];}
+  else{cfg.videoId=mv[1];cfg.playerVars.playlist=mv[1];}
+  ytPlayer=new YT.Player('yt-el',cfg);
+}
+
 function setMusic(url){document.getElementById('musicUrl').value=url;}
 function playMusic(){
   const url=document.getElementById('musicUrl').value.trim();
-  if(!url){toast('⚠ Pega un link de YouTube');return;}
-  bcast({type:'PLAY_YT',url,vol:0.4});toast('▶ Música enviada a pantalla');
+  if(!url){toast('Pega un link de YouTube');return;}
+  clearInterval(ytFadeInt);
+  ytPendingVol=0.4;
+  if(!ytReady){ytPendingUrl=url;toast('Cargando reproductor...');return;}
+  _createPlayer(url,0.4);
+  toast('Reproduciendo música');
 }
-function fadeMusic(){bcast({type:'FADE_YT'});toast('↓ Fade out de música');}
-function stopMusic(){bcast({type:'STOP_YT'});toast('■ Música detenida');}
+function fadeMusic(){
+  if(!ytPlayer){toast('No hay música activa');return;}
+  clearInterval(ytFadeInt);
+  let vol=40;
+  ytFadeInt=setInterval(()=>{
+    vol-=4;
+    if(vol<=0){clearInterval(ytFadeInt);_stopPlayer();return;}
+    try{ytPlayer.setVolume(vol);}catch(e){clearInterval(ytFadeInt);}
+  },120);
+  toast('Fade out de música');
+}
+function _stopPlayer(){
+  if(ytPlayer){try{ytPlayer.stopVideo();ytPlayer.destroy();}catch(e){}ytPlayer=null;}
+  document.getElementById('ytHolder').innerHTML='';
+}
+function stopMusic(){clearInterval(ytFadeInt);_stopPlayer();toast('Música detenida');}
 
-/* ── SOUND TOGGLE ── */
+/*  SOUND TOGGLE  */
 let soundOn=true;
 function toggleSound(){
   soundOn=!soundOn;ST.sounds=soundOn;
   document.getElementById('sTrack').className='tog-track'+(soundOn?' on':'');
   document.getElementById('sLbl').textContent=soundOn?'SONIDOS ACTIVADOS':'SONIDOS DESACTIVADOS';
   bcast({type:'SOUND_TOGGLE',enabled:soundOn});
-  toast(soundOn?'🔊 Sonidos activados':'🔇 Sonidos desactivados');
+  toast(soundOn?'Sonidos activados':'Sonidos desactivados');
 }
 
-/* ── WINNER ── */
+/*  WINNER  */
 function declWinner(t){
   const name=t==='a'?ST.nameA:ST.nameB;
   bcast({type:'SHOW_WINNER',team:t,name,scoreA:ST.scoreA,scoreB:ST.scoreB});
-  toast(`🏆 ¡${name} ganador!`);
+  toast("Ganador: "+name);
 }
 
-/* ── LIST ── */
+/*  LIST  */
 let curFilter='all';
 function setFilter(f,el){curFilter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderList();}
 function renderList(){
@@ -702,7 +714,7 @@ function renderList(){
     const pc=d.includes('fácil')||d==='facil'?'pf':d.includes('medio')||d.includes('media')?'pm':'pd';
     const ans=ST.answered[q.id];
     const ac=ans?(ans.correct?(ans.team==='a'?'ans-a':'ans-b'):'ans-w'):'';
-    const badge=ans?(ans.correct?'✓':'✗'):'';
+    const badge=ans?(ans.correct?'':''):'';
     const isSel=ST.selQ&&ST.selQ.id===q.id;
     return `<div class="qcard ${ac} ${isSel?'sel':''}" onclick="selQ(${q.id})">
       <div class="qcard-hdr"><span class="qnum">#${q.id}</span><span class="pip ${pc}"></span><span style="font-size:9px;color:var(--dim)">${q.d}</span>${badge?`<span class="abadge">${badge}</span>`:''}</div>
@@ -719,27 +731,27 @@ function renderSelQ(){
   const q=ST.selQ;if(!q)return;
   const d=q.d.toLowerCase();
   const c=d.includes('fácil')||d==='facil'?'var(--green)':d.includes('medio')||d.includes('media')?'#F1C40F':'var(--red)';
-  document.getElementById('selQBox').innerHTML=`<div style="font-size:10px;color:${c};letter-spacing:2px;margin-bottom:6px">${q.d.toUpperCase()} · ${q.r}</div><div class="cq-q">${q.q}</div><div class="cq-a">✝ ${q.a}</div>`;
+  document.getElementById('selQBox').innerHTML=`<div style="font-size:10px;color:${c};letter-spacing:2px;margin-bottom:6px">${q.d.toUpperCase()} · ${q.r}</div><div class="cq-q">${q.q}</div><div class="cq-a">${q.a}</div>`;
 }
 
-/* ── HISTORY ── */
+/*  HISTORY  */
 function addHist(q,t,ok){ST.history.unshift({q,t,ok});renderHist();}
 function renderHist(){
-  document.getElementById('histBody').innerHTML=ST.history.slice(0,15).map(h=>`<tr><td>${h.q.id}</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.q.q.substring(0,28)}...</td><td class="${h.t==='a'?'sta':'stb'}">${h.t==='a'?ST.nameA:ST.nameB}</td><td>${h.ok?'✓':'✗'}</td></tr>`).join('');
+  document.getElementById('histBody').innerHTML=ST.history.slice(0,15).map(h=>`<tr><td>${h.q.id}</td><td style="max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${h.q.q.substring(0,28)}...</td><td class="${h.t==='a'?'sta':'stb'}">${h.t==='a'?ST.nameA:ST.nameB}</td><td>${h.ok?'':''}</td></tr>`).join('');
 }
 function updStats(){const n=Object.keys(ST.answered).length;document.getElementById('stTotal').textContent=n;document.getElementById('stPend').textContent=QQ.length-n;}
 
-/* ── TOAST ── */
+/*  TOAST  */
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2500);}
 
-/* ── INIT ── */
+/*  INIT  */
 renderList();updStats();
 // Init button labels
-document.getElementById('btnCA').textContent=`✓ Correcto ${ST.nameA}`;
-document.getElementById('btnCB').textContent=`✓ Correcto ${ST.nameB}`;
-document.getElementById('btnWA').textContent=`✗ Incorrecto ${ST.nameA}`;
-document.getElementById('btnWB').textContent=`✗ Incorrecto ${ST.nameB}`;
+document.getElementById('btnCA').textContent=` Correcto ${ST.nameA}`;
+document.getElementById('btnCB').textContent=` Correcto ${ST.nameB}`;
+document.getElementById('btnWA').textContent=` Incorrecto ${ST.nameA}`;
+document.getElementById('btnWB').textContent=` Incorrecto ${ST.nameB}`;
 </script>
 </body>
 </html>
