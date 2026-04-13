@@ -347,10 +347,11 @@ let roomCode='';
 async function sendToSupabase(msg){
   if(!roomCode) return;
   try{
+    const tagged={...msg,_sender:'mod'};
     await fetch(`${SUPABASE_URL}/rest/v1/quiz_events`,{
       method:'POST',
       headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
-      body:JSON.stringify({room:roomCode,payload:JSON.stringify(msg),ts:Date.now()})
+      body:JSON.stringify({room:roomCode,payload:JSON.stringify(tagged),ts:Date.now()})
     });
   }catch(e){}
 }
@@ -365,7 +366,12 @@ async function pollSupabase(){
     const data=await r.json();
     if(Array.isArray(data)&&data.length){
       data.forEach(row=>{
-        try{const msg=JSON.parse(row.payload);if(msg.type==='BUZZER_HIT')handle(msg);}catch(e){}
+        try{
+          const msg=JSON.parse(row.payload);
+          // Skip events we sent ourselves
+          if(msg._sender==='mod') return;
+          if(msg.type==='BUZZER_HIT') handle(msg);
+        }catch(e){}
       });
       lastTs=data[data.length-1].ts;
     }
@@ -383,7 +389,11 @@ async function pushStateSnapshot(){
     round:ST.currentRound||'',roundName:ST.currentRoundName||'',
     questionActive:ST.questionActive,
     activeBuzzerTeam:ST.activeBuzzerTeam,
+    answerRevealed:ST.answerRevealed||false,
     currentQuestion:q?{q:q.q,a:q.a,d:q.d,id:q.id,r:q.r,rn:q.rn}:null,
+    timerLeft:ST.timerLeft,
+    timerTotal:ST.timerSec,
+    timerRunning:!!(ST.timerInt),
   };
   try{
     await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
@@ -548,6 +558,7 @@ const ST={
   timerInt:null, sounds:true,
   activeBuzzerTeam:null,
   questionActive:false,
+  answerRevealed:false,
   currentRound:'', currentRoundName:'',
 };
 
@@ -604,9 +615,11 @@ function updScoreDisplay(){
 function awardPoint(t){
   chScore(t,1);
   ST.activeBuzzerTeam=null;
+  ST.questionActive=false;
   updBuzzerStatus('libre');
   if(ST.selQ){ST.answered[ST.selQ.id]={team:t,correct:true};addHist(ST.selQ,t,true);renderList();updStats();saveState();}
   bcast({type:'CLEAR_ACTIVE'});
+  pushStateSnapshot();
   toast('Punto a '+(t==='a'?ST.nameA:ST.nameB));
 }
 function updBuzzerStatus(state, teamName){
@@ -632,36 +645,34 @@ function updBuzzerStatus(state, teamName){
 
 function wrongAns(t){
   bcast({type:'WRONG_ANSWER',team:t});
+  // Clear active buzzer so display removes highlight
+  bcast({type:'CLEAR_ACTIVE'});
   ST.activeBuzzerTeam=null;
   updBuzzerStatus('libre');
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:t,correct:false};
-    addHist(ST.selQ,t,false);
-    renderList();
-    updStats();
-    saveState();
+    addHist(ST.selQ,t,false);renderList();updStats();saveState();
   }
+  pushStateSnapshot();
   toast('Respuesta incorrecta: '+(t==='a'?ST.nameA:ST.nameB));
 }
 
 function passTurn(wrongTeam){
-  bcast({type:'WRONG_ANSWER',team:wrongTeam});
+  // 1. Register the wrong answer locally
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:wrongTeam,correct:false};
     addHist(ST.selQ,wrongTeam,false);renderList();updStats();saveState();
   }
+  // 2. Show wrong effect then cleanly enable buzzer for other team
+  bcast({type:'WRONG_ANSWER',team:wrongTeam});
   ST.activeBuzzerTeam=null;
   updBuzzerStatus('libre');
+  // 3. After visual settles, clear active state and re-enable buzzer
   setTimeout(()=>{
-    if(ST.selQ){
-      bcast({type:'SHOW_QUESTION',
-        question:ST.selQ.q, answer:ST.selQ.a, difficulty:ST.selQ.d,
-        round:ST.selQ.r+' · '+ST.selQ.rn,
-        index:ST.selQ.id, total:QQ.length
-      });
-    }
-  }, 500);
-  toast('Turno pasado al equipo contrario');
+    bcast({type:'CLEAR_ACTIVE'});
+    pushStateSnapshot();
+  }, 800);
+  toast('Turno pasado — buzzer habilitado para ambos');
 }
 
 /*  TEST FUNCTIONS  */
@@ -680,11 +691,19 @@ function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;docum
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
   ST.timerLeft=s;
-  // Show question first, then start timer
   if(ST.selQ) showSelQ();
-  bcast({type:'START_TIMER',seconds:s});startLocalTimer(s);toast("Cronómetro iniciado: "+s+"s");
+  bcast({type:'START_TIMER',seconds:s});
+  startLocalTimer(s);
+  pushStateSnapshot();
+  toast('Cronómetro iniciado: '+s+'s');
 }
-function stopTimerMod(){clearInterval(ST.timerInt);document.getElementById('modTimer').classList.remove('dng');bcast({type:'STOP_TIMER'});toast(' Cronómetro detenido');}
+function stopTimerMod(){
+  clearInterval(ST.timerInt);ST.timerInt=null;
+  document.getElementById('modTimer').classList.remove('dng');
+  bcast({type:'STOP_TIMER'});
+  pushStateSnapshot();
+  toast('Cronómetro detenido');
+}
 function startLocalTimer(s){
   clearInterval(ST.timerInt);ST.timerLeft=s;updModTimer();
   ST.timerInt=setInterval(()=>{ST.timerLeft--;updModTimer();if(ST.timerLeft<=0)clearInterval(ST.timerInt);},1000);
@@ -706,11 +725,13 @@ function showSelQ(){
   pushStateSnapshot();
   toast("Pregunta #"+q.id+" en pantalla");
 }
-function revealAns(){bcast({type:'SHOW_ANSWER'});toast('Revelar respuesta revelada');}
+function revealAns(){ST.answerRevealed=true;bcast({type:'SHOW_ANSWER'});pushStateSnapshot();toast('Respuesta revelada');}
 function hideQ(){
-  ST.questionActive=false;ST.activeBuzzerTeam=null;
+  ST.questionActive=false;ST.activeBuzzerTeam=null;ST.answerRevealed=false;
   updBuzzerStatus('libre');
-  bcast({type:'HIDE_QUESTION'});toast('Pregunta ocultada');
+  bcast({type:'HIDE_QUESTION'});
+  pushStateSnapshot();
+  toast('Pregunta ocultada');
 }
 function clearActive(){
   ST.activeBuzzerTeam=null;
