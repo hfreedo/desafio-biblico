@@ -16,7 +16,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cinzel
 .tb-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pu 2s infinite;}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
-.main{display:grid;grid-template-columns:310px 1fr 270px;height:100%;overflow:hidden;}
+.main{display:grid;grid-template-columns:310px 1fr 340px;height:100%;overflow:hidden;}
 .side{overflow-y:auto;border-right:1px solid var(--border2);}
 .side:last-child{border-right:none;border-left:1px solid var(--border2);}
 .sec{padding:12px 14px;border-bottom:1px solid var(--border2);}
@@ -222,20 +222,39 @@ input:focus,select:focus{border-color:var(--gold);}
       <div class="sec">
         <div class="stitle">Música de Fondo</div>
         <input type="text" id="musicUrl" placeholder="Link de YouTube (video o playlist)">
+
+        <!-- Controles principales -->
         <div class="brow" style="margin-top:6px">
           <button class="btn gold btn-sm" onclick="playMusic()">Reproducir</button>
           <button class="btn orn btn-sm" onclick="fadeMusic()">Fade</button>
           <button class="btn red btn-sm" onclick="stopMusic()">Detener</button>
         </div>
+
+        <!-- Controles de playlist -->
+        <div class="brow" style="margin-top:6px">
+          <button class="btn gry btn-sm" onclick="prevTrack()" style="flex:1" title="Anterior">&#8592; Ant</button>
+          <button class="btn gry btn-sm" onclick="nextTrack()" style="flex:1" title="Siguiente">Sig &#8594;</button>
+        </div>
+
+        <!-- Volumen -->
+        <div style="margin-top:8px;">
+          <div class="slim">VOLUMEN</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="range" id="volSlider" min="0" max="100" value="40"
+              oninput="setVol(this.value)"
+              style="flex:1;accent-color:var(--gold);height:4px;cursor:pointer;">
+            <div style="font-size:11px;color:var(--gold-l);min-width:32px;text-align:right;font-family:'Cinzel',serif;" id="volDisplay">40%</div>
+          </div>
+        </div>
+
+        <!-- Track actual -->
+        <div id="trackInfo" style="margin-top:6px;font-size:10px;color:var(--dim);font-family:'Crimson Text',serif;font-style:italic;min-height:16px;"></div>
+
         <div class="slim" style="margin-top:8px">SUGERENCIAS RÁPIDAS</div>
         <div class="music-presets">
           <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=4S_GHmAzI0I')">Música Cristiana Instrumental</button>
           <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=WtVHobWTePE')">Worship Background Music</button>
           <button class="preset-btn" onclick="setMusic('https://www.youtube.com/watch?v=2cTJjT6aMso')">Epic Bible Music</button>
-        </div>
-        <div style="margin-top:8px;font-size:9px;color:var(--dim);font-family:'Crimson Text',serif;line-height:1.6">
-          La música se reproduce en esta pantalla de moderación.<br>
-          El fade baja el volumen gradualmente antes de detener.
         </div>
         <div id="ytHolder" style="position:fixed;bottom:0;right:0;width:2px;height:2px;overflow:hidden;opacity:0.01;pointer-events:none;z-index:1;"></div>
       </div>
@@ -526,6 +545,7 @@ function applyTeams(){
   ST.nameB=document.getElementById('nameB').value.toUpperCase()||'EQUIPO B';
   bcast({type:'UPDATE_TEAMS',nameA:ST.nameA,nameB:ST.nameB});
   pushStateSnapshot();
+  saveState();
   toast('Nombres actualizados');
 }
 
@@ -536,6 +556,7 @@ function chScore(t,d){
   updScoreDisplay();
   bcast({type:'UPDATE_SCORE',scoreA:ST.scoreA,scoreB:ST.scoreB});
   pushStateSnapshot();
+  saveState();
 }
 function updScoreDisplay(){
   document.getElementById('mScA').textContent=ST.scoreA;
@@ -579,7 +600,10 @@ function adjTimer(d){ST.timerSec=Math.max(5,Math.min(180,ST.timerSec+d));documen
 function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;document.getElementById('timerVal').textContent=n;}}
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
-  ST.timerLeft=s;bcast({type:'START_TIMER',seconds:s});startLocalTimer(s);toast("Cronómetro iniciado: "+s+"s");
+  ST.timerLeft=s;
+  // Show question first, then start timer
+  if(ST.selQ) showSelQ();
+  bcast({type:'START_TIMER',seconds:s});startLocalTimer(s);toast("Cronómetro iniciado: "+s+"s");
 }
 function stopTimerMod(){clearInterval(ST.timerInt);document.getElementById('modTimer').classList.remove('dng');bcast({type:'STOP_TIMER'});toast(' Cronómetro detenido');}
 function startLocalTimer(s){
@@ -614,6 +638,7 @@ function changeRound(){
 
 /*  MUSIC — reproducción local en moderador  */
 let ytPlayer=null, ytReady=false, ytPendingUrl=null, ytPendingVol=0.4, ytFadeInt=null;
+let trackInfoInt=null;
 
 (function(){
   if(document.getElementById('yt-api')) return;
@@ -629,6 +654,7 @@ window.onYouTubeIframeAPIReady=function(){
 
 function _createPlayer(url,vol){
   if(ytPlayer){try{ytPlayer.destroy();}catch(e){}ytPlayer=null;}
+  clearInterval(trackInfoInt);
   const holder=document.getElementById('ytHolder');
   const div=document.createElement('div');div.id='yt-el';
   holder.innerHTML='';holder.appendChild(div);
@@ -639,8 +665,15 @@ function _createPlayer(url,vol){
     width:'2',height:'2',
     playerVars:{autoplay:1,controls:0,rel:0,loop:1,enablejsapi:1,origin:location.origin||'http://localhost'},
     events:{
-      onReady(e){e.target.setVolume(Math.round(vol*100));e.target.playVideo();},
-      onError(e){console.warn('YT error:',e.data);}
+      onReady(e){
+        const v=parseInt(document.getElementById('volSlider').value)||Math.round(vol*100);
+        e.target.setVolume(v);e.target.playVideo();
+        // Poll track title every 2s
+        trackInfoInt=setInterval(()=>updateTrackInfo(),2000);
+        setTimeout(updateTrackInfo,1500);
+      },
+      onStateChange(e){if(e.data===YT.PlayerState.PLAYING) setTimeout(updateTrackInfo,800);},
+      onError(e){document.getElementById('trackInfo').textContent='Error al cargar — verifica el link';}
     }
   };
   if(ml){cfg.playerVars.list=ml[1];cfg.playerVars.listType='playlist';if(mv)cfg.videoId=mv[1];}
@@ -648,32 +681,65 @@ function _createPlayer(url,vol){
   ytPlayer=new YT.Player('yt-el',cfg);
 }
 
+function updateTrackInfo(){
+  if(!ytPlayer) return;
+  try{
+    const data=ytPlayer.getVideoData();
+    if(data&&data.title) document.getElementById('trackInfo').textContent='Reproduciendo: '+data.title;
+  }catch(e){}
+}
+
 function setMusic(url){document.getElementById('musicUrl').value=url;}
+
 function playMusic(){
   const url=document.getElementById('musicUrl').value.trim();
   if(!url){toast('Pega un link de YouTube');return;}
   clearInterval(ytFadeInt);
-  ytPendingVol=0.4;
+  const vol=parseInt(document.getElementById('volSlider').value)/100;
+  ytPendingVol=vol;
   if(!ytReady){ytPendingUrl=url;toast('Cargando reproductor...');return;}
-  _createPlayer(url,0.4);
+  _createPlayer(url,vol);
   toast('Reproduciendo música');
 }
+
 function fadeMusic(){
   if(!ytPlayer){toast('No hay música activa');return;}
   clearInterval(ytFadeInt);
-  let vol=40;
+  let vol=parseInt(document.getElementById('volSlider').value)||40;
   ytFadeInt=setInterval(()=>{
     vol-=4;
+    document.getElementById('volSlider').value=Math.max(0,vol);
+    document.getElementById('volDisplay').textContent=Math.max(0,vol)+'%';
     if(vol<=0){clearInterval(ytFadeInt);_stopPlayer();return;}
     try{ytPlayer.setVolume(vol);}catch(e){clearInterval(ytFadeInt);}
   },120);
   toast('Fade out de música');
 }
+
 function _stopPlayer(){
+  clearInterval(trackInfoInt);
   if(ytPlayer){try{ytPlayer.stopVideo();ytPlayer.destroy();}catch(e){}ytPlayer=null;}
   document.getElementById('ytHolder').innerHTML='';
+  document.getElementById('trackInfo').textContent='';
 }
 function stopMusic(){clearInterval(ytFadeInt);_stopPlayer();toast('Música detenida');}
+
+function setVol(v){
+  document.getElementById('volDisplay').textContent=v+'%';
+  if(ytPlayer){try{ytPlayer.setVolume(parseInt(v));}catch(e){}}
+}
+
+function prevTrack(){
+  if(!ytPlayer){toast('No hay música activa');return;}
+  try{ytPlayer.previousVideo();setTimeout(updateTrackInfo,1000);}
+  catch(e){toast('No disponible para este video');}
+}
+
+function nextTrack(){
+  if(!ytPlayer){toast('No hay música activa');return;}
+  try{ytPlayer.nextVideo();setTimeout(updateTrackInfo,1000);}
+  catch(e){toast('No disponible para este video');}
+}
 
 /*  SOUND TOGGLE  */
 let soundOn=true;
@@ -745,13 +811,25 @@ function updStats(){const n=Object.keys(ST.answered).length;document.getElementB
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2500);}
 
-/*  INIT  */
-renderList();updStats();
-// Init button labels
-document.getElementById('btnCA').textContent=` Correcto ${ST.nameA}`;
-document.getElementById('btnCB').textContent=` Correcto ${ST.nameB}`;
-document.getElementById('btnWA').textContent=` Incorrecto ${ST.nameA}`;
-document.getElementById('btnWB').textContent=` Incorrecto ${ST.nameB}`;
+/*  INIT — restore saved state  */
+(function initApp(){
+  // Restore team names
+  if(ST.nameA!=='EQUIPO A'){
+    document.getElementById('nameA').value=ST.nameA;
+    liveTeamName('a',ST.nameA);
+  }
+  if(ST.nameB!=='EQUIPO B'){
+    document.getElementById('nameB').value=ST.nameB;
+    liveTeamName('b',ST.nameB);
+  }
+  // Restore scores
+  updScoreDisplay();
+  // Restore timer
+  document.getElementById('timerInput').value=ST.timerSec;
+  document.getElementById('timerVal').textContent=ST.timerSec;
+  document.getElementById('modTimer').textContent=ST.timerSec;
+  renderList();updStats();renderHist();
+})();
 </script>
 </body>
 </html>

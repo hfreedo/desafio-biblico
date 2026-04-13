@@ -230,19 +230,6 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 <canvas id="bgC"></canvas>
 <div class="ambient"><div class="orb orb1"></div><div class="orb orb2"></div><div class="orb orb3"></div></div>
 
-<!-- Activación de audio (requerido por políticas del navegador) -->
-<div id="audioGate" style="position:fixed;inset:0;z-index:200;background:rgba(7,8,15,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;backdrop-filter:blur(10px);">
-  <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-    <rect x="20" y="2" width="8" height="44" rx="4" fill="#F5C842"/>
-    <rect x="2" y="16" width="44" height="8" rx="4" fill="#F5C842"/>
-  </svg>
-  <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:#F6F4FF;letter-spacing:0.04em;">Desafío Bíblico</div>
-  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:16px;color:rgba(246,244,255,0.5);">Pantalla de presentación — efectos de sonido del juego</div>
-  <button onclick="activateAudio()" style="margin-top:12px;background:linear-gradient(135deg,#F5C842,#C9A12F);color:#07080F;border:none;border-radius:12px;padding:14px 40px;font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:0.1em;cursor:pointer;">
-    Iniciar pantalla
-  </button>
-</div>
-
 <!-- Curtain -->
 <div class="curtain" id="curtain">
   <div class="curtain-bar"></div><div class="curtain-bar"></div><div class="curtain-bar"></div>
@@ -386,7 +373,7 @@ let timerInt=null;
 /* SUPABASE */
 const SUPABASE_URL='https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
-let pollInterval=null,lastTs=Date.now(),currentRoom='';
+let pollInterval=null,lastTs=Date.now()-5000,currentRoom='';
 async function pollSupabaseEvents(){
   if(!currentRoom)return;
   try{
@@ -409,11 +396,29 @@ async function fetchStateSnapshot(room){
 const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
+/* Auto-recover state on load: try all recent rooms */
+async function autoRecoverState(){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?order=ts.desc&limit=1`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok) return;
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      const snap=JSON.parse(data[0].payload);
+      handle(snap);
+      // Start listening to that room
+      if(snap.room) startRemoteMode(snap.room);
+    }
+  }catch(e){}
+}
+setTimeout(autoRecoverState, 800);
+
 function handle(m){
   switch(m.type){
     case 'SHOW_QUESTION':showQ(m);break;case 'SHOW_ANSWER':revealAns();break;case 'HIDE_QUESTION':hideQ();break;
     case 'UPDATE_SCORE':updScore(m);break;case 'UPDATE_TEAMS':updTeams(m);break;
-    case 'STATE_SNAPSHOT':updTeams(m);updScore(m);break;
+    case 'STATE_SNAPSHOT':updTeams(m);updScore(m);if(m.round)updRound(m);break;
     case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();break;
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
@@ -621,15 +626,8 @@ const ss=document.createElement('style');
 ss.textContent='@keyframes wshake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-14px)}40%,80%{transform:translateX(14px)}}';
 document.head.appendChild(ss);
 
-function activateAudio(){
-  // User gesture — satisfies browser autoplay policy for both WebAudio and YouTube
-  if(AC.state==='suspended') AC.resume();
-  document.getElementById('audioGate').style.display='none';
-  setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
-}
-
-// Don't auto-open curtain on load anymore — wait for user click
-// setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
+// Open curtain on load
+setTimeout(()=>document.getElementById('curtain').classList.add('open'),120);
 </script>
 </body>
 </html>
