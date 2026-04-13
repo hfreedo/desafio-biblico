@@ -324,17 +324,15 @@ function handleMsg(m){
       resetBz();
       break;
     case 'WRONG_ANSWER':
-      // If it wasn't us who answered wrong, we might get another chance
-      // Keep current state — moderador will send CLEAR_ACTIVE or SHOW_QUESTION next
-      if(ST.triggered && m.team===ST.team){
-        // Our answer was wrong — reset for possible next round
-        ST.triggered=false;
-      }
+      // Stay disabled — wait for SHOW_QUESTION (passTurn) or CLEAR_ACTIVE (wrongAns)
+      // Just update the status text
+      disableBz('Respuesta incorrecta — esperando moderador');
       break;
     case 'SHOW_ANSWER':
+      disableBz('Respuesta revelada');
+      break;
     case 'STOP_TIMER':
-      // Question resolved, disable buzzer
-      disableBz('Esperando moderador');
+      disableBz('Tiempo terminado');
       break;
     case 'BUZZER_HIT':
       if(!ST.triggered) disableBz((m.name||'Otro equipo')+' pulsó primero');

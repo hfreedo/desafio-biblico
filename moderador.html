@@ -150,9 +150,7 @@ input:focus,select:focus{border-color:var(--gold);}
           <button class="btn orn btn-sm" id="btnPassB" onclick="passTurn('b')" style="flex:1" title="Incorrecto B y habilitar A">Pasar a A</button>
         </div>
         <!-- Estado del buzzer -->
-        <div id="buzzerStatus" style="margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--dim);">
-          BUZZER LIBRE
-        </div>
+        <div id="buzzerStatus" style="margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--dim);">BUZZER LIBRE</div>
       </div>
 
       <!-- TIMER -->
@@ -405,27 +403,32 @@ async function pushStateSnapshot(){
 }
 
 function startSupabaseRoom(){
-  const code=prompt('Ingresa código de sala:');
-  if(code&&code.trim()){
-    roomCode=code.trim().toUpperCase();
-    lastTs=Date.now();
-    if(pollInterval) clearInterval(pollInterval);
-    pollInterval=setInterval(pollSupabase,800);
-    toast('Sala remota activa: '+roomCode);
-    document.getElementById('roomStatus').textContent='Sala: '+roomCode;
-    document.getElementById('roomStatus').style.color='#2ECC71';
-    bcast({type:'START_REMOTE',room:roomCode});
-    pushStateSnapshot();
-  }
+  const code=prompt('Ingresa código de sala (o dejá vacío para restaurar la última):');
+  const resolved = (code&&code.trim()) ? code.trim().toUpperCase() : getSavedRoom();
+  if(!resolved){ toast('Ingresa un código de sala'); return; }
+  activateRoom(resolved);
+}
+function activateRoom(code){
+  roomCode=code;
+  lastTs=Date.now()-5000; // look back 5s to catch recent events
+  if(pollInterval) clearInterval(pollInterval);
+  pollInterval=setInterval(pollSupabase,800);
+  saveRoom(code);
+  document.getElementById('roomStatus').textContent='Sala: '+code;
+  document.getElementById('roomStatus').style.color='#2ECC71';
+  bcast({type:'START_REMOTE',room:code});
+  pushStateSnapshot();
+  toast('Sala activa: '+code);
 }
 
 function stopSupabaseRoom(){
   if(pollInterval){clearInterval(pollInterval);pollInterval=null;}
   roomCode='';
+  clearSavedRoom();
   document.getElementById('roomStatus').textContent='Sin sala remota';
   document.getElementById('roomStatus').style.color='rgba(255,255,255,.45)';
-  toast('Sala remota desconectada');
   bcast({type:'STOP_REMOTE'});
+  toast('Sala remota desconectada');
 }
 
 /*  DATA  */
@@ -538,6 +541,9 @@ function loadSavedState(){
   try{return JSON.parse(localStorage.getItem('quiz_mod_state')||'{}');}
   catch(e){return {};}
 }
+function getSavedRoom(){ return localStorage.getItem('quiz_mod_room')||''; }
+function saveRoom(code){ localStorage.setItem('quiz_mod_room', code); }
+function clearSavedRoom(){ localStorage.removeItem('quiz_mod_room'); }
 function saveState(){
   try{
     localStorage.setItem('quiz_mod_state',JSON.stringify({
@@ -645,10 +651,8 @@ function updBuzzerStatus(state, teamName){
 
 function wrongAns(t){
   bcast({type:'WRONG_ANSWER',team:t});
-  // Clear active buzzer so display removes highlight
-  bcast({type:'CLEAR_ACTIVE'});
   ST.activeBuzzerTeam=null;
-  updBuzzerStatus('libre');
+  updBuzzerStatus('bloqueado');
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:t,correct:false};
     addHist(ST.selQ,t,false);renderList();updStats();saveState();
@@ -658,21 +662,28 @@ function wrongAns(t){
 }
 
 function passTurn(wrongTeam){
-  // 1. Register the wrong answer locally
+  // Register wrong answer locally only
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:wrongTeam,correct:false};
     addHist(ST.selQ,wrongTeam,false);renderList();updStats();saveState();
   }
-  // 2. Show wrong effect then cleanly enable buzzer for other team
-  bcast({type:'WRONG_ANSWER',team:wrongTeam});
   ST.activeBuzzerTeam=null;
   updBuzzerStatus('libre');
-  // 3. After visual settles, clear active state and re-enable buzzer
+  // Send: wrong visual effect, then after effect clears, re-show question
+  // This re-enables the buzzer on pulsador (SHOW_QUESTION enables it)
+  bcast({type:'WRONG_ANSWER',team:wrongTeam});
   setTimeout(()=>{
-    bcast({type:'CLEAR_ACTIVE'});
+    if(ST.selQ){
+      bcast({type:'SHOW_QUESTION',
+        question:ST.selQ.q, answer:ST.selQ.a, difficulty:ST.selQ.d,
+        round:ST.selQ.r+' · '+ST.selQ.rn,
+        index:ST.selQ.id, total:QQ.length});
+    } else {
+      bcast({type:'CLEAR_ACTIVE'});
+    }
     pushStateSnapshot();
-  }, 800);
-  toast('Turno pasado — buzzer habilitado para ambos');
+  }, 1200);
+  toast('Turno pasado — buzzer habilitado');
 }
 
 /*  TEST FUNCTIONS  */
@@ -1002,24 +1013,27 @@ function updStats(){const n=Object.keys(ST.answered).length;document.getElementB
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2500);}
 
-/*  INIT — restore saved state  */
+/*  INIT — restore saved state and room  */
 (function initApp(){
-  // Restore team names
-  if(ST.nameA!=='EQUIPO A'){
-    document.getElementById('nameA').value=ST.nameA;
-    liveTeamName('a',ST.nameA);
-  }
-  if(ST.nameB!=='EQUIPO B'){
-    document.getElementById('nameB').value=ST.nameB;
-    liveTeamName('b',ST.nameB);
-  }
+  // Restore team names in UI
+  document.getElementById('nameA').value=ST.nameA;
+  document.getElementById('nameB').value=ST.nameB;
+  liveTeamName('a',ST.nameA);
+  liveTeamName('b',ST.nameB);
   // Restore scores
   updScoreDisplay();
-  // Restore timer
+  // Restore timer value
   document.getElementById('timerInput').value=ST.timerSec;
   document.getElementById('timerVal').textContent=ST.timerSec;
   document.getElementById('modTimer').textContent=ST.timerSec;
   renderList();updStats();renderHist();
+  updBuzzerStatus('libre');
+  // Auto-restore room if one was active before reload
+  const savedRoom=getSavedRoom();
+  if(savedRoom){
+    activateRoom(savedRoom);
+    toast('Sala restaurada: '+savedRoom);
+  }
 })();
 </script>
 </body>

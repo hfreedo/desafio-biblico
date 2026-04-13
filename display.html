@@ -417,8 +417,8 @@ async function autoRecoverState(){
       const snap=JSON.parse(data[0].payload);
       handle(snap);
       if(snap.room){
-        // Start polling from 10s before snapshot to catch very recent events
-        lastTs=Math.max(0, snap.ts - 10000);
+        // Poll from 2s after snapshot to catch events that happened after it
+        lastTs=snap.ts;
         startRemoteMode(snap.room);
       }
     }
@@ -449,13 +449,23 @@ function handle(m){
       // Restore buzzer/turn state
       if(m.activeBuzzerTeam) highlightTeam(m.activeBuzzerTeam);
       else clearActive();
-      // Restore timer — show at correct position even if stopped
-      if(m.timerTotal){
-        S.timerTotal=m.timerTotal; S.timerLeft=m.timerLeft||0;
-        if(m.timerLeft>0){
+      // Restore timer state
+      if(m.timerTotal&&m.timerTotal>0){
+        S.timerTotal=m.timerTotal;
+        S.timerLeft=Math.max(0,m.timerLeft||0);
+        if(S.timerLeft>0){
           document.getElementById('timerSec').style.display='flex';
-          renderTimer();
-          if(m.timerRunning) startTimer(m.timerLeft);
+          renderTimer(); // show at correct position
+          if(m.timerRunning){
+            // Start counting from current timerLeft
+            stopTimer();
+            timerInt=setInterval(()=>{
+              S.timerLeft--;
+              renderTimer();
+              if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds) playTick();
+              if(S.timerLeft<=0){stopTimer();bombExplosion();}
+            },1000);
+          }
         } else {
           document.getElementById('timerSec').style.display='none';
         }
@@ -591,7 +601,7 @@ function showWrong(m){
   const b=document.getElementById('bzBanner');const nm=m.team==='a'?S.nameA:S.nameB;
   b.style.cssText='background:rgba(248,113,113,.12);border-bottom:1px solid rgba(248,113,113,.4);color:#F87171;';
   b.className='bz show';b.textContent='X  '+nm.toUpperCase()+'  —  ¡RESPUESTA INCORRECTA!';
-  setTimeout(()=>{wf.className='wf';if(card)card.style.animation='';b.classList.remove('show');b.style.cssText='';clearActive();},1500);
+  setTimeout(()=>{wf.className='wf';if(card){card.style.animation='';card.style.borderColor='';card.style.borderWidth='';}b.classList.remove('show');b.style.cssText='';},1500);
 }
 
 function highlightTeam(t){
@@ -626,7 +636,8 @@ function showWinner(m){
 /* TIMER */
 function startTimer(s){
   stopTimer();
-  S.timerTotal=s;S.timerLeft=s;
+  // Only reset total if starting fresh (s == full duration)
+  S.timerTotal=s; S.timerLeft=s;
   document.getElementById('timerSec').style.display='flex';
   renderTimer();
   timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);
