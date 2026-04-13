@@ -324,9 +324,15 @@ function handleMsg(m){
       resetBz();
       break;
     case 'WRONG_ANSWER':
-      // Stay disabled — wait for SHOW_QUESTION (passTurn) or CLEAR_ACTIVE (wrongAns)
-      // Just update the status text
-      disableBz('Respuesta incorrecta — esperando moderador');
+      disableBz('Respuesta incorrecta');
+      break;
+    case 'PASS_TURN':
+      // Only enable if we are the team that gets the turn
+      if(ST.team===m.toTeam){
+        enableBz();
+      } else {
+        disableBz('Turno del otro equipo');
+      }
       break;
     case 'SHOW_ANSWER':
       disableBz('Respuesta revelada');

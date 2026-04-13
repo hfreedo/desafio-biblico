@@ -146,8 +146,8 @@ input:focus,select:focus{border-color:var(--gold);}
         </div>
         <!-- Pasar turno al equipo contrario -->
         <div class="brow" style="margin-top:6px">
-          <button class="btn orn btn-sm" id="btnPassA" onclick="passTurn('a')" style="flex:1" title="Incorrecto A y habilitar B">Pasar a B</button>
-          <button class="btn orn btn-sm" id="btnPassB" onclick="passTurn('b')" style="flex:1" title="Incorrecto B y habilitar A">Pasar a A</button>
+          <button class="btn orn btn-sm" id="btnPassA" onclick="passTurn('a')" style="flex:1" title="A falla, pasa a B">A falla → B</button>
+          <button class="btn orn btn-sm" id="btnPassB" onclick="passTurn('b')" style="flex:1" title="B falla, pasa a A">B falla → A</button>
         </div>
         <!-- Estado del buzzer -->
         <div id="buzzerStatus" style="margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--dim);">BUZZER LIBRE</div>
@@ -662,28 +662,24 @@ function wrongAns(t){
 }
 
 function passTurn(wrongTeam){
-  // Register wrong answer locally only
+  // Record wrong answer
   if(ST.selQ&&!ST.answered[ST.selQ.id]){
     ST.answered[ST.selQ.id]={team:wrongTeam,correct:false};
     addHist(ST.selQ,wrongTeam,false);renderList();updStats();saveState();
   }
+  const otherTeam = wrongTeam==='a' ? 'b' : 'a';
   ST.activeBuzzerTeam=null;
   updBuzzerStatus('libre');
-  // Send: wrong visual effect, then after effect clears, re-show question
-  // This re-enables the buzzer on pulsador (SHOW_QUESTION enables it)
-  bcast({type:'WRONG_ANSWER',team:wrongTeam});
+  // Step 1: wrong effect on the team that failed
+  bcast({type:'WRONG_ANSWER', team:wrongTeam});
+  // Step 2: after effect, pass turn to other team
   setTimeout(()=>{
-    if(ST.selQ){
-      bcast({type:'SHOW_QUESTION',
-        question:ST.selQ.q, answer:ST.selQ.a, difficulty:ST.selQ.d,
-        round:ST.selQ.r+' · '+ST.selQ.rn,
-        index:ST.selQ.id, total:QQ.length});
-    } else {
-      bcast({type:'CLEAR_ACTIVE'});
-    }
+    ST.activeBuzzerTeam=otherTeam;
+    updBuzzerStatus('respondiendo', otherTeam==='a'?ST.nameA:ST.nameB);
+    bcast({type:'PASS_TURN', fromTeam:wrongTeam, toTeam:otherTeam});
     pushStateSnapshot();
-  }, 1200);
-  toast('Turno pasado — buzzer habilitado');
+  }, 1000);
+  toast('Turno pasado a '+(otherTeam==='a'?ST.nameA:ST.nameB));
 }
 
 /*  TEST FUNCTIONS  */

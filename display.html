@@ -473,6 +473,7 @@ function handle(m){
       break;
     case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();break;
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
+    case 'PASS_TURN':handlePassTurn(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
     case 'UPDATE_ROUND':updRound(m);break;case 'SOUND_TOGGLE':S.sounds=m.enabled;break;
     case 'START_REMOTE':startRemoteMode(m.room);break;case 'STOP_REMOTE':stopRemoteMode();break;
@@ -572,6 +573,15 @@ function updTeams(m){
 }
 
 /* ══ BUZZER — shockwave ══ */
+function handlePassTurn(m){
+  // Show wrong effect on the team that failed
+  showWrong({team:m.fromTeam});
+  // After effect, highlight the team that gets to answer — no curtain, no re-render
+  setTimeout(()=>{
+    highlightTeam(m.toTeam);
+  }, 1000);
+}
+
 function showBuzzer(m){
   const isA=m.team==='a';
   const nm=isA?S.nameA:S.nameB;
