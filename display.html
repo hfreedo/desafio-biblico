@@ -45,8 +45,8 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 .round-name{font-size:11px;color:var(--muted);text-align:center;margin-top:5px;font-family:'Lora',serif;font-style:italic;}
 
 /* TEAMS */
-.teams-bar{display:flex;gap:0;padding:14px 24px;flex-shrink:0;align-items:stretch;}
-.team-card{flex:1;border-radius:16px;padding:16px 26px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);transition:border-color .4s,box-shadow .4s;}
+.teams-bar{display:flex;gap:0;padding:10px 16px;flex-shrink:0;align-items:stretch;}
+.team-card{flex:1;min-width:0;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;background:var(--surface);border:1px solid var(--border);transition:border-color .4s,box-shadow .4s;}
 .team-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .4s;border-radius:inherit;}
 .team-card.ta{border-color:var(--green-border);}
 .team-card.ta::before{background:linear-gradient(135deg,rgba(52,211,153,.08) 0%,transparent 60%);opacity:1;}
@@ -56,10 +56,10 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 .team-card.pb{border-color:var(--blue)!important;animation:glow-b 1.6s ease-in-out infinite;}
 @keyframes glow-a{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 40px var(--green-glow),0 0 80px rgba(52,211,153,.08)}}
 @keyframes glow-b{0%,100%{box-shadow:0 0 0 0 transparent}50%{box-shadow:0 0 40px var(--blue-glow),0 0 80px rgba(96,165,250,.08)}}
-.tn{font-size:clamp(14px,1.8vw,24px);font-weight:700;letter-spacing:.06em;font-family:'Syne',sans-serif;}
+.tn{font-size:clamp(12px,1.6vw,22px);font-weight:700;letter-spacing:.04em;font-family:'Syne',sans-serif;word-break:break-word;overflow-wrap:anywhere;}
 .ta .tn{color:var(--green)}.tb .tn{color:var(--blue)}
-.tst{font-size:13px;margin-top:5px;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);}
-.ts-num{font-size:clamp(50px,7.5vw,96px);font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-family:'Syne',sans-serif;}
+.tst{font-size:clamp(10px,1.2vw,13px);margin-top:4px;font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ts-num{font-size:clamp(36px,6vw,96px);font-weight:800;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums;font-family:'Syne',sans-serif;flex-shrink:0;}
 .ta .ts-num{color:var(--green)}.tb .ts-num{color:var(--blue)}
 .ts-num.bump{animation:score-bump .5s cubic-bezier(.34,1.56,.64,1);}
 @keyframes score-bump{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
@@ -174,6 +174,15 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 .bz.ba{background:rgba(52,211,153,.12);border-bottom:1px solid rgba(52,211,153,.4);color:var(--green);}
 .bz.bb{background:rgba(96,165,250,.12);border-bottom:1px solid rgba(96,165,250,.4);color:var(--blue);}
 
+/* Mobile responsive */
+@media (max-width:600px){
+  .teams-bar{padding:8px 10px;gap:6px;}
+  .team-card{padding:10px 12px;border-radius:10px;}
+  .vs-div{padding:0 8px;}
+  .vs-txt{font-size:12px;}
+  .q-area{padding:10px 20px;}
+  .header{padding:10px 16px;}
+}
 .shockwave{position:fixed;top:50%;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:55;opacity:0;}
 .shockwave.fire-a{animation:shock-a .95s ease-out forwards;}
 .shockwave.fire-b{animation:shock-b .95s ease-out forwards;}
@@ -396,7 +405,7 @@ async function fetchStateSnapshot(room){
 const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
-/* Auto-recover state on load: try all recent rooms */
+/* Auto-recover full state on load */
 async function autoRecoverState(){
   try{
     const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?order=ts.desc&limit=1`,{
@@ -407,18 +416,29 @@ async function autoRecoverState(){
     if(Array.isArray(data)&&data.length){
       const snap=JSON.parse(data[0].payload);
       handle(snap);
-      // Start listening to that room
       if(snap.room) startRemoteMode(snap.room);
     }
   }catch(e){}
 }
-setTimeout(autoRecoverState, 800);
+setTimeout(autoRecoverState, 600);
 
 function handle(m){
   switch(m.type){
     case 'SHOW_QUESTION':showQ(m);break;case 'SHOW_ANSWER':revealAns();break;case 'HIDE_QUESTION':hideQ();break;
     case 'UPDATE_SCORE':updScore(m);break;case 'UPDATE_TEAMS':updTeams(m);break;
-    case 'STATE_SNAPSHOT':updTeams(m);updScore(m);if(m.round)updRound(m);break;
+    case 'STATE_SNAPSHOT':
+      updTeams(m);updScore(m);
+      if(m.round)updRound(m);
+      // Restore active question if one was showing
+      if(m.questionActive&&m.currentQuestion){
+        const q=m.currentQuestion;
+        showQ({question:q.q,answer:q.a,difficulty:q.d,
+          round:(m.round||q.r)+' · '+(m.roundName||q.rn),
+          index:q.id,total:100});
+      }
+      // Restore active buzzer team
+      if(m.activeBuzzerTeam) highlightTeam(m.activeBuzzerTeam);
+      break;
     case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();break;
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
