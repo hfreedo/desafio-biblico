@@ -201,8 +201,11 @@ input:focus,select:focus{border-color:var(--gold);}
           <button class="btn gold btn-sm" onclick="startSupabaseRoom()">🌐 Crear sala</button>
           <button class="btn red btn-sm" onclick="stopSupabaseRoom()">✕ Cerrar</button>
         </div>
+        <div class="brow" style="margin-top:6px">
+          <button class="btn gry btn-sm" onclick="setupStateTable()" title="Crea la tabla quiz_state si no existe">⚙ Setup BD</button>
+        </div>
         <div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,.3);line-height:1.4">
-          Permite que gente desde otros dispositivos se conecte usando el código de sala.
+          Permite que gente desde otros dispositivos se conecte usando el código de sala. Ejecutá "Setup BD" una vez al inicio.
         </div>
       </div>
 
@@ -323,6 +326,53 @@ let pollInterval=null;
 let lastTs=Date.now();
 let roomCode='';
 
+/* ── STATE SNAPSHOT — save to Supabase so late-joiners can catch up ── */
+async function pushStateSnapshot(){
+  if(!roomCode) return;
+  const snapshot={
+    type:'STATE_SNAPSHOT',
+    nameA:ST.nameA, nameB:ST.nameB,
+    scoreA:ST.scoreA, scoreB:ST.scoreB,
+    room:roomCode,
+    ts:Date.now()
+  };
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({room:roomCode, payload:JSON.stringify(snapshot), ts:Date.now()})
+    });
+  }catch(e){}
+}
+
+/* Creates quiz_state table via RPC if it doesn't exist yet */
+async function setupStateTable(){
+  try{
+    // Try a simple insert/upsert — if table doesn't exist Supabase returns 404
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?limit=1`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(r.ok){
+      toast('✓ Tabla quiz_state lista');
+    } else if(r.status===404||r.status===400){
+      toast('⚠ Tabla quiz_state no existe — ver instrucciones');
+      setTimeout(()=>alert(
+        'Tabla quiz_state no encontrada.\n\n'+
+        'En tu panel de Supabase → SQL Editor → ejecutá:\n\n'+
+        'CREATE TABLE IF NOT EXISTS quiz_state (\n'+
+        '  room TEXT PRIMARY KEY,\n'+
+        '  payload TEXT,\n'+
+        '  ts BIGINT\n'+
+        ');\n\n'+
+        'ALTER TABLE quiz_state ENABLE ROW LEVEL SECURITY;\n'+
+        'CREATE POLICY "allow_all" ON quiz_state FOR ALL USING (true) WITH CHECK (true);'
+      ),300);
+    } else {
+      toast(`⚠ Error ${r.status} al verificar BD`);
+    }
+  }catch(e){toast('⚠ Error de conexión');}
+}
+
 async function sendToSupabase(msg){
   if(!roomCode) return;
   try{
@@ -360,9 +410,9 @@ function startSupabaseRoom(){
     toast(`🌐 Sala remota: ${roomCode} — Activa`);
     document.getElementById('roomStatus').textContent=`Sala: ${roomCode}`;
     document.getElementById('roomStatus').style.color='#2ECC71';
-    
-    // Tell display to start remote mode too
-    bcast({type: 'START_REMOTE', room: roomCode});
+    bcast({type:'START_REMOTE',room:roomCode});
+    // Publish current state immediately so late-joiners get it
+    pushStateSnapshot();
   }
 }
 
@@ -515,6 +565,7 @@ function applyTeams(){
   ST.nameA=document.getElementById('nameA').value.toUpperCase()||'EQUIPO A';
   ST.nameB=document.getElementById('nameB').value.toUpperCase()||'EQUIPO B';
   bcast({type:'UPDATE_TEAMS',nameA:ST.nameA,nameB:ST.nameB});
+  pushStateSnapshot();
   toast('✓ Nombres actualizados en pantalla');
 }
 
@@ -524,6 +575,7 @@ function chScore(t,d){
   else ST.scoreB=Math.max(0,ST.scoreB+d);
   updScoreDisplay();
   bcast({type:'UPDATE_SCORE',scoreA:ST.scoreA,scoreB:ST.scoreB});
+  pushStateSnapshot();
 }
 function updScoreDisplay(){
   document.getElementById('mScA').textContent=ST.scoreA;
@@ -597,6 +649,7 @@ function changeRound(){
   const v=document.getElementById('roundSel').value;
   const r=ROUNDS.find(x=>x.id==v);
   bcast({type:'UPDATE_ROUND',round:`Ronda ${r.id}`,name:r.name});
+  pushStateSnapshot();
   toast(`✓ Ronda: ${r.name}`);
 }
 

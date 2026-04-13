@@ -297,6 +297,9 @@ function connectNet(){
         document.getElementById('disconnectPanel').style.display='flex';
         document.getElementById('connectedRoom').textContent=code;
         
+        // Fetch current state snapshot so late-joiners see real team names/scores
+        fetchStateSnapshot(code);
+        
         // Mobile success feedback
         if('vibrate' in navigator) {
           navigator.vibrate([200, 100, 200]); // Success vibration pattern
@@ -402,10 +405,24 @@ function handleMsg(m){
       if(!ST.triggered) disableBz(`🔔 ${m.name||'Otro equipo'} pulsó primero`);
       break;
     case 'UPDATE_TEAMS':
+    case 'STATE_SNAPSHOT':
       if(m.nameA){ST.nameA=m.nameA;document.getElementById('lbA').textContent=m.nameA;document.getElementById('pickA').textContent=`Soy del equipo ${m.nameA}`;}
       if(m.nameB){ST.nameB=m.nameB;document.getElementById('lbB').textContent=m.nameB;document.getElementById('pickB').textContent=`Soy del equipo ${m.nameB}`;}
       break;
   }
+}
+
+async function fetchStateSnapshot(room){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?room=eq.${room}`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      const snap=JSON.parse(data[0].payload);
+      handleMsg(snap);
+    }
+  }catch(e){console.log('Snapshot fetch error:',e);}
 }
 
 /* ── MODE ── */
