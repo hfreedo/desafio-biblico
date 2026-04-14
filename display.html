@@ -552,8 +552,9 @@ function showQ(m){
   if(!timerInt) document.getElementById('timerSec').style.display='none';
   clearActive();
 
-  // Open curtain after brief hold
-  setTimeout(()=>curtain.classList.add('open'), 80);
+  // Wait for curtain to fully close (last bar: 300ms delay + 600ms transition = 900ms)
+  // then open to reveal prepared content
+  setTimeout(()=>curtain.classList.add('open'), 950);
 }
 
 /* ══ REVEAL ANSWER — build tension then unlock ══ */
@@ -574,15 +575,18 @@ function revealAns(){
 
 /* ══ HIDE → back to idle with curtain ══ */
 function hideQ(){S.buzzerLocked=false;S.currentQuestionId=null;
+  bombFired=false;
   const curtain=document.getElementById('curtain');
   curtain.classList.remove('open');
+  // Wait for curtain to fully close before swapping content
   setTimeout(()=>{
     document.getElementById('idle').classList.add('visible');
     document.getElementById('qWrap').classList.remove('active');
     document.getElementById('timerSec').style.display='none';
     stopTimer();clearActive();
-    setTimeout(()=>curtain.classList.add('open'),80);
-  },400);
+    // Brief hold so content is ready, then open
+    setTimeout(()=>curtain.classList.add('open'), 80);
+  }, 950);
 }
 
 /* ══ SCORES ══ */
