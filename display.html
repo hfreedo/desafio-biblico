@@ -386,17 +386,21 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 let realtimeChannel=null, currentRoom='';
 let supabaseRt=null; // Realtime client
 function startRealtimeEvents(room){
-  // Clean up any existing subscription
-  if(realtimeChannel){ try{supabaseRt.removeChannel(realtimeChannel);}catch(e){} realtimeChannel=null; }
-  if(!supabaseRt) supabaseRt=supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  if(realtimeChannel){try{supabaseRt.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
+  if(!supabaseRt) supabaseRt=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   realtimeChannel=supabaseRt
-    .channel('display-events-'+room)
+    .channel('dsp-rx-'+room)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},
       payload=>{
         try{
           const msg=JSON.parse(payload.new.payload);
-          // Accept events from moderador, or BUZZER_HIT from pulsador directly
-          if(msg._sender==='mod'||!msg._sender||msg.type==='BUZZER_HIT') handle(msg);
+          // Accept: events from moderador, events with no sender, BUZZER_HIT from anyone
+          const fromMod=msg._sender==='mod';
+          const fromPuls=msg._sender==='puls';
+          const noSender=!msg._sender;
+          if(fromMod||noSender) handle(msg);
+          else if(fromPuls&&msg.type==='BUZZER_HIT') handle(msg);
+          // fromPuls non-buzzer events ignored — moderador handles those
         }catch(e){}
       })
     .subscribe();
@@ -480,13 +484,15 @@ function handle(m){
           left=Math.max(0,left-elapsed);
         }
         S.timerLeft=left;
-        // Only show timer if it was actually started (running, or stopped mid-way)
+        // STATE_SNAPSHOT syncs position only — never starts a new interval
+        // START_TIMER message is the only authoritative source for starting the timer
         const wasStarted = m.timerRunning || (left > 0 && left < m.timerTotal);
-        if(wasStarted && left>0){
+        if(wasStarted && left > 0){
           document.getElementById('timerSec').style.display='flex';
-          renderTimer();
-          if(m.timerRunning){
-            stopTimer();
+          S.timerLeft = left; // update position
+          renderTimer();      // render at correct position
+          // Only start interval if timer should be running AND none is active
+          if(m.timerRunning && !timerInt){
             timerInt=setInterval(()=>{
               S.timerLeft--;renderTimer();
               if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();
@@ -513,6 +519,7 @@ function handle(m){
 function showQ(m){
   S.buzzerLocked=false;
   S.currentQuestionId=m.index||null;
+  bombFired=false;
   const idle=document.getElementById('idle');
   idle.classList.remove('visible');
 
@@ -682,15 +689,19 @@ function showWinner(m){
 }
 
 /* TIMER */
+let timerStartPending=null;
 function startTimer(s){
+  // Cancel any pending delayed start
+  if(timerStartPending){clearTimeout(timerStartPending);timerStartPending=null;}
   stopTimer();
   S.timerTotal=s; S.timerLeft=s;
-  // If curtain is still animating, wait for it before showing timer
   const curtain=document.getElementById('curtain');
   const isAnimating=!curtain.classList.contains('open');
   const startFn=()=>{
+    timerStartPending=null;
     document.getElementById('timerSec').style.display='flex';
     renderTimer();
+    if(timerInt) return; // guard: don't double-start
     timerInt=setInterval(()=>{
       S.timerLeft--;renderTimer();
       if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();
@@ -698,13 +709,16 @@ function startTimer(s){
     },1000);
   };
   if(isAnimating){
-    // Wait for curtain to fully open (max 700ms) then show timer
-    setTimeout(startFn, 700);
+    timerStartPending=setTimeout(startFn, 700);
   } else {
     startFn();
   }
 }
-function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}document.getElementById('tNum').classList.remove('danger');}
+function stopTimer(){
+  if(timerStartPending){clearTimeout(timerStartPending);timerStartPending=null;}
+  if(timerInt){clearInterval(timerInt);timerInt=null;}
+  document.getElementById('tNum').classList.remove('danger');
+}
 function renderTimer(){
   const n=document.getElementById('tNum'),r=document.getElementById('tRing');
   n.textContent=Math.max(0,S.timerLeft);
@@ -713,10 +727,18 @@ function renderTimer(){
   r.style.stroke=pct>.5?'var(--violet-l)':pct>.25?'var(--gold)':'var(--red)';
   n.classList.toggle('danger',S.timerLeft<=5);
 }
+let bombFired=false;
 function bombExplosion(){
-  const ov=document.getElementById('bombOv');ov.className='bomb-ov boom';
-  if(S.sounds)playBomb();confetti('#F87171',60);confetti('#F5C842',40);
-  setTimeout(()=>{ov.className='bomb-ov';},2200);
+  if(bombFired) return; // prevent duplicate calls
+  bombFired=true;
+  const ov=document.getElementById('bombOv');
+  ov.className='bomb-ov boom';
+  if(S.sounds)playBomb();
+  confetti('#F87171',40);confetti('#F5C842',30);
+  setTimeout(()=>{
+    ov.className='bomb-ov';
+    bombFired=false; // reset for next question
+  },2200);
 }
 
 /* AUDIO */

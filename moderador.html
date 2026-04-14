@@ -151,6 +151,7 @@ input:focus,select:focus{border-color:var(--gold);}
           <button class="btn orn btn-sm" id="btnPassB" onclick="passTurn('b')" style="flex:1" title="B falla, pasa a A">B falla → A</button>
         </div>
         <!-- Estado del buzzer -->
+        <div id="buzzerTiming" style="margin-top:4px;font-size:9px;color:var(--dim);text-align:center;min-height:12px;letter-spacing:1px;"></div>
         <div id="buzzerStatus" style="margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--dim);">BUZZER LIBRE</div>
       </div>
 
@@ -426,27 +427,39 @@ function startRealtimeMod(room){
   if(realtimeChannelMod){try{supabaseRtMod.removeChannel(realtimeChannelMod);}catch(e){}realtimeChannelMod=null;}
   if(!supabaseRtMod) supabaseRtMod=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
   realtimeChannelMod=supabaseRtMod
-    .channel('mod-events-'+room)
+    .channel('mod-rx-'+room)
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},
       payload=>{
         try{
           const msg=JSON.parse(payload.new.payload);
-          if(msg._sender==='mod') return; // skip our own events
-          if(msg.type==='BUZZER_HIT'){
-            if(ST.activeBuzzerTeam) return;
-            if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
-            const nm=msg.team==='a'?ST.nameA:ST.nameB;
-            ST.activeBuzzerTeam=msg.team;
-            updBuzzerStatus('respondiendo',nm);
-            if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
-            document.getElementById('modTimer').classList.remove('dng');
-            toast(nm+' activó el buzzer');
-            // Forward to display via bcast (tagged _sender:'mod' so display accepts it)
-            bcast({type:'BUZZER_HIT', team:msg.team, name:nm, questionId:msg.questionId||null});
-          }
+          if(msg._sender==='mod') return; // skip our own
+          if(msg.type==='BUZZER_HIT') handleBuzzerHit(msg, payload.new.ts);
         }catch(e){}
       })
     .subscribe();
+}
+
+// Central buzzer handler — called from Realtime AND local BroadcastChannel
+function handleBuzzerHit(msg, supabaseTs){
+  if(ST.activeBuzzerTeam) return; // dedup: first hit wins
+  if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return; // stale
+  const nm=msg.team==='a'?ST.nameA:ST.nameB;
+  ST.activeBuzzerTeam=msg.team;
+  updBuzzerStatus('respondiendo', nm);
+  if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+  document.getElementById('modTimer').classList.remove('dng');
+  // Show timing info if available
+  const delay=msg.clientTs ? Date.now()-msg.clientTs : null;
+  const _d=msg.clientTs ? Date.now()-msg.clientTs : null;
+  const delayStr=delay!==null ? ` (${delay}ms red)` : '';
+  toast(nm+' activó el buzzer'+delayStr);
+  const timingEl=document.getElementById('buzzerTiming');
+  if(timingEl&&delay!==null) timingEl.textContent='Latencia: '+delay+'ms';
+  // Store for potential second-buzzer comparison
+  ST.lastBuzzerTs=msg.clientTs||Date.now();
+  ST.lastBuzzerSupaTs=supabaseTs||Date.now();
+  // Send STOP_TIMER to display — moderador is authoritative for timer stop
+  bcast({type:'STOP_TIMER'});
 }
 
 function activateRoom(code){
@@ -610,6 +623,7 @@ const ST={
   timerInt:null, sounds:true,
   activeBuzzerTeam:null,
   questionActive:false,
+  lastBuzzerTs:null, lastBuzzerSupaTs:null,
   answerRevealed:false,
   currentRound:'', currentRoundName:'',
 };
@@ -624,19 +638,8 @@ function bcast(m){
 // Listen for buzzer from pulsador (local broadcast channel)
 ch.onmessage=e=>{
   const msg=e.data;
-  if(msg.type==='BUZZER_HIT'){
-    // Dedup: ignore if a team already has the buzzer for this question
-    if(ST.activeBuzzerTeam) return;
-    // Ignore if questionId doesn't match current question (stale event)
-    if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
-    const nm=msg.team==='a'?ST.nameA:ST.nameB;
-    ST.activeBuzzerTeam=msg.team;
-    updBuzzerStatus('respondiendo', nm);
-    if(ST.timerInt){ clearInterval(ST.timerInt); ST.timerInt=null; }
-    document.getElementById('modTimer').classList.remove('dng');
-    toast(nm+' activó el buzzer');
-    if(roomCode) sendToSupabase(msg);
-  }
+  // Local pulsador (same device) — treat same as remote
+  if(msg.type==='BUZZER_HIT') handleBuzzerHit(msg, null);
 };
 
 /*  TEAM NAMES  */
