@@ -403,13 +403,10 @@ function connectNet(){
       document.getElementById('disconnectPanel').style.display='flex';
       document.getElementById('connectedRoom').textContent=code;
       if('vibrate' in navigator) navigator.vibrate([150,80,150]);
-      // Snapshot first — sets lastTs to snap.ts, blocking old event replay
-      // Only start polling AFTER snapshot is applied
-      lastTs=Date.now()-2000;
-      fetchStateSnapshot(code).then(()=>{
-        if(pollInterval) clearInterval(pollInterval);
-        pollInterval=setInterval(pollNet,350);
-      });
+      // 1. Subscribe to Realtime immediately (no dependency on snapshot)
+      startRealtimeNet(code);
+      // 2. Fetch snapshot in parallel to restore current state
+      fetchStateSnapshot(code);
     } else {
       document.getElementById('sTxt').textContent='ERROR DE CONEXIÓN';
       ST.room=''; ST.connected=false;
