@@ -97,6 +97,7 @@ input:focus,select:focus{border-color:var(--gold);}
 .preset-btn{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-family:'Crimson Text',serif;font-size:12px;cursor:pointer;text-align:left;transition:all .2s;}
 .preset-btn:hover{background:rgba(212,168,67,.1);border-color:var(--gold);color:var(--gold-l);}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <div class="app">
@@ -344,6 +345,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 let pollInterval=null;
 let lastTs=Date.now();
 let roomCode='';
+let realtimeChannelMod=null, supabaseRtMod=null;
 
 async function sendToSupabase(msg){
   if(!roomCode) return;
@@ -422,23 +424,50 @@ function startSupabaseRoom(){
   if(!resolved){ toast('Ingresa un código de sala'); return; }
   activateRoom(resolved);
 }
+function startRealtimeMod(room){
+  if(realtimeChannelMod){try{supabaseRtMod.removeChannel(realtimeChannelMod);}catch(e){}realtimeChannelMod=null;}
+  if(!supabaseRtMod) supabaseRtMod=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  realtimeChannelMod=supabaseRtMod
+    .channel('mod-events-'+room)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},
+      payload=>{
+        try{
+          const msg=JSON.parse(payload.new.payload);
+          if(msg._sender==='mod') return; // skip our own events
+          if(msg.type==='BUZZER_HIT'){
+            if(ST.activeBuzzerTeam) return; // dedup
+            if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
+            const nm=msg.team==='a'?ST.nameA:ST.nameB;
+            ST.activeBuzzerTeam=msg.team;
+            updBuzzerStatus('respondiendo',nm);
+            if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+            document.getElementById('modTimer').classList.remove('dng');
+            toast(nm+' activó el buzzer');
+          }
+        }catch(e){}
+      })
+    .subscribe();
+}
+
 function activateRoom(code){
   roomCode=code;
-  lastTs=Date.now()-10000; // look back 10s
+  lastTs=Date.now()-10000;
+  // Keep HTTP poll as fallback for BUZZER_HIT from older devices
   if(pollInterval) clearInterval(pollInterval);
   pollInterval=setInterval(pollSupabase,350);
+  // Also subscribe via Realtime for instant buzzer reception
+  startRealtimeMod(code);
   saveRoom(code);
   document.getElementById('roomStatus').textContent='Sala: '+code;
   document.getElementById('roomStatus').style.color='#2ECC71';
-  // Broadcast START_REMOTE so display/pulsador on same browser reconnect
   bcast({type:'START_REMOTE',room:code});
-  // Push full state snapshot so remote devices catch up
   setTimeout(pushStateSnapshot, 300);
   toast('Sala activa: '+code);
 }
 
 function stopSupabaseRoom(){
   if(pollInterval){clearInterval(pollInterval);pollInterval=null;}
+  if(realtimeChannelMod){try{supabaseRtMod.removeChannel(realtimeChannelMod);}catch(e){}realtimeChannelMod=null;}
   roomCode='';
   clearSavedRoom();
   document.getElementById('roomStatus').textContent='Sin sala remota';
@@ -722,7 +751,8 @@ function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;docum
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
   ST.timerLeft=s;
-  if(ST.selQ) showSelQ();
+  // Only show question if it isn't already showing (avoid re-triggering curtain)
+  if(ST.selQ && !ST.questionActive) showSelQ();
   bcast({type:'START_TIMER',seconds:s});
   startLocalTimer(s);
   pushStateSnapshot();

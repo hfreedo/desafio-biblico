@@ -187,6 +187,7 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   .wrap{gap:6px;}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <canvas id="bgC"></canvas>
@@ -268,7 +269,7 @@ const ST={team:null,enabled:false,triggered:false,nameA:'EQUIPO A',nameB:'EQUIPO
 /* ── SUPABASE ── */
 const SUPABASE_URL='https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
-let pollInterval=null, lastTs=Date.now();
+let realtimeChannel=null, supabaseRtP=null;
 
 async function sendToNet(msg){
   if(!ST.room) return;
@@ -282,19 +283,21 @@ async function sendToNet(msg){
   }catch(e){}
 }
 
-async function pollNet(){
-  if(!ST.room) return;
-  try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${ST.room}&ts=gt.${lastTs}&order=ts.asc`,{
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
-    });
-    if(!r.ok) return;
-    const data=await r.json();
-    if(Array.isArray(data)&&data.length){
-      data.forEach(row=>{try{handleMsg(JSON.parse(row.payload));}catch(e){}});
-      lastTs=data[data.length-1].ts;
-    }
-  }catch(e){}
+function startRealtimeNet(room){
+  if(realtimeChannel){try{supabaseRtP.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
+  if(!supabaseRtP) supabaseRtP=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  realtimeChannel=supabaseRtP
+    .channel('pulsador-'+room)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},
+      payload=>{
+        try{
+          const msg=JSON.parse(payload.new.payload);
+          // Only process events from moderador (not our own BUZZER_HIT echoes)
+          if(msg._sender==='puls') return;
+          handleMsg(msg);
+        }catch(e){}
+      })
+    .subscribe();
 }
 
 async function fetchStateSnapshot(room){
@@ -307,9 +310,7 @@ async function fetchStateSnapshot(room){
     if(Array.isArray(data)&&data.length){
       const snap=JSON.parse(data[0].payload);
       handleMsg(snap);
-      // Critical: set lastTs to snapshot time so we only process NEWER events
-      // This prevents old SHOW_QUESTION/WRONG_ANSWER from re-enabling the buzzer
-      if(snap.ts) lastTs=snap.ts;
+      // Realtime replaces polling — no lastTs needed anymore
     }
   }catch(e){}
 }
@@ -421,7 +422,7 @@ function connectNet(){
 }
 
 function disconnectNet(){
-  if(pollInterval) clearInterval(pollInterval);
+  if(realtimeChannel){try{supabaseRtP.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
   ST.room=''; ST.connected=false;
   document.getElementById('sTxt').textContent='ESPERANDO MODERADOR';
   document.getElementById('sDot').className='sdot';

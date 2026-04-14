@@ -234,6 +234,7 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 .cftti{position:fixed;pointer-events:none;animation:cff linear forwards;border-radius:2px;}
 @keyframes cff{0%{opacity:1}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <canvas id="bgC"></canvas>
@@ -382,25 +383,33 @@ let timerInt=null;
 /* SUPABASE */
 const SUPABASE_URL='https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
-let pollInterval=null,lastTs=Date.now()-5000,currentRoom='';
-async function pollSupabaseEvents(){
-  if(!currentRoom)return;
-  try{
-    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${currentRoom}&ts=gt.${lastTs}&order=ts.asc`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
-    if(!r.ok)return;
-    const data=await r.json();
-    if(Array.isArray(data)&&data.length){data.forEach(row=>{try{handle(JSON.parse(row.payload))}catch(e){}});lastTs=data[data.length-1].ts;}
-  }catch(e){}
+let realtimeChannel=null, currentRoom='';
+let supabaseRt=null; // Realtime client
+function startRealtimeEvents(room){
+  // Clean up any existing subscription
+  if(realtimeChannel){ try{supabaseRt.removeChannel(realtimeChannel);}catch(e){} realtimeChannel=null; }
+  if(!supabaseRt) supabaseRt=supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  realtimeChannel=supabaseRt
+    .channel('display-events-'+room)
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},
+      payload=>{
+        try{
+          const msg=JSON.parse(payload.new.payload);
+          if(msg._sender==='mod'||!msg._sender) handle(msg);
+        }catch(e){}
+      })
+    .subscribe();
 }
 function startRemoteMode(room){
   if(!room) return;
-  if(room===currentRoom&&pollInterval) return; // already connected
+  if(room===currentRoom&&realtimeChannel) return; // already connected
   currentRoom=room;
-  if(pollInterval) clearInterval(pollInterval);
-  // lastTs is set by autoRecoverState — don't overwrite it here
-  pollInterval=setInterval(pollSupabaseEvents,350);
+  startRealtimeEvents(room);
 }
-function stopRemoteMode(){if(pollInterval)clearInterval(pollInterval);currentRoom='';}
+function stopRemoteMode(){
+  if(realtimeChannel){try{supabaseRt.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
+  currentRoom='';
+}
 async function fetchStateSnapshot(room){
   try{
     const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?room=eq.${room}`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
@@ -490,7 +499,7 @@ function handle(m){
         }
       }
       break;
-    case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();break;
+    case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();if(S.timerLeft>0){document.getElementById('timerSec').style.display='flex';renderTimer();}break;
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
     case 'PASS_TURN':handlePassTurn(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
@@ -530,7 +539,9 @@ function showQ(m){
   ab.innerHTML=`<div class="ans-lock">[]</div>${m.answer||''}`;
 
   document.getElementById('qWrap').classList.add('active');
-  document.getElementById('timerSec').style.display='none';
+  // Don't hide timer here — if it was already running, keep it visible
+  // Only hide if no timer was active
+  if(!timerInt) document.getElementById('timerSec').style.display='none';
   clearActive();
 
   // Open curtain after brief hold
@@ -672,11 +683,25 @@ function showWinner(m){
 /* TIMER */
 function startTimer(s){
   stopTimer();
-  // Only reset total if starting fresh (s == full duration)
   S.timerTotal=s; S.timerLeft=s;
-  document.getElementById('timerSec').style.display='flex';
-  renderTimer();
-  timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);
+  // If curtain is still animating, wait for it before showing timer
+  const curtain=document.getElementById('curtain');
+  const isAnimating=!curtain.classList.contains('open');
+  const startFn=()=>{
+    document.getElementById('timerSec').style.display='flex';
+    renderTimer();
+    timerInt=setInterval(()=>{
+      S.timerLeft--;renderTimer();
+      if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();
+      if(S.timerLeft<=0){stopTimer();bombExplosion();}
+    },1000);
+  };
+  if(isAnimating){
+    // Wait for curtain to fully open (max 700ms) then show timer
+    setTimeout(startFn, 700);
+  } else {
+    startFn();
+  }
 }
 function stopTimer(){if(timerInt){clearInterval(timerInt);timerInt=null;}document.getElementById('tNum').classList.remove('danger');}
 function renderTimer(){
