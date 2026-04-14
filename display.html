@@ -521,41 +521,41 @@ function showQ(m){
   S.currentQuestionId=m.index||null;
   S.questionActive=true;
   bombFired=false;
-  const idle=document.getElementById('idle');
-  idle.classList.remove('visible');
 
-  // Close curtain (cover screen)
+  // Step 1: close curtain — all content swaps happen BEHIND it
   const curtain=document.getElementById('curtain');
   curtain.classList.remove('open');
 
-  // Prep content behind curtain
-  const d=(m.difficulty||'').toLowerCase();
-  const db=document.getElementById('diffBadge');
-  db.className='diff-badge';
-  db.classList.add(d.includes('fácil')||d==='facil'?'df':d.includes('medio')||d.includes('media')?'dm':'dd');
-  db.textContent=m.difficulty||'NORMAL';
-  document.getElementById('roundLbl').textContent=(m.round||'').toUpperCase();
-  document.getElementById('qNum').textContent=`PREGUNTA ${m.index} DE ${m.total}`;
+  // Step 2: wait for curtain to fully close, then swap content
+  setTimeout(()=>{
+    const idle=document.getElementById('idle');
+    idle.classList.remove('visible');
 
-  // Word-by-word animated question text
-  const qText=document.getElementById('qText');
-  const words=(m.question||'').split(' ');
-  qText.innerHTML=words.map((w,i)=>`<span class="qword" style="animation-delay:${.35+i*.065}s">${w}</span>`).join(' ');
+    const diff=(m.difficulty||'').toLowerCase();
+    const db=document.getElementById('diffBadge');
+    db.className='diff-badge';
+    db.classList.add(diff.includes('fácil')||diff==='facil'?'df':diff.includes('medio')||diff.includes('media')?'dm':'dd');
+    db.textContent=m.difficulty||'NORMAL';
+    document.getElementById('roundLbl').textContent=(m.round||'').toUpperCase();
+    document.getElementById('qNum').textContent=`PREGUNTA ${m.index} DE ${m.total}`;
 
-  // Lock answer box
-  const ab=document.getElementById('ansBox');
-  ab.classList.remove('show');
-  ab.innerHTML=`<div class="ans-lock">[]</div>${m.answer||''}`;
+    // Word-by-word animated question text
+    const qText=document.getElementById('qText');
+    const words=(m.question||'').split(' ');
+    qText.innerHTML=words.map((w,i)=>`<span class="qword" style="animation-delay:${.35+i*.065}s">${w}</span>`).join(' ');
 
-  document.getElementById('qWrap').classList.add('active');
-  // Don't hide timer here — if it was already running, keep it visible
-  // Only hide if no timer was active
-  if(!timerInt) document.getElementById('timerSec').style.display='none';
-  clearActive();
+    // Lock answer box
+    const ab=document.getElementById('ansBox');
+    ab.classList.remove('show');
+    ab.innerHTML=`<div class="ans-lock">[]</div>${m.answer||''}`;
 
-  // Wait for curtain to fully close (last bar: 300ms delay + 600ms transition = 900ms)
-  // then open to reveal prepared content
-  setTimeout(()=>curtain.classList.add('open'), 855);
+    document.getElementById('qWrap').classList.add('active');
+    if(!timerInt) document.getElementById('timerSec').style.display='none';
+    clearActive();
+
+    // Step 3: brief hold then open curtain to reveal
+    setTimeout(()=>curtain.classList.add('open'), 80);
+  }, 855);
 }
 
 /* ══ REVEAL ANSWER — build tension then unlock ══ */
