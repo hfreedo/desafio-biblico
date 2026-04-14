@@ -373,13 +373,11 @@ async function pollSupabase(){
           const msg=JSON.parse(row.payload);
           if(msg._sender==='mod') return;
           if(msg.type==='BUZZER_HIT'){
-            // Dedup: ignore if already someone has the buzzer
             if(ST.activeBuzzerTeam) return;
             if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
             const nm=msg.team==='a'?ST.nameA:ST.nameB;
             ST.activeBuzzerTeam=msg.team;
             updBuzzerStatus('respondiendo', nm);
-            // Stop local timer — remote buzzer hit
             if(ST.timerInt){ clearInterval(ST.timerInt); ST.timerInt=null; }
             document.getElementById('modTimer').classList.remove('dng');
             toast(nm+' activó el buzzer');
@@ -435,7 +433,7 @@ function startRealtimeMod(room){
           const msg=JSON.parse(payload.new.payload);
           if(msg._sender==='mod') return; // skip our own events
           if(msg.type==='BUZZER_HIT'){
-            if(ST.activeBuzzerTeam) return; // dedup
+            if(ST.activeBuzzerTeam) return;
             if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return;
             const nm=msg.team==='a'?ST.nameA:ST.nameB;
             ST.activeBuzzerTeam=msg.team;
@@ -443,6 +441,8 @@ function startRealtimeMod(room){
             if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
             document.getElementById('modTimer').classList.remove('dng');
             toast(nm+' activó el buzzer');
+            // Forward to display via bcast (tagged _sender:'mod' so display accepts it)
+            bcast({type:'BUZZER_HIT', team:msg.team, name:nm, questionId:msg.questionId||null});
           }
         }catch(e){}
       })

@@ -395,7 +395,8 @@ function startRealtimeEvents(room){
       payload=>{
         try{
           const msg=JSON.parse(payload.new.payload);
-          if(msg._sender==='mod'||!msg._sender) handle(msg);
+          // Accept events from moderador, or BUZZER_HIT from pulsador directly
+          if(msg._sender==='mod'||!msg._sender||msg.type==='BUZZER_HIT') handle(msg);
         }catch(e){}
       })
     .subscribe();
