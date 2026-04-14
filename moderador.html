@@ -754,8 +754,8 @@ function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;docum
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
   ST.timerLeft=s;
-  // Only show question if it isn't already showing (avoid re-triggering curtain)
-  if(ST.selQ && !ST.questionActive) showSelQ();
+  // Iniciar = mostrar pregunta + arrancar cronómetro siempre
+  if(ST.selQ) showSelQ();
   bcast({type:'START_TIMER',seconds:s});
   startLocalTimer(s);
   pushStateSnapshot();

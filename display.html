@@ -99,13 +99,13 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 
 /* ══ CURTAIN WIPE (question entry) ══ */
 .curtain{position:fixed;inset:0;z-index:80;pointer-events:none;display:flex;flex-direction:column;}
-.curtain-bar{flex:1;background:var(--ink);transform:scaleX(1);transition:transform .6s cubic-bezier(.76,0,.24,1);}
+.curtain-bar{flex:1;background:var(--ink);transform:scaleX(1);transition:transform .54s cubic-bezier(.76,0,.24,1);}
 .curtain-bar:nth-child(1){transform-origin:left;transition-delay:.00s}
-.curtain-bar:nth-child(2){transform-origin:right;transition-delay:.06s}
-.curtain-bar:nth-child(3){transform-origin:left;transition-delay:.12s}
-.curtain-bar:nth-child(4){transform-origin:right;transition-delay:.18s}
-.curtain-bar:nth-child(5){transform-origin:left;transition-delay:.24s}
-.curtain-bar:nth-child(6){transform-origin:right;transition-delay:.30s}
+.curtain-bar:nth-child(2){transform-origin:right;transition-delay:.054s}
+.curtain-bar:nth-child(3){transform-origin:left;transition-delay:.108s}
+.curtain-bar:nth-child(4){transform-origin:right;transition-delay:.162s}
+.curtain-bar:nth-child(5){transform-origin:left;transition-delay:.216s}
+.curtain-bar:nth-child(6){transform-origin:right;transition-delay:.270s}
 .curtain.open .curtain-bar{transform:scaleX(0);}
 
 /* ══ QUESTION ══ */
@@ -377,7 +377,7 @@ body{background:var(--ink);font-family:'Cormorant Garamond',serif;color:var(--wh
 
 <script>
 const CIRC=427;
-const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true,buzzerLocked:false,currentQuestionId:null};
+const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true,buzzerLocked:false,currentQuestionId:null,questionActive:false};
 let timerInt=null;
 
 /* SUPABASE */
@@ -506,7 +506,7 @@ function handle(m){
         }
       }
       break;
-    case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();if(S.timerLeft>0){document.getElementById('timerSec').style.display='flex';renderTimer();}break;
+    case 'START_TIMER':startTimer(m.seconds);break;case 'STOP_TIMER':stopTimer();if(S.timerLeft>0&&S.questionActive){document.getElementById('timerSec').style.display='flex';renderTimer();}break;
     case 'BUZZER_HIT':showBuzzer(m);break;case 'SHOW_WINNER':showWinner(m);break;
     case 'PASS_TURN':handlePassTurn(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;case 'CLEAR_ACTIVE':clearActive();break;
@@ -519,6 +519,7 @@ function handle(m){
 function showQ(m){
   S.buzzerLocked=false;
   S.currentQuestionId=m.index||null;
+  S.questionActive=true;
   bombFired=false;
   const idle=document.getElementById('idle');
   idle.classList.remove('visible');
@@ -554,7 +555,7 @@ function showQ(m){
 
   // Wait for curtain to fully close (last bar: 300ms delay + 600ms transition = 900ms)
   // then open to reveal prepared content
-  setTimeout(()=>curtain.classList.add('open'), 950);
+  setTimeout(()=>curtain.classList.add('open'), 855);
 }
 
 /* ══ REVEAL ANSWER — build tension then unlock ══ */
@@ -575,6 +576,7 @@ function revealAns(){
 
 /* ══ HIDE → back to idle with curtain ══ */
 function hideQ(){S.buzzerLocked=false;S.currentQuestionId=null;
+  S.questionActive=false;
   bombFired=false;
   const curtain=document.getElementById('curtain');
   curtain.classList.remove('open');
@@ -586,7 +588,7 @@ function hideQ(){S.buzzerLocked=false;S.currentQuestionId=null;
     stopTimer();clearActive();
     // Brief hold so content is ready, then open
     setTimeout(()=>curtain.classList.add('open'), 80);
-  }, 950);
+  }, 855);
 }
 
 /* ══ SCORES ══ */
