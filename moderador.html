@@ -271,6 +271,36 @@ input:focus,select:focus{border-color:var(--gold);}
         </div>
       </div>
 
+      <!-- PREGUNTAS SUPABASE (S01/S02) -->
+      <div class="sec">
+        <div class="stitle">Banco de Preguntas <span id="qSourceBadge" style="font-size:9px;letter-spacing:1px;color:var(--dim)">LOCAL</span></div>
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button class="btn gold btn-sm" onclick="loadQuestionsFromSupabase()" style="flex:1">Recargar desde Supabase</button>
+        </div>
+        <div class="sep"></div>
+        <div class="slim">AGREGAR PREGUNTA</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+          <textarea id="newQText" placeholder="Pregunta..." style="background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'Crimson Text',serif;font-size:13px;width:100%;outline:none;resize:vertical;min-height:58px;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+          <textarea id="newQAnswer" placeholder="Respuesta..." style="background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'Crimson Text',serif;font-size:13px;width:100%;outline:none;resize:vertical;min-height:40px;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
+          <div style="display:flex;gap:6px">
+            <select id="newQDiff" style="flex:1">
+              <option value="Fácil">Fácil</option>
+              <option value="Medio">Medio</option>
+              <option value="Difícil">Difícil</option>
+            </select>
+            <select id="newQRound" style="flex:1">
+              <option value="1">Ronda 1</option>
+              <option value="2">Ronda 2</option>
+              <option value="3">Ronda 3</option>
+              <option value="4">Ronda 4</option>
+              <option value="5">Ronda 5</option>
+            </select>
+          </div>
+          <input type="text" id="newQCat" placeholder="Categoría (opcional)">
+          <button class="btn grn btn-sm" onclick="saveNewQuestion()">Guardar en Supabase</button>
+        </div>
+      </div>
+
       <!-- WINNER -->
       <div class="sec">
         <div class="stitle">Finalizar</div>
@@ -787,6 +817,7 @@ function showSelQ(){
   bcast({type:'UPDATE_ROUND',round:q.r,name:q.rn});
   const rv=q.r.replace('Ronda ','');
   document.getElementById('roundSel').value=rv;
+  markQuestionUsed(q.id); // S03
   pushStateSnapshot();
   toast("Pregunta #"+q.id+" en pantalla");
 }
@@ -1046,6 +1077,7 @@ function newGame(){
   bcast({type:'UPDATE_SCORE',scoreA:0,scoreB:0});
   saveState();
   pushStateSnapshot();
+  resetAllQuestionsUsed(); // S03
   toast('Nuevo juego iniciado');
 }
 
@@ -1053,6 +1085,30 @@ function declWinner(t){
   const name=t==='a'?ST.nameA:ST.nameB;
   bcast({type:'SHOW_WINNER',team:t,name,scoreA:ST.scoreA,scoreB:ST.scoreB});
   toast("Ganador: "+name);
+  // S06: guardar historial en Supabase
+  _saveGameHistory(t, name);
+}
+
+async function _saveGameHistory(winnerTeam, winnerName){
+  try{
+    const totalAnswered=Object.keys(ST.answered).length;
+    const record={
+      played_at: new Date().toISOString(),
+      team_a_name: ST.nameA,
+      team_b_name: ST.nameB,
+      score_a: ST.scoreA,
+      score_b: ST.scoreB,
+      winner_team: winnerTeam,
+      winner_name: winnerName,
+      questions_answered: totalAnswered,
+      room: ST.room||'local'
+    };
+    await fetch(`${SUPABASE_URL}/rest/v1/game_history`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify(record)
+    });
+  }catch(e){console.warn('No se pudo guardar el historial:',e);}
 }
 
 /*  LIST  */
@@ -1108,27 +1164,113 @@ function updStats(){const n=Object.keys(ST.answered).length;document.getElementB
 let toastT;
 function toast(msg){const e=document.getElementById('toast');e.textContent=msg;e.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>e.classList.remove('show'),2500);}
 
+/* ══ S01/S02/S03 — PREGUNTAS DESDE SUPABASE ══ */
+let QQ_REMOTE=[]; // preguntas cargadas desde Supabase
+let usingRemoteQ=false; // true cuando Supabase tiene preguntas
+
+async function loadQuestionsFromSupabase(){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/questions?order=id.asc`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok) return;
+    const data=await r.json();
+    if(!Array.isArray(data)||data.length===0) return;
+    // Mapear columnas Supabase → formato interno
+    QQ_REMOTE=data.map(q=>({
+      id:q.id,
+      r:`Ronda ${q.round}`,
+      rn:ROUNDS.find(x=>x.id==q.round)?.name||'',
+      d:q.difficulty||'Fácil',
+      q:q.question,
+      a:q.answer,
+      category:q.category||'',
+      used:q.used||false
+    }));
+    usingRemoteQ=true;
+    // Reemplazar QQ con las preguntas remotas
+    QQ.length=0;
+    QQ_REMOTE.forEach(q=>QQ.push(q));
+    renderList();updStats();
+    toast(`${QQ.length} preguntas cargadas desde Supabase`);
+    document.getElementById('qSourceBadge').textContent='SUPABASE';
+    document.getElementById('qSourceBadge').style.color='var(--green)';
+  }catch(e){
+    console.warn('Sin conexión a Supabase para preguntas:',e);
+  }
+}
+
+// S03 — marcar pregunta como usada al mostrarla
+async function markQuestionUsed(id){
+  if(!usingRemoteQ) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/questions?id=eq.${id}`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},
+      body:JSON.stringify({used:true})
+    });
+    const q=QQ.find(x=>x.id===id);
+    if(q) q.used=true;
+  }catch(e){}
+}
+
+// S03 — resetear todas las preguntas al iniciar nueva partida
+async function resetAllQuestionsUsed(){
+  if(!usingRemoteQ) return;
+  try{
+    await fetch(`${SUPABASE_URL}/rest/v1/questions`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=minimal'},
+      body:JSON.stringify({used:false})
+    });
+    QQ.forEach(q=>q.used=false);
+    renderList();updStats();
+    toast('Preguntas reseteadas para nueva partida');
+  }catch(e){}
+}
+
+// S02 — guardar nueva pregunta en Supabase
+async function saveNewQuestion(){
+  const qText=document.getElementById('newQText').value.trim();
+  const aText=document.getElementById('newQAnswer').value.trim();
+  const diff=document.getElementById('newQDiff').value;
+  const round=parseInt(document.getElementById('newQRound').value);
+  const cat=document.getElementById('newQCat').value.trim();
+  if(!qText||!aText){toast('Completá pregunta y respuesta');return;}
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/questions`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Prefer':'return=representation'},
+      body:JSON.stringify({question:qText,answer:aText,difficulty:diff,round,category:cat,used:false})
+    });
+    if(!r.ok) throw new Error('Error al guardar');
+    document.getElementById('newQText').value='';
+    document.getElementById('newQAnswer').value='';
+    document.getElementById('newQCat').value='';
+    toast('Pregunta guardada en Supabase');
+    loadQuestionsFromSupabase(); // recargar
+  }catch(e){toast('Error al guardar: '+e.message);}
+}
+
 /*  INIT — restore saved state and room  */
 (function initApp(){
-  // Restore team names in UI
   document.getElementById('nameA').value=ST.nameA;
   document.getElementById('nameB').value=ST.nameB;
   liveTeamName('a',ST.nameA);
   liveTeamName('b',ST.nameB);
-  // Restore scores
   updScoreDisplay();
-  // Restore timer value
   document.getElementById('timerInput').value=ST.timerSec;
   document.getElementById('timerVal').textContent=ST.timerSec;
   document.getElementById('modTimer').textContent=ST.timerSec;
   renderList();updStats();renderHist();
   updBuzzerStatus('libre');
-  // Auto-restore room if one was active before reload
   const savedRoom=getSavedRoom();
   if(savedRoom){
     activateRoom(savedRoom);
     toast('Sala restaurada: '+savedRoom);
   }
+  // S01: intentar cargar preguntas desde Supabase
+  loadQuestionsFromSupabase();
 })();
 </script>
 </body>

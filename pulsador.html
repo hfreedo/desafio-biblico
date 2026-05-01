@@ -108,9 +108,15 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   border-radius:50%;cursor:pointer;user-select:none;-webkit-user-select:none;
   display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;
   border:none;outline:none;touch-action:none;
-  transition:transform .1s,filter .2s;
+  transition:transform .1s,filter .2s,width .5s cubic-bezier(.34,1.56,.64,1),height .5s cubic-bezier(.34,1.56,.64,1),border-radius .5s;
 }
-.bz-btn:active{transform:scale(.92);}
+.bz-btn:active{transform:scale(.95);}
+
+/* P01: al habilitarse, el botón crece a casi toda la pantalla */
+.bz-btn.ba:not(.dis),
+.bz-btn.bb:not(.dis){
+  width:min(88vw,82vh,520px);height:min(88vw,82vh,520px);
+}
 
 /* States */
 .bz-btn.nt{
@@ -119,18 +125,18 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   cursor:not-allowed;
 }
 .bz-btn.ba{
-  background:radial-gradient(circle at 35% 35%,#3DB578,#1B6B3A,#0D3A1E);
-  box-shadow:0 0 0 10px rgba(52,211,153,.08),0 0 0 20px rgba(52,211,153,.04),0 8px 60px rgba(52,211,153,.4),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3);
+  background:radial-gradient(circle at 35% 35%,#00F090,#00A85A,#005C30);
+  box-shadow:0 0 0 12px rgba(0,217,126,.1),0 0 0 24px rgba(0,217,126,.05),0 8px 80px rgba(0,217,126,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
   animation:pulse-a 2s ease-in-out infinite;
 }
 .bz-btn.bb{
-  background:radial-gradient(circle at 35% 35%,#5DAEE8,#1A3A6B,#0D1E3A);
-  box-shadow:0 0 0 10px rgba(96,165,250,.08),0 0 0 20px rgba(96,165,250,.04),0 8px 60px rgba(96,165,250,.4),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3);
+  background:radial-gradient(circle at 35% 35%,#38C8FF,#0080CC,#00407A);
+  box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
   animation:pulse-b 2s ease-in-out infinite;
 }
-.bz-btn.dis{filter:grayscale(.7) brightness(.45)!important;animation:none!important;cursor:not-allowed!important;}
-@keyframes pulse-a{0%,100%{box-shadow:0 0 0 10px rgba(52,211,153,.08),0 0 0 20px rgba(52,211,153,.04),0 8px 60px rgba(52,211,153,.4),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 16px rgba(52,211,153,.12),0 0 0 32px rgba(52,211,153,.06),0 8px 90px rgba(52,211,153,.75),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3)}}
-@keyframes pulse-b{0%,100%{box-shadow:0 0 0 10px rgba(96,165,250,.08),0 0 0 20px rgba(96,165,250,.04),0 8px 60px rgba(96,165,250,.4),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 16px rgba(96,165,250,.12),0 0 0 32px rgba(96,165,250,.06),0 8px 90px rgba(96,165,250,.75),inset 0 2px 0 rgba(255,255,255,.18),inset 0 -5px 0 rgba(0,0,0,.3)}}
+.bz-btn.dis{filter:grayscale(.7) brightness(.45)!important;animation:none!important;cursor:not-allowed!important;width:min(62vw,42vh,260px)!important;height:min(62vw,42vh,260px)!important;}
+@keyframes pulse-a{0%,100%{box-shadow:0 0 0 12px rgba(0,217,126,.1),0 0 0 24px rgba(0,217,126,.05),0 8px 80px rgba(0,217,126,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(0,217,126,.15),0 0 0 40px rgba(0,217,126,.07),0 8px 120px rgba(0,217,126,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
+@keyframes pulse-b{0%,100%{box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(14,165,255,.15),0 0 0 40px rgba(14,165,255,.07),0 8px 120px rgba(14,165,255,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
 
 .bz-label{
   font-family:'Syne',sans-serif;font-size:clamp(18px,5vw,28px);font-weight:800;
@@ -251,6 +257,7 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   <div class="bz-area">
     <button class="bz-btn nt" id="bzBtn" onpointerdown="trigBz(event)">
       <div class="bz-label">PULSAR</div>
+      <div class="bz-countdown" id="bzCountdown" style="display:none;font-family:'Syne',sans-serif;font-size:clamp(40px,12vw,80px);font-weight:800;letter-spacing:-.03em;color:var(--white);pointer-events:none;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.5);"></div>
       <div class="bz-hint" id="bzHint">Elegí tu equipo primero</div>
     </button>
   </div>
@@ -345,10 +352,16 @@ function handleMsg(m){
       }
       break;
     case 'SHOW_ANSWER':
+      document.getElementById('trigOv').className='trig'; // B04: cerrar overlay inmediatamente
       disableBz('Respuesta revelada');
+      _stopCountdown(); // P02
       break;
     case 'STOP_TIMER':
       disableBz('Tiempo terminado');
+      _stopCountdown(); // P02
+      break;
+    case 'START_TIMER':
+      _startCountdown(m.seconds); // P02
       break;
     case 'BUZZER_HIT':
       if(!ST.triggered) disableBz((m.name||'Otro equipo')+' pulsó primero');
@@ -476,6 +489,39 @@ function updBtn(){
   }
 }
 
+/* P02 — Cuenta regresiva visible en el botón */
+let _cdInt=null,_cdLeft=0;
+function _startCountdown(secs){
+  _stopCountdown();
+  _cdLeft=secs;
+  const el=document.getElementById('bzCountdown');
+  const lbl=document.querySelector('.bz-label');
+  const _update=()=>{
+    if(_cdLeft<=5&&_cdLeft>0){
+      el.style.display='block';
+      el.style.color=_cdLeft<=3?'var(--red)':'var(--white)';
+      el.textContent=_cdLeft;
+      if(lbl) lbl.style.display='none';
+    } else {
+      el.style.display='none';
+      if(lbl) lbl.style.display='';
+    }
+  };
+  _update();
+  _cdInt=setInterval(()=>{
+    _cdLeft--;
+    _update();
+    if(_cdLeft<=0) _stopCountdown();
+  },1000);
+}
+function _stopCountdown(){
+  if(_cdInt){clearInterval(_cdInt);_cdInt=null;}
+  const el=document.getElementById('bzCountdown');
+  const lbl=document.querySelector('.bz-label');
+  if(el) el.style.display='none';
+  if(lbl) lbl.style.display='';
+}
+
 function enableBz(){
   ST.enabled=true; ST.triggered=false;
   document.getElementById('sDot').className='sdot on';
@@ -492,6 +538,7 @@ function disableBz(msg){
 function resetBz(){
   ST.triggered=false; ST.enabled=false;
   document.getElementById('trigOv').className='trig';
+  _stopCountdown(); // P02
   disableBz('ESPERANDO MODERADOR'); updBtn();
 }
 
