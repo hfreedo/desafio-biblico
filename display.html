@@ -702,6 +702,7 @@ function handle(m){
 /* ── START GAME — secuencia de entrada al campo de juego ── */
 function startGameSequence(){
   if(!isFirstQuestion) return;
+  isFirstQuestion=false; // inmediato — evita doble ejecución por BroadcastChannel + Supabase
   const idleEl=el('idle');
   const hdr=el('siteHeader'), sb=el('scoreboard');
   const stageEl=document.querySelector('.stage');
@@ -824,7 +825,6 @@ function startGameSequence(){
     el('teamA').classList.remove('sg-enter');
     el('teamB').classList.remove('sg-enter');
     stageEl.classList.remove('sg-enter');
-    isFirstQuestion=false;
   }, 6200);
 }
 
