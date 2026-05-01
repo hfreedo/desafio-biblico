@@ -301,6 +301,13 @@ input:focus,select:focus{border-color:var(--gold);}
         </div>
       </div>
 
+      <!-- INICIAR JUEGO -->
+      <div class="sec" id="secStartGame">
+        <div class="stitle">Partida</div>
+        <button class="btn gold" onclick="startGame()" style="width:100%;font-size:14px;padding:12px;letter-spacing:2px;">▶ INICIAR JUEGO</button>
+        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:1px;">Activa la pantalla principal</div>
+      </div>
+
       <!-- WINNER -->
       <div class="sec">
         <div class="stitle">Finalizar</div>
@@ -1059,6 +1066,15 @@ function toggleSound(){
   toast(soundOn?'Sonidos activados':'Sonidos desactivados');
 }
 
+function startGame(){
+  bcast({type:'START_GAME'});
+  // Ocultar el botón después de iniciarlo — ya no es necesario
+  document.getElementById('secStartGame').style.opacity='.4';
+  document.getElementById('secStartGame').style.pointerEvents='none';
+  toast('¡Juego iniciado!');
+  // Reactivar si se hace nueva partida
+}
+
 /*  WINNER  */
 function newGame(){
   if(!confirm('Reiniciar todo el juego? Se borran puntajes e historial.')) return;
@@ -1078,6 +1094,9 @@ function newGame(){
   saveState();
   pushStateSnapshot();
   resetAllQuestionsUsed(); // S03
+  // Reactivar botón de inicio
+  const sg=document.getElementById('secStartGame');
+  if(sg){sg.style.opacity='';sg.style.pointerEvents='';}
   toast('Nuevo juego iniciado');
 }
 
