@@ -275,24 +275,19 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
    SECUENCIA START_GAME
    ════════════════════════════════════════ */
 
-/* IDLE EXIT — manejado completamente por JS Web Animations API */
-#idle.sg-exit{
-  position:fixed !important;
-  inset:0 !important;
-  z-index:50 !important;
-  pointer-events:none;
-}
+/* IDLE EXIT — manejado por Web Animations API sobre un clone en startGameSequence */
+#idle.sg-exit{ display:none; } /* fallback: ocultar si sg-exit se agrega por error */
 
-/* HEADER — fade desde arriba, empieza en 0 */
+/* HEADER — fade desde arriba */
 .header.sg-enter{
-  animation:sg-hdr 2s cubic-bezier(.16,1,.3,1) forwards;
+  animation:sg-hdr 1.8s cubic-bezier(.16,1,.3,1) forwards;
 }
 @keyframes sg-hdr{
-  0%  {opacity:0;transform:translateY(-28px);}
+  0%  {opacity:0;transform:translateY(-24px);}
   100%{opacity:1;transform:translateY(0);}
 }
 
-/* PUNTAJE A — entra desde la izquierda exterior, suave */
+/* PUNTAJE A — entra desde la izquierda, suave */
 #teamA.sg-enter{
   animation:sg-left 1.8s cubic-bezier(.16,1,.3,1) both;
 }
@@ -302,7 +297,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
   100%{opacity:1;transform:translateX(0);}
 }
 
-/* PUNTAJE B — entra desde la derecha, 140ms después de A */
+/* PUNTAJE B — entra desde la derecha, 140ms después */
 #teamB.sg-enter{
   animation:sg-right 1.8s .14s cubic-bezier(.16,1,.3,1) both;
 }
@@ -314,10 +309,10 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 
 /* STAGE — emerge desde abajo */
 .stage.sg-enter{
-  animation:sg-stage 1.8s cubic-bezier(.16,1,.3,1) both;
+  animation:sg-stage 1.6s cubic-bezier(.16,1,.3,1) both;
 }
 @keyframes sg-stage{
-  0%  {opacity:0;transform:translateY(40px);}
+  0%  {opacity:0;transform:translateY(36px);}
   100%{opacity:1;transform:translateY(0);}
 }
 
@@ -711,38 +706,40 @@ function startGameSequence(){
   const hdr=el('siteHeader'), sb=el('scoreboard');
   const stageEl=document.querySelector('.stage');
 
-  // Esconder elementos del juego sin transición
+  // Ocultar elementos del juego sin transición
   hdr.style.cssText='opacity:0;pointer-events:none;';
   sb.style.cssText='opacity:0;pointer-events:none;';
   stageEl.style.cssText='opacity:0;pointer-events:none;';
 
-  // ── TÉCNICA: CLONE PARA ANIMACIÓN DE SALIDA ───────────────────────
-  // El idle original tiene reglas CSS complejas que interfieren con Web
-  // Animations API. Clonamos el idle para la animación — el clone tiene
-  // estilos inline puros, sin cascada que interfiera. El original
-  // se oculta instantáneamente y el clone hace todo el viaje visual.
+  // ══ TÉCNICA DEL CLONE ════════════════════════════════════════════
+  // El idle original tiene reglas CSS con alta especificidad que
+  // compiten con cualquier animación — online esto causa que el
+  // browser muestre dos elementos simultáneamente. La solución:
+  // clonamos el idle, lo animamos, y ocultamos el original
+  // con display:none en el mismo frame.
 
-  // 1. Capturar las dimensiones del idle ANTES de cualquier cambio
+  // 1. Capturar posición actual del idle ANTES de cualquier cambio
   const idleRect=idleEl.getBoundingClientRect();
 
-  // 2. Crear el clone con posición y apariencia exacta del original
+  // 2. Capturar el estado visual de todos los hijos
+  //    (las animaciones CSS fill:forwards no se transfieren al clone)
+  const origKids=[...idleEl.querySelectorAll('*')];
+
+  // 3. Crear el clone
   const clone=idleEl.cloneNode(true);
   clone.removeAttribute('id');
 
-  // CRÍTICO: capturar el estado visual actual de cada hijo del idle
-  // Las animaciones CSS con fill:forwards no se transfieren al clone —
-  // el clone las resetea al estado inicial. Hay que fijar los computed
-  // styles como inline para que el clone se vea idéntico al original.
-  const origKids=[...idleEl.querySelectorAll('*')];
+  // 4. Fijar el estado visual actual de cada hijo en el clone
   const cloneKids=[...clone.querySelectorAll('*')];
   origKids.forEach((orig,i)=>{
     const cs=getComputedStyle(orig);
     cloneKids[i].style.opacity=cs.opacity;
     cloneKids[i].style.transform=cs.transform==='none'?'':cs.transform;
-    cloneKids[i].style.animation='none'; // evitar que las animaciones corran de nuevo
+    cloneKids[i].style.animation='none';
     cloneKids[i].style.transition='none';
   });
 
+  // 5. Posicionar el clone exactamente sobre el idle original
   clone.style.cssText=`
     position:fixed;
     top:${idleRect.top}px;
@@ -763,15 +760,15 @@ function startGameSequence(){
   `;
   document.body.appendChild(clone);
 
-  // 3. Ocultar el idle original sin transición
-  idleEl.style.opacity='0';
-  idleEl.style.pointerEvents='none';
+  // 6. Ocultar el original con display:none — inmediato, sin cascade
+  //    Esto elimina el duplicado online
+  idleEl.style.display='none';
 
   // ── FASE 1 (0s) ──────────────────────────────────────────────────
   bgStartScroll();
   startEmbers();
 
-  // 4. Animar el clone — ease-in puro: arranca lento, gana momentum
+  // 7. Animar el clone — Web Animations API, sin conflictos CSS
   const H=window.innerHeight;
   const cloneAnim=clone.animate([
     {transform:'translateY(0)',             opacity:1},
@@ -783,42 +780,42 @@ function startGameSequence(){
     easing:'cubic-bezier(.4,0,1,1)',
     fill:'forwards'
   });
-
   cloneAnim.onfinish=()=>clone.remove();
 
   // ── FASE 2 (2550ms) ──────────────────────────────────────────────
-  // Clone termina a los 2400ms. Esperamos 150ms extra de margen.
-  // Solo el HEADER aparece ahora — scoreboard sigue oculto (opacity:0 inline).
+  // Clone terminó (2400ms) + 150ms margen. Header emerge.
+  // Scoreboard sigue oculto vía opacity:0 inline.
   setTimeout(()=>{
     bgStopScroll();
     document.body.classList.remove('pre-game');
     hdr.classList.remove('pre-game');
-    sb.classList.remove('pre-game'); // quita la clase pre-game pero sb sigue opacity:0 inline
+    sb.classList.remove('pre-game');
     hdr.style.cssText='';
     hdr.classList.add('sg-enter');
-    // sb.style.cssText intencionalmente NO se limpia aquí todavía
+    // sb sigue con opacity:0 — los scores no aparecen todavía
   }, 2550);
 
   // ── FASE 3 (3300ms) ──────────────────────────────────────────────
-  // Revelar scoreboard Y disparar animación de equipos en el MISMO momento.
-  // Sin gap entre visibilidad y animación = sin doble entrada.
+  // Revelar scoreboard Y animar scores en el MISMO frame.
+  // Sin gap = sin doble entrada.
   setTimeout(()=>{
-    sb.style.cssText='';          // scoreboard visible
-    el('teamA').classList.add('sg-enter'); // animación arranca desde opacity:0 del keyframe 0%
+    sb.style.cssText='';
+    el('teamA').classList.add('sg-enter');
     el('teamB').classList.add('sg-enter');
   }, 3300);
 
-  // ── FASE 4 (4200ms) ──────────────────────────────────────────────
+  // ── FASE 4 (4100ms) ──────────────────────────────────────────────
   // Stage emerge desde abajo. Ascuas se apagan.
   setTimeout(()=>{
     stageEl.style.cssText='';
     stageEl.classList.add('sg-enter');
     stopEmbers();
-  }, 4200);
+  }, 4100);
 
   // ── FASE 5 (2800ms) ──────────────────────────────────────────────
-  // Idle original reaparece en modo "Esperando" — ya sin el clone encima
+  // Idle original vuelve en modo "Esperando"
   setTimeout(()=>{
+    idleEl.style.display='';          // restaurar display
     idleEl.style.cssText='';
     idleEl.classList.remove('visible');
     el('idleEvent').style.display='none';
