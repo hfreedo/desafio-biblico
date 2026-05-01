@@ -718,18 +718,15 @@ function startGameSequence(){
   // clonamos el idle, lo animamos, y ocultamos el original
   // con display:none en el mismo frame.
 
-  // 1. Capturar posición actual del idle ANTES de cualquier cambio
-  const idleRect=idleEl.getBoundingClientRect();
-
-  // 2. Capturar el estado visual de todos los hijos
+  // 1. Capturar el estado visual de todos los hijos ANTES de clonar
   //    (las animaciones CSS fill:forwards no se transfieren al clone)
   const origKids=[...idleEl.querySelectorAll('*')];
 
-  // 3. Crear el clone
+  // 2. Crear el clone
   const clone=idleEl.cloneNode(true);
   clone.removeAttribute('id');
 
-  // 4. Fijar el estado visual actual de cada hijo en el clone
+  // 3. Fijar el estado visual actual de cada hijo en el clone
   const cloneKids=[...clone.querySelectorAll('*')];
   origKids.forEach((orig,i)=>{
     const cs=getComputedStyle(orig);
@@ -739,13 +736,11 @@ function startGameSequence(){
     cloneKids[i].style.transition='none';
   });
 
-  // 5. Posicionar el clone exactamente sobre el idle original
+  // 4. Posicionar el clone — inset:0 siempre llena el viewport correctamente
+  //    sin depender de getBoundingClientRect que puede variar entre entornos
   clone.style.cssText=`
     position:fixed;
-    top:${idleRect.top}px;
-    left:${idleRect.left}px;
-    width:${idleRect.width}px;
-    height:${idleRect.height}px;
+    inset:0;
     z-index:200;
     opacity:1;
     pointer-events:none;
