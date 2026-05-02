@@ -125,18 +125,18 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   cursor:not-allowed;
 }
 .bz-btn.ba{
-  background:radial-gradient(circle at 35% 35%,#00F090,#00A85A,#005C30);
-  box-shadow:0 0 0 12px rgba(0,217,126,.1),0 0 0 24px rgba(0,217,126,.05),0 8px 80px rgba(0,217,126,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
+  background:radial-gradient(circle at 35% 35%,#5DCFFF,#0EA5FF,#005C9A);
+  box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
   animation:pulse-a 2s ease-in-out infinite;
 }
 .bz-btn.bb{
-  background:radial-gradient(circle at 35% 35%,#38C8FF,#0080CC,#00407A);
-  box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
+  background:radial-gradient(circle at 35% 35%,#FF8888,#FF4444,#8A1010);
+  box-shadow:0 0 0 12px rgba(255,68,68,.1),0 0 0 24px rgba(255,68,68,.05),0 8px 80px rgba(255,68,68,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3);
   animation:pulse-b 2s ease-in-out infinite;
 }
 .bz-btn.dis{filter:grayscale(.7) brightness(.45)!important;animation:none!important;cursor:not-allowed!important;width:min(62vw,42vh,260px)!important;height:min(62vw,42vh,260px)!important;}
-@keyframes pulse-a{0%,100%{box-shadow:0 0 0 12px rgba(0,217,126,.1),0 0 0 24px rgba(0,217,126,.05),0 8px 80px rgba(0,217,126,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(0,217,126,.15),0 0 0 40px rgba(0,217,126,.07),0 8px 120px rgba(0,217,126,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
-@keyframes pulse-b{0%,100%{box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(14,165,255,.15),0 0 0 40px rgba(14,165,255,.07),0 8px 120px rgba(14,165,255,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
+@keyframes pulse-a{0%,100%{box-shadow:0 0 0 12px rgba(14,165,255,.1),0 0 0 24px rgba(14,165,255,.05),0 8px 80px rgba(14,165,255,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(14,165,255,.15),0 0 0 40px rgba(14,165,255,.07),0 8px 120px rgba(14,165,255,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
+@keyframes pulse-b{0%,100%{box-shadow:0 0 0 12px rgba(255,68,68,.1),0 0 0 24px rgba(255,68,68,.05),0 8px 80px rgba(255,68,68,.5),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}50%{box-shadow:0 0 0 20px rgba(255,68,68,.15),0 0 0 40px rgba(255,68,68,.07),0 8px 120px rgba(255,68,68,.8),inset 0 2px 0 rgba(255,255,255,.2),inset 0 -5px 0 rgba(0,0,0,.3)}}
 
 .bz-label{
   font-family:'Syne',sans-serif;font-size:clamp(18px,5vw,28px);font-weight:800;
@@ -158,8 +158,8 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   opacity:0;pointer-events:none;transition:opacity .3s;
 }
 .trig.show{opacity:1;pointer-events:all;}
-.trig.ta{background:radial-gradient(ellipse,rgba(20,80,45,.96),rgba(7,8,15,.99));}
-.trig.tb{background:radial-gradient(ellipse,rgba(20,40,80,.96),rgba(7,8,15,.99));}
+.trig.ta{background:radial-gradient(ellipse,rgba(0,60,120,.97),rgba(7,8,15,.99));}
+.trig.tb{background:radial-gradient(ellipse,rgba(100,10,10,.97),rgba(7,8,15,.99));}
 .trig-cross{width:48px;height:48px;margin-bottom:8px;opacity:.6;animation:scale-in .6s cubic-bezier(.34,1.56,.64,1);}
 @keyframes scale-in{0%{transform:scale(0)}100%{transform:scale(1)}}
 .trig-name{
@@ -557,7 +557,7 @@ function trigBz(e){
   const y=(e.clientY||rect.top+rect.height/2)-rect.top;
   const rip=document.createElement('div');
   rip.className='rip';
-  rip.style.cssText=`left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${ST.team==='a'?'rgba(14,165,255,.4)':'rgba(255,68,68,.4)'};`;
+  rip.style.cssText=`left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${ST.team==='a'?'rgba(14,165,255,.45)':'rgba(255,68,68,.45)'};`;
   btn.appendChild(rip);
   setTimeout(()=>rip.remove(),700);
 

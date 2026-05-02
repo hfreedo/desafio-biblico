@@ -517,8 +517,14 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 #wrongFlash.show .wi{animation:wi-in .9s ease-out forwards;}
 @keyframes wi-in{0%{opacity:0;transform:scale(.2)}15%{opacity:1;transform:scale(1.15)}55%{opacity:.7;transform:scale(1)}100%{opacity:0}}
 #bombOv{position:fixed;inset:0;z-index:70;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+/* Pulso rojo que irradia desde el centro al dispararse TIEMPO */
+.tiempo-pulse{position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;border:2px solid rgba(255,68,68,.6);}
+#bombOv.boom .tiempo-pulse{animation:tiempo-pulse-out 1.8s ease-out forwards;}
+#bombOv.boom .tiempo-pulse:nth-child(2){animation-delay:.25s;opacity:.7;}
+#bombOv.boom .tiempo-pulse:nth-child(3){animation-delay:.5s;opacity:.5;}
+@keyframes tiempo-pulse-out{0%{width:0;height:0;opacity:.9}100%{width:180vw;height:180vh;opacity:0;border-width:0px;}}
 #bombOv.boom{animation:tiempo-bg 2.2s ease-out forwards;}
-@keyframes tiempo-bg{0%{background:rgba(0,0,0,0)}10%{background:rgba(180,0,0,.18)}55%{background:rgba(120,0,0,.12)}100%{background:rgba(0,0,0,0)}}
+@keyframes tiempo-bg{0%{background:rgba(0,0,0,0)}8%{background:rgba(200,0,0,.25)}30%{background:rgba(180,0,0,.12)}70%{background:rgba(120,0,0,.06)}100%{background:rgba(0,0,0,0)}}
 
 /* Texto TIEMPO */
 .tiempo-word{
@@ -569,26 +575,74 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 #bzBanner.bx{background:rgba(255,68,68,.1);border-bottom:2px solid rgba(255,68,68,.4);color:var(--red);}
 
 /* ── GANADOR ── */
-#wonOv{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;background:rgba(4,4,10,0);opacity:0;pointer-events:none;transition:background .6s,opacity .4s;}
-#wonOv.show{opacity:1;pointer-events:all;background:rgba(4,4,10,.97);}
-.won-burst{position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(255,184,0,.1) 0%,transparent 70%);pointer-events:none;}
+#wonOv{
+  position:fixed;inset:0;z-index:200;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  background:#04040A;  /* opaco sólido — nada se ve detrás */
+  opacity:0;pointer-events:none;
+  transition:opacity .5s ease;
+  overflow:hidden;
+}
+#wonOv.show{opacity:1;pointer-events:all;}
+
+/* Orbs animados dentro del winner overlay */
+.won-orb{position:absolute;border-radius:50%;filter:blur(80px);pointer-events:none;}
+.won-orb-1{width:min(600px,60vw);height:min(600px,60vw);top:-15%;left:-15%;opacity:.7;}
+.won-orb-2{width:min(500px,50vw);height:min(500px,50vw);bottom:-10%;right:-10%;opacity:.6;}
+#wonOv.won-a .won-orb-1{background:rgba(14,165,255,.18);animation:won-orb-drift 8s ease-in-out infinite;}
+#wonOv.won-a .won-orb-2{background:rgba(0,80,180,.14);animation:won-orb-drift 11s ease-in-out infinite reverse;}
+#wonOv.won-b .won-orb-1{background:rgba(255,68,68,.18);animation:won-orb-drift 8s ease-in-out infinite;}
+#wonOv.won-b .won-orb-2{background:rgba(180,0,0,.14);animation:won-orb-drift 11s ease-in-out infinite reverse;}
+@keyframes won-orb-drift{0%,100%{transform:translate(0,0)}33%{transform:translate(30px,20px)}66%{transform:translate(-20px,30px)}}
+
+/* Bursts */
+.won-burst{position:absolute;top:50%;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(255,184,0,.08) 0%,transparent 70%);pointer-events:none;}
 #wonOv.show .won-burst{animation:burst-grow 2s .2s ease-out forwards;}
-@keyframes burst-grow{0%{width:0;height:0}100%{width:1200px;height:1200px}}
-.won-trophy{font-size:clamp(70px,12vw,110px);margin-bottom:12px;opacity:0;}
+@keyframes burst-grow{0%{width:0;height:0}100%{width:1400px;height:1400px}}
+
+/* Contenido */
+.won-trophy{font-size:clamp(60px,10vw,96px);margin-bottom:8px;opacity:0;}
 #wonOv.show .won-trophy{animation:trophy-in .8s .3s cubic-bezier(.34,1.56,.64,1) forwards;}
 @keyframes trophy-in{0%{opacity:0;transform:scale(0) rotate(-15deg)}80%{transform:scale(1.1) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
-.won-eyebrow{font-family:'Syne',sans-serif;font-size:clamp(9px,1vw,12px);font-weight:700;color:var(--muted);letter-spacing:.35em;margin-bottom:10px;opacity:0;}
+
+.won-eyebrow{font-family:'Syne',sans-serif;font-size:clamp(9px,1vw,12px);font-weight:700;color:var(--muted);letter-spacing:.35em;margin-bottom:8px;opacity:0;}
 #wonOv.show .won-eyebrow{animation:fadeup .5s .8s ease-out forwards;}
-.won-name{font-family:'Cormorant Garamond',serif;font-size:clamp(56px,10vw,128px);font-weight:700;text-align:center;letter-spacing:.01em;margin-bottom:12px;opacity:0;}
+
+/* Badge de equipo ganador */
+.won-team-badge{
+  font-family:'Syne',sans-serif;font-size:clamp(10px,1.2vw,14px);font-weight:700;
+  letter-spacing:.25em;padding:5px 18px;border-radius:100px;border:1px solid;
+  margin-bottom:16px;opacity:0;
+}
+#wonOv.won-a .won-team-badge{color:var(--blue);border-color:rgba(14,165,255,.4);background:rgba(14,165,255,.1);}
+#wonOv.won-b .won-team-badge{color:var(--red);border-color:rgba(255,68,68,.4);background:rgba(255,68,68,.1);}
+#wonOv.show .won-team-badge{animation:fadeup .5s .9s ease-out forwards;}
+
+.won-name{font-family:'Cormorant Garamond',serif;font-size:clamp(52px,9vw,120px);font-weight:700;text-align:center;letter-spacing:.01em;margin-bottom:10px;opacity:0;}
 #wonOv.show .won-name{animation:won-name-in .8s 1.05s cubic-bezier(.16,1,.3,1) forwards;}
 @keyframes won-name-in{0%{opacity:0;transform:translateY(24px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
-.won-name.an{color:var(--blue);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
-.won-name.bn{color:var(--red);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
-@keyframes won-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6) drop-shadow(0 0 40px currentColor)}}
-.won-score{font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,32px);font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:22px;opacity:0;font-variant-numeric:tabular-nums;}
+.won-name.an{color:var(--blue);animation:won-pulse 2.2s 1.9s ease-in-out infinite!important;}
+.won-name.bn{color:var(--red);animation:won-pulse 2.2s 1.9s ease-in-out infinite!important;}
+@keyframes won-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.7) drop-shadow(0 0 50px currentColor)}}
+
+.won-score{font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,32px);font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:24px;opacity:0;font-variant-numeric:tabular-nums;}
 #wonOv.show .won-score{animation:fadeup .5s 1.4s ease-out forwards;}
+
 .won-verse{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(14px,1.6vw,20px);color:var(--dim);text-align:center;max-width:620px;border-top:1px solid var(--rim);padding-top:18px;opacity:0;}
 #wonOv.show .won-verse{animation:fadeup .6s 1.85s ease-out forwards;}
+
+/* Botón volver al idle */
+.won-back-btn{
+  margin-top:28px;opacity:0;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.18em;text-transform:uppercase;
+  padding:8px 22px;border-radius:100px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);
+  transition:background .2s,color .2s,border-color .2s;
+}
+.won-back-btn:hover{background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.3);}
+#wonOv.show .won-back-btn{animation:fadeup .5s 2.3s ease-out forwards;}
 
 @media(max-width:768px){
   .header{padding:8px 16px;}
@@ -634,16 +688,22 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 <div id="bzBanner"></div>
 <div id="shockwave"></div>
 <div id="wrongFlash"><div class="wi"></div></div>
-<div id="bombOv"><div class="tiempo-word">TIEMPO</div><div class="tiempo-line"></div></div>
+<div id="bombOv"><div class="tiempo-pulse"></div><div class="tiempo-pulse"></div><div class="tiempo-pulse"></div><div class="tiempo-word">TIEMPO</div><div class="tiempo-line"></div></div>
 
 <!-- Ganador -->
 <div id="wonOv">
+  <!-- Orbs de color del equipo ganador -->
+  <div class="won-orb won-orb-1"></div>
+  <div class="won-orb won-orb-2"></div>
   <div class="won-burst"></div>
+  <!-- Contenido centrado -->
   <div class="won-trophy">🏆</div>
   <div class="won-eyebrow">¡CAMPEÓN DEL DESAFÍO BÍBLICO!</div>
+  <div class="won-team-badge" id="wonTeamBadge">EQUIPO A</div>
   <div class="won-name" id="wonName">EQUIPO A</div>
   <div class="won-score" id="wonScore">0 — 0</div>
   <div class="won-verse">"Todo lo puedo en Cristo que me fortalece" — Fil. 4:13</div>
+  <button class="won-back-btn" onclick="hideWinner()">Volver al inicio</button>
 </div>
 
 <!-- HEADER -->
@@ -825,10 +885,31 @@ function handle(m){
     case 'START_GAME':startGameSequence();break;
     case 'SHOW_QUESTION':showQ(m);break;
     case 'SHOW_ANSWER':revealAns();break;
+    case 'GOTO_IDLE':
+      // Volver al idle sin recargar — útil tras ganador o cualquier estado
+      if(el('wonOv').classList.contains('show')) hideWinner();
+      else {
+        el('qPanel').classList.remove('active','ans-revealed');
+        el('qPanel').style.opacity='0';
+        el('ansOverlay').classList.remove('show');
+        el('curtain').classList.remove('open');
+        setTimeout(()=>{
+          el('idle').classList.add('visible');
+          el('curtain').classList.add('open');
+          el('qPanel').style.opacity='';
+          bgMode='idle';
+          bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;bgWash.alpha=0;
+          stopTimer();clearActive();
+        },820);
+      }
+      break;
     case 'HIDE_QUESTION':hideQ();break;
     case 'UPDATE_SCORE':updScore(m);break;
     case 'UPDATE_TEAMS':updTeams(m);break;
     case 'UPDATE_ROUND':updRound(m);break;
+    case 'SOUND_VOLUME':
+      if(typeof m.volume==='number') S.soundVol=Math.max(0,Math.min(1,m.volume));
+      break;
     case 'SOUND_TOGGLE':S.sounds=m.enabled;break;
     case 'START_TIMER':startTimer(m.seconds);break;
     case 'STOP_TIMER':
@@ -1324,8 +1405,34 @@ function showWinner(m){
   el('wonName').textContent=m.name;
   el('wonName').className='won-name '+(isA?'an':'bn');
   el('wonScore').textContent=`${m.scoreA} — ${m.scoreB}`;
+  const badge=el('wonTeamBadge');
+  if(badge) badge.textContent=(isA?'EQUIPO A':'EQUIPO B')+' GANÓ';
+  // Clase de color del equipo en el overlay
+  ov.className='';
   ov.classList.add('show');
-  for(let i=0;i<14;i++)setTimeout(()=>bgBurst(isA?'a':'b',true),i*280);
+  ov.classList.add(isA?'won-a':'won-b');
+  // Limpiar contenido detrás
+  el('qPanel').classList.remove('active','ans-revealed');
+  el('qPanel').style.opacity='0';
+  el('ansOverlay').classList.remove('show');
+  el('curtain').classList.remove('open');
+  for(let i=0;i<18;i++)setTimeout(()=>bgBurst(isA?'a':'b',true),i*220);
+}
+function hideWinner(){
+  const ov=el('wonOv');
+  ov.style.transition='opacity .5s ease';
+  ov.style.opacity='0';
+  setTimeout(()=>{
+    ov.className='';
+    ov.style.opacity='';
+    ov.style.transition='';
+    // Volver al idle
+    el('idle').classList.add('visible');
+    el('curtain').classList.add('open');
+    el('qPanel').style.opacity='';
+    bgMode='idle';
+    bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;
+  },520);
 }
 
 /* ── TIMER ── */
@@ -1410,11 +1517,11 @@ function resume(){
 document.addEventListener('click',resume);
 document.addEventListener('keydown',resume);
 // AudioContext: resume() se llama en handle() y en eventos de usuario
-function playBuzzerSfx(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.setValueAtTime(1100,_getAC().currentTime);o.frequency.exponentialRampToValueAtTime(550,_getAC().currentTime+.13);g.gain.setValueAtTime(.45,_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.36);o.start();o.stop(_getAC().currentTime+.4);}
-function playCorrect(){resume();[523,659,784,1047].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sine';o.frequency.value=f;const t=_getAC().currentTime+i*.11;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.28,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.start(t);o.stop(t+.4);});}
-function playWrong(){resume();[220,180,150].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sawtooth';o.frequency.value=f;const t=_getAC().currentTime+i*.09;g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.start(t);o.stop(t+.32);});}
-function playTick(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.value=880+S.timerLeft*20;g.gain.setValueAtTime(.18,_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.09);o.start();o.stop(_getAC().currentTime+.11);}
-function playBomb(){resume();for(let i=0;i<6;i++){const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.frequency.value=700+i*130;const t=_getAC().currentTime+i*.13;g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.11);o.start(t);o.stop(t+.13);}const buf=_getAC().createBuffer(1,_getAC().sampleRate*.9,_getAC().sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);const s=_getAC().createBufferSource();s.buffer=buf;const gn=_getAC().createGain();gn.gain.value=.9;s.connect(gn);gn.connect(_getAC().destination);s.start(_getAC().currentTime+.78);}
+function playBuzzerSfx(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.setValueAtTime(1100,_getAC().currentTime);o.frequency.exponentialRampToValueAtTime(550,_getAC().currentTime+.13);g.gain.setValueAtTime(.45*(S.soundVol||0.7),_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.36);o.start();o.stop(_getAC().currentTime+.4);}
+function playCorrect(){resume();[523,659,784,1047].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sine';o.frequency.value=f;const t=_getAC().currentTime+i*.11;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.28*(S.soundVol||0.7),t+.04);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.start(t);o.stop(t+.4);});}
+function playWrong(){resume();[220,180,150].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sawtooth';o.frequency.value=f;const t=_getAC().currentTime+i*.09;g.gain.setValueAtTime(.3*(S.soundVol||0.7),t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.start(t);o.stop(t+.32);});}
+function playTick(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.value=880+S.timerLeft*20;g.gain.setValueAtTime(.18*(S.soundVol||0.7),_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.09);o.start();o.stop(_getAC().currentTime+.11);}
+function playBomb(){resume();for(let i=0;i<6;i++){const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.frequency.value=700+i*130;const t=_getAC().currentTime+i*.13;g.gain.setValueAtTime(.5*(S.soundVol||0.7),t);g.gain.exponentialRampToValueAtTime(.001,t+.11);o.start(t);o.stop(t+.13);}const buf=_getAC().createBuffer(1,_getAC().sampleRate*.9,_getAC().sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);const s=_getAC().createBufferSource();s.buffer=buf;const gn=_getAC().createGain();gn.gain.value=.9*(S.soundVol||0.7);s.connect(gn);gn.connect(_getAC().destination);s.start(_getAC().currentTime+.78);}
 
 /* ── CANVAS — fondo reactivo + bursts + ascuas ── */
 const bgC=document.getElementById('bgC'),bgX=bgC.getContext('2d');
