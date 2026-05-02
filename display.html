@@ -631,8 +631,9 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 }
 #wonOv.show .won-name{animation:won-name-in .9s .85s cubic-bezier(.16,1,.3,1) forwards;}
 @keyframes won-name-in{0%{opacity:0;transform:translateY(28px) scale(.9)}100%{opacity:1;transform:translateY(0) scale(1)}}
-.won-name.an{color:var(--blue);animation:won-pulse 2.4s 1.8s ease-in-out infinite!important;}
-.won-name.bn{color:var(--red);animation:won-pulse 2.4s 1.8s ease-in-out infinite!important;}
+.won-name.an{color:var(--blue);}
+.won-name.bn{color:var(--red);}
+#wonOv.show .won-name.an,#wonOv.show .won-name.bn{animation:won-name-in .9s .85s cubic-bezier(.16,1,.3,1) forwards,won-pulse 2.4s 2s ease-in-out infinite;}
 @keyframes won-pulse{0%,100%{filter:brightness(1) drop-shadow(0 0 0px transparent)}50%{filter:brightness(1.6) drop-shadow(0 0 55px currentColor)}}
 
 /* Línea decorativa bajo el nombre */
@@ -869,7 +870,8 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 <script>
 const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true,buzzerLocked:false,currentQuestionId:null,questionActive:false};
 let timerInt=null,timerStartPending=null,bombFired=false,bombTimeout=null,bgMode='idle';
-let _anticipating=false; // true mientras el anticOv está visible
+let _anticipating=false;
+let _answerRevealed=false;
 // ── Fondo reactivo: transición suave de color ──
 let bgHueCurrent=250;   // hue actual interpolado
 let bgHueTarget=250;    // hue objetivo
@@ -922,6 +924,7 @@ function handle(m){
     case 'SHOW_QUESTION':showQ(m);break;
     case 'SHOW_ANSWER':revealAns();break;
     case 'GOTO_IDLE':
+      _answerRevealed=false;
       // Volver al idle sin recargar — útil tras ganador o cualquier estado
       if(el('wonOv').classList.contains('show')) hideWinner();
       else {
@@ -981,9 +984,11 @@ function handle(m){
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
       if(m.round)updRound({round:m.round,name:m.roundName});
       if(m.questionActive&&m.currentQuestion){
+        _answerRevealed=false;
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});
-        if(m.answerRevealed){
+        if(m.answerRevealed && !_answerRevealed){
+          _answerRevealed=true;
           const ansOv=el('ansOverlay');
           const ansOvTxt=el('ansOvText');
           if(ansOv&&ansOvTxt){
@@ -1153,6 +1158,7 @@ function startGameSequence(){
 /* ── SHOW QUESTION ── */
 function showQ(m){
   S.buzzerLocked=false;S.currentQuestionId=m.index||null;S.questionActive=true;bombFired=false;bgMode='question';
+  _answerRevealed=false;
   _subsequentQuestionEntry(m);
 }
 
@@ -1248,6 +1254,8 @@ function _anticipation(m,cb){
 }
 
 function revealAns(){
+  if(_answerRevealed) return;
+  _answerRevealed=true;
   const ab=el('ansBox');
   // Extraer el texto de la respuesta del ansBox (sin el lock icon)
   const rawAns=ab.textContent.trim();
@@ -1277,6 +1285,7 @@ function revealAns(){
 
 function hideQ(){
   S.buzzerLocked=false;S.currentQuestionId=null;S.questionActive=false;bgMode='idle';
+  _answerRevealed=false;
   if(bombTimeout){clearTimeout(bombTimeout);bombTimeout=null;el('bombOv').className='';}
   bombFired=false;
   bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;bgWash.alpha=0;
@@ -1447,17 +1456,22 @@ document.addEventListener('DOMContentLoaded',()=>{
 
 /* ── GANADOR ── */
 function showWinner(m){
-  const isA=m.team==='a';const ov=el('wonOv');
-  // Usar el nombre del ganador directamente del mensaje
-  const teamName=m.name||(isA?S.nameA:S.nameB)||'Equipo '+(isA?'A':'B');
+  const isA=m.team==='a';
+  const ov=el('wonOv');
+  // Prioridad: nombre directo del mensaje > estado local > fallback por equipo
+  let teamName=m.name;
+  if(!teamName||teamName.trim()===''){
+    teamName=isA?S.nameA:S.nameB;
+  }
+  if(!teamName||teamName.trim()===''){
+    teamName=isA?'EQUIPO A':'EQUIPO B';
+  }
   el('wonName').textContent=teamName;
   el('wonName').className='won-name '+(isA?'an':'bn');
   el('wonScore').textContent=`${m.scoreA} — ${m.scoreB}`;
-  // Clase de color del equipo
   ov.className='';
   ov.classList.add('show');
   ov.classList.add(isA?'won-a':'won-b');
-  // Tapar todo el contenido detrás
   el('qPanel').classList.remove('active','ans-revealed');
   el('qPanel').style.opacity='0';
   el('ansOverlay').classList.remove('show');

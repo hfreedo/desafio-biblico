@@ -512,8 +512,9 @@ input[type=range]{
           <button class="btn btn-a" id="winA" onclick="declWinner('a')">Ganador A</button>
           <button class="btn btn-b" id="winB" onclick="declWinner('b')">Ganador B</button>
         </div>
-        <div style="margin-top:10px">
-          <button class="btn btn-reset" onclick="resetGameState()" style="width:100%;background:transparent;border:1px solid var(--border2);color:var(--dim);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">Reiniciar juego</button>
+        <div class="btn-grid btn-grid-2" style="margin-top:10px">
+          <button class="btn btn-hide" onclick="hideWinnerOnDisplay()" style="background:transparent;border:1px solid var(--border2);color:var(--dim);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;width:100%">Ocultar ganador</button>
+          <button class="btn btn-reset" onclick="resetGameState()" style="background:transparent;border:1px solid var(--border2);color:var(--dim);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;width:100%">Reiniciar juego</button>
         </div>
       </div>
 
@@ -1420,6 +1421,14 @@ function newGame(){
   // Reactivar botón de inicio
   const sg2=document.getElementById('btnStart');if(sg2){sg2.disabled=false;sg2.style.opacity='';}
   toast('Nuevo juego iniciado');
+}
+
+function hideWinnerOnDisplay(){
+  bcast({type:'GOTO_IDLE'});
+  ST.winner=null;
+  saveState();
+  if(roomCode) pushStateSnapshot();
+  toast('Pantalla de ganador ocultada');
 }
 
 function resetGameState(){
