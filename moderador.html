@@ -198,8 +198,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .search-inp::placeholder{color:var(--dim);}
 
 .filter-bar{
-  display:flex;gap:4px;padding:6px 10px;
-  border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;gap:4px;
   flex-wrap:wrap;
 }
 .ftab{
@@ -390,11 +389,23 @@ input[type=range]{
     <div class="qlist-toolbar">
       <input class="search-inp" id="searchQ" type="text" placeholder="Buscar pregunta..." oninput="renderList()">
     </div>
-    <div class="filter-bar" id="filterBar">
-      <button class="ftab active" onclick="setFilter('all',this)">Todas</button>
-      <button class="ftab" onclick="setFilter('pending',this)">Pendientes</button>
-      <button class="ftab" onclick="setFilter('answered',this)">Respondidas</button>
-      <!-- Los filtros dinámicos (ronda/dificultad/categoría) se renderizan aquí -->
+    <!-- Barra de filtros colapsable -->
+    <div style="border-bottom:1px solid var(--border);flex-shrink:0;">
+      <!-- Fila de filtros rápidos siempre visible -->
+      <div style="display:flex;align-items:center;gap:4px;padding:5px 10px;flex-wrap:wrap;">
+        <button class="ftab active" onclick="setFilter('all',this)" id="ftabAll">Todas</button>
+        <button class="ftab" onclick="setFilter('pending',this)">Pend.</button>
+        <button class="ftab" onclick="setFilter('answered',this)">Resp.</button>
+        <button id="filterToggle" onclick="toggleFilters()"
+          style="margin-left:auto;font-size:9px;padding:3px 8px;border-radius:4px;
+          border:1px solid var(--border2);background:transparent;color:var(--dim);
+          cursor:pointer;font-family:var(--font);white-space:nowrap;transition:all .15s;"
+          title="Mostrar más filtros">Más ▾</button>
+      </div>
+      <!-- Filtros expandibles (dificultad, categorías) -->
+      <div id="filterBar" style="display:none;padding:4px 10px 6px;flex-wrap:wrap;gap:4px;flex-direction:row;">
+        <!-- Los filtros dinámicos se insertan aquí -->
+      </div>
     </div>
     <div id="qList" style="overflow-y:auto;flex:1;"></div>
   </div>
@@ -1456,33 +1467,45 @@ async function _saveGameHistory(winnerTeam, winnerName){
 let curFilter='all';
 function setFilter(f,btn){curFilter=f;document.querySelectorAll('.ftab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');renderList();}
 
+function toggleFilters(){
+  const bar=document.getElementById('filterBar');
+  const btn=document.getElementById('filterToggle');
+  if(!bar||!btn) return;
+  const open=bar.style.display!=='none';
+  bar.style.display=open?'none':'flex';
+  btn.textContent=open?'Más ▾':'Menos ▴';
+  btn.style.color=open?'var(--dim)':'var(--gold)';
+  btn.style.borderColor=open?'var(--border2)':'var(--gold)';
+}
 function renderFilters(){
   const bar=document.getElementById('filterBar');
   if(!bar) return;
-  // Extraer valores únicos de las preguntas cargadas
+  // Filtros dinámicos — solo dificultades y categorías (los estáticos están arriba)
   const diffs=[...new Set(QQ.map(q=>q.d).filter(Boolean))].sort();
   const cats=[...new Set(QQ.map(q=>q.category||'').filter(Boolean))].sort();
-  // Conservar los botones estáticos (primeros 3: Todas, Pendientes, Respondidas)
-  const staticBtns=Array.from(bar.querySelectorAll('.ftab')).slice(0,3);
   bar.innerHTML='';
-  staticBtns.forEach(b=>bar.appendChild(b));
-  // Separador visual
+  if(!diffs.length&&!cats.length){
+    // Si no hay filtros dinámicos, ocultar el botón "Más"
+    const btn=document.getElementById('filterToggle');
+    if(btn) btn.style.display='none';
+    return;
+  }
+  const btn=document.getElementById('filterToggle');
+  if(btn) btn.style.display='';
   const sep=document.createElement('span');
-  sep.style.cssText='display:inline-block;width:1px;height:18px;background:rgba(255,255,255,.08);margin:0 4px;align-self:center;';
-  bar.appendChild(sep);
-  // Filtros de dificultad dinámicos
+  sep.style.cssText='font-size:8px;color:var(--dim);letter-spacing:.12em;align-self:center;padding-right:2px;';
+  // Filtros de dificultad
+  const dLabel=sep.cloneNode();dLabel.textContent='DIFICULTAD';bar.appendChild(dLabel);
   diffs.forEach(d=>{
-    const dl=d.toLowerCase();
-    const isPrueba=dl==='prueba';
     const b=document.createElement('button');
-    b.className='ftab'+(isPrueba?' fprueba':'');
+    b.className='ftab'+(d==='Prueba'?' fprueba':'');
     b.textContent=d;
     b.onclick=function(){setFilter('diff:'+d,this);};
     bar.appendChild(b);
   });
-  // Filtros de categoría dinámicos (si hay)
+  // Filtros de categoría
   if(cats.length){
-    const sep2=sep.cloneNode();bar.appendChild(sep2);
+    const cLabel=sep.cloneNode();cLabel.textContent='CATEGORÍA';cLabel.style.marginLeft='6px';bar.appendChild(cLabel);
     cats.forEach(cat=>{
       const b=document.createElement('button');
       b.className='ftab';b.style.fontSize='9px';
