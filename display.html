@@ -124,6 +124,21 @@ body{
   font-size:19px;color:var(--dim);margin-top:3px;letter-spacing:.04em;
 }
 
+.team-lock{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;
+  font-size:clamp(28px,4vw,52px);
+  font-weight:800;letter-spacing:.15em;
+  background:rgba(4,4,10,.82);
+  backdrop-filter:blur(6px);
+  color:var(--red);
+  opacity:0;pointer-events:none;
+  transition:opacity .35s ease;
+  z-index:5;
+}
+.team.locked .team-lock{opacity:1;}
+
 /* Puntaje — el número más grande y más importante */
 .team-score{
   font-family:'Syne',sans-serif;
@@ -774,6 +789,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
       <div class="team-status" id="stA">Listos para competir</div>
     </div>
     <div class="team-score" id="scoreA">0</div>
+    <div class="team-lock" id="lockA">BLOQUEADO</div>
   </div>
 
   <!-- TIMER CENTRAL -->
@@ -797,6 +813,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
       <div class="team-name" id="nameB">EQUIPO B</div>
       <div class="team-status" id="stB">Listos para competir</div>
     </div>
+    <div class="team-lock" id="lockB">BLOQUEADO</div>
   </div>
 </div>
 
@@ -1326,16 +1343,30 @@ function updScore(m){
   animScore('scoreB','teamB',pB,m.scoreB);
 }
 function animScore(sid,tid,prev,next){
-  const se=el(sid);se.textContent=next;
-  se.classList.remove('score-bump');void se.offsetWidth;
-  if(next>prev){
-    se.classList.add('score-bump');
-    const r=el(tid).getBoundingClientRect();
-    const sp=document.createElement('div');
-    sp.className='spop';sp.textContent='+'+(next-prev);
-    sp.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+10}px;`;
-    document.body.appendChild(sp);setTimeout(()=>sp.remove(),1200);
-  }
+  const se=el(sid);
+  const diff=next-prev;
+  if(diff===0){se.textContent=next;return;}
+  // Conteo tipo slot machine
+  const steps=Math.abs(diff);
+  const stepMs=steps>5?25:steps>3?40:60;
+  let current=prev;
+  const step=Math.sign(diff);
+  const interval=setInterval(()=>{
+    current+=step;
+    se.textContent=current;
+    if(current===next){
+      clearInterval(interval);
+      se.classList.remove('score-bump');void se.offsetWidth;
+      if(diff>0){
+        se.classList.add('score-bump');
+        const r=el(tid).getBoundingClientRect();
+        const sp=document.createElement('div');
+        sp.className='spop';sp.textContent='+'+diff;
+        sp.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+10}px;`;
+        document.body.appendChild(sp);setTimeout(()=>sp.remove(),1200);
+      }
+    }
+  },stepMs);
 }
 function updTeams(m){if(m.nameA){S.nameA=m.nameA;el('nameA').textContent=m.nameA;}if(m.nameB){S.nameB=m.nameB;el('nameB').textContent=m.nameB;}}
 function updRound(m){
@@ -1360,10 +1391,18 @@ function showBuzzer(m){
   el('bzTint').className=isA?'show-a':'show-b';
   const sw=el('shockwave');sw.className='';void sw.offsetWidth;sw.className=isA?'fire-a':'fire-b';
   highlightTeam(m.team);stopTimer();
+  // Bloquear equipo contrario
+  el(isA?'teamB':'teamA').classList.add('locked');
   if(S.sounds)playBuzzerSfx();
   setTimeout(()=>{b.className='';el('bzTint').className='';bgMode='question';},3500);
 }
-function handlePassTurn(m){showWrong({team:m.fromTeam});setTimeout(()=>highlightTeam(m.toTeam),1000);}
+function handlePassTurn(m){
+  showWrong({team:m.fromTeam});
+  // Desbloquear anterior y bloquear nuevo
+  el(m.fromTeam==='a'?'teamB':'teamA').classList.remove('locked');
+  el(m.fromTeam==='a'?'teamA':'teamB').classList.add('locked');
+  setTimeout(()=>highlightTeam(m.toTeam),1000);
+}
 function showWrong(m){
   const wf=el('wrongFlash');wf.className='';void wf.offsetWidth;wf.className='show';
   if(S.sounds)playWrong();
@@ -1399,10 +1438,11 @@ function clearActive(){
   S.buzzerLocked=false;
   el('teamA').classList.remove('active-a','active-b');
   el('teamB').classList.remove('active-a','active-b');
+  el('teamA').classList.remove('locked');
+  el('teamB').classList.remove('locked');
   el('stA').textContent='Listos para competir';
   el('stB').textContent='Listos para competir';
   stopFlame('a'); stopFlame('b');
-  // Volver al modo neutro
   bgHueTarget=250; bgSatTarget=60; bgSpeedTarget=1;
   bgWash.alpha=0;
 }
