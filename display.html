@@ -1548,7 +1548,6 @@ function bombExplosion(){
   if(bombFired)return;bombFired=true;
   el('bombOv').className='boom';
   if(S.sounds)playBomb();
-  bgBurst('red',true);bgBurst('red',true);
   bombTimeout=setTimeout(()=>{el('bombOv').className='';bombFired=false;bombTimeout=null;},2200);
 }
 
