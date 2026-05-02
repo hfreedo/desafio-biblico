@@ -962,7 +962,9 @@ const ST={
 };
 
 const ch=new BroadcastChannel('quiz_channel');
+let _msgSeq=0;
 function bcast(m){
+  m._uid=Date.now()+'-'+(++_msgSeq);
   ch.postMessage(m);
   // Also send to remote room if active
   if(roomCode) sendToSupabase(m);
@@ -1168,8 +1170,12 @@ function clearActive(){
 function manualBz(t){
   const name=t==='a'?ST.nameA:ST.nameB;
   const ts=Date.now();
-  bcast({type:'BUZZER_HIT',team:t,name,clientTs:ts});
-  handleBuzzerHit({team:t,name,clientTs:ts},ts);
+  if(!ST.activeBuzzerTeam){
+    ST.activeBuzzerTeam=t;
+    _bzTimes={first:ts,firstTeam:t,second:null,secondTeam:null};
+    updBuzzerStatus('respondiendo', name);
+    bcast({type:'BUZZER_HIT',team:t,name,clientTs:ts,questionId:ST.selQ?ST.selQ.id:null});
+  }
   toast("Buzzer: "+name);
 }
 

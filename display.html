@@ -1005,7 +1005,15 @@ const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
 /* ── HANDLER ── */
+const _seenMsgs=new Set();
+const _DUP_WINDOW=800; // ms para considerar un msg como duplicado
 function handle(m){
+  // Deduplicación: ignorar mensajes recibidos recientemente
+  if(m._uid){
+    if(_seenMsgs.has(m._uid)) return;
+    _seenMsgs.add(m._uid);
+    setTimeout(()=>_seenMsgs.delete(m._uid), _DUP_WINDOW);
+  }
   // AudioContext se maneja solo por eventos del usuario (ver listeners arriba)
   switch(m.type){
     case 'START_GAME':startGameSequence();break;
