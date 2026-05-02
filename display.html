@@ -1335,7 +1335,6 @@ function animScore(sid,tid,prev,next){
     sp.className='spop';sp.textContent='+'+(next-prev);
     sp.style.cssText=`left:${r.left+r.width/2}px;top:${r.top+10}px;`;
     document.body.appendChild(sp);setTimeout(()=>sp.remove(),1200);
-    bgBurst(sid==='scoreA'?'a':'b');
   }
 }
 function updTeams(m){if(m.nameA){S.nameA=m.nameA;el('nameA').textContent=m.nameA;}if(m.nameB){S.nameB=m.nameB;el('nameB').textContent=m.nameB;}}
