@@ -36,14 +36,14 @@ body{
 /* ── FONDO ── */
 #bgC{position:fixed;inset:0;z-index:0;}
 .orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
-.orb{position:absolute;border-radius:50%;filter:blur(120px);animation:orb-drift 24s ease-in-out infinite;}
-.orb-a{width:800px;height:800px;background:rgba(107,95,255,0.09);top:-300px;left:-200px;}
-.orb-b{width:700px;height:700px;background:rgba(255,45,122,0.06);bottom:-250px;right:-180px;animation-delay:-10s;}
+.orb{position:absolute;border-radius:50%;filter:blur(min(120px,11vw));animation:orb-drift 24s ease-in-out infinite;}
+.orb-a{width:min(800px,72vw);height:min(800px,72vw);background:rgba(120,90,255,0.14);top:-20%;left:-15%;}
+.orb-b{width:min(700px,62vw);height:min(700px,62vw);background:rgba(50,80,220,0.11);bottom:-22%;right:-14%;animation-delay:-10s;}
 @keyframes orb-drift{0%,100%{transform:translate(0,0)}40%{transform:translate(60px,-40px)}70%{transform:translate(-30px,30px)}}
 
 /* ── TIMER BAR ── */
 #timerBar{position:fixed;top:0;left:0;right:0;height:4px;z-index:100;background:rgba(255,255,255,0.05);display:none;}
-#timerFill{height:100%;width:100%;transform-origin:left center;transform:scaleX(1);transition:transform 1s linear,background 0.6s ease;background:var(--green);}
+#timerFill{height:100%;width:100%;transform-origin:left center;transform:scaleX(1);transition:transform 1s linear,background 0.6s ease;background:var(--green);will-change:transform,background;}
 #timerBar.active{display:block;}
 
 /* ── ANTICIPACIÓN ── */
@@ -57,13 +57,13 @@ body{
 .antic-number{font-family:'Syne',sans-serif;font-size:clamp(100px,22vw,280px);font-weight:800;line-height:.85;letter-spacing:-.05em;color:rgba(255,255,255,0.05);font-variant-numeric:tabular-nums;animation:antic-breathe 2s ease-in-out infinite;}
 @keyframes antic-breathe{0%,100%{color:rgba(255,255,255,.05)}50%{color:rgba(255,255,255,.1)}}
 .antic-diff{font-family:'Syne',sans-serif;font-size:clamp(10px,1.1vw,13px);font-weight:700;letter-spacing:.2em;padding:6px 18px;border-radius:100px;border:1px solid;}
-.antic-diff.df{color:var(--green);border-color:rgba(0,217,126,.4);background:rgba(0,217,126,.08);}
+.antic-diff.df{color:var(--green);border-color:rgba(0,217,126,.4);background:rgba(255,180,0,.12);}
 .antic-diff.dm{color:var(--gold);border-color:rgba(255,184,0,.4);background:rgba(255,184,0,.08);}
 .antic-diff.dd{color:var(--red);border-color:rgba(255,68,68,.4);background:rgba(255,68,68,.08);}
 
 /* ── CURTAIN ── */
 #curtain{position:fixed;inset:0;z-index:80;pointer-events:none;display:grid;grid-template-rows:repeat(5,1fr);}
-.c-bar{background:var(--ink);transform:scaleX(1);transition:transform .5s cubic-bezier(.76,0,.24,1);}
+.c-bar{background:var(--ink);transform:scaleX(1);transition:transform .48s cubic-bezier(.77,0,.18,1);will-change:transform;}
 .c-bar:nth-child(odd){transform-origin:left;}
 .c-bar:nth-child(even){transform-origin:right;}
 .c-bar:nth-child(1){transition-delay:.00s;}.c-bar:nth-child(2){transition-delay:.05s;}
@@ -95,7 +95,7 @@ body{
   display:grid;
   grid-template-columns:1fr 140px 1fr;
   align-items:stretch;
-  padding:0 32px;
+  padding:0 0;
   gap:0;
   flex-shrink:0;
   border-bottom:1px solid var(--rim);
@@ -116,12 +116,12 @@ body{
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   max-width:26vw;
 }
-.team-a .team-name{color:var(--green);}
-.team-b .team-name{color:var(--blue);}
+.team-a .team-name{color:var(--blue);}
+.team-b .team-name{color:var(--red);}
 
 .team-status{
   font-family:'Cormorant Garamond',serif;font-style:italic;
-  font-size:13px;color:var(--dim);margin-top:3px;letter-spacing:.04em;
+  font-size:19px;color:var(--dim);margin-top:3px;letter-spacing:.04em;
 }
 
 /* Puntaje — el número más grande y más importante */
@@ -133,19 +133,84 @@ body{
   font-variant-numeric:tabular-nums;
   flex-shrink:0;
 }
-.team-a .team-score{color:var(--green);}
-.team-b .team-score{color:var(--blue);}
+.team-a .team-score{color:var(--blue);}
+.team-b .team-score{color:var(--red);}
 
 .score-bump{animation:sbump .5s cubic-bezier(.34,1.56,.64,1);}
 @keyframes sbump{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
 
 /* Glow equipo activo */
-.team.active-a{background:linear-gradient(90deg,rgba(0,217,126,.07),transparent);}
-.team.active-b{background:linear-gradient(270deg,rgba(14,165,255,.07),transparent);}
-.team-a.active-a .team-score{filter:drop-shadow(0 0 24px var(--green-glow));}
-.team-b.active-b .team-score{filter:drop-shadow(0 0 24px var(--blue-glow));}
-.team-a.active-a .team-name{filter:drop-shadow(0 0 12px var(--green-glow));}
-.team-b.active-b .team-name{filter:drop-shadow(0 0 12px var(--blue-glow));}
+/* Glow equipo activo — manejado por las reglas de .flame-video arriba */
+
+/* Videos de llamas — alpha nativo, sin blend mode */
+.flame-video{
+  position:absolute;
+  bottom:-30%;
+  left:0;
+  right:0;
+  width:50%;
+  height:80%;
+  object-fit:cover;
+  object-position:bottom center;
+  -webkit-mask-image:linear-gradient(to top,black 0%,black 30%,rgba(0,0,0,.4) 55%,transparent 80%);
+  mask-image:linear-gradient(to top,black 0%,black 30%,rgba(0,0,0,.4) 55%,transparent 80%);
+  opacity:0;
+  transition:opacity .6s ease;
+  pointer-events:none;
+  z-index:1;
+}
+/* Equipo B — pegado a la derecha */
+#flameB{
+  left:auto;
+  right:0;
+}
+.flame-video.flame-on{opacity:1;}
+
+/* Opción A — card oscurece y muestra borde lateral al activarse */
+.team{
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    position: relative;
+    transition: background .5s ease;
+    overflow: hidden;
+    justify-content: space-around;
+}
+.team-a{
+  border-left:2px solid transparent;
+  transition:border-color .5s ease, background .5s ease;
+}
+.team-b{
+  border-right:2px solid transparent;
+  transition:border-color .5s ease, background .5s ease;
+}
+
+/* Estado activo A */
+.team.active-a{
+  background:linear-gradient(70deg,rgba(14,165,255,.12),transparent)!important;
+  border-left-color:rgba(14,165,255,.7)!important;
+}
+/* Estado activo B */
+.team.active-b{
+  background:linear-gradient(290deg,rgba(255,68,68,.12),transparent)!important;
+  border-right-color:rgba(255,68,68,.7)!important;
+}
+
+/* Contenido siempre por encima del video */
+.team-info-a,.team-info-b,.team-score{
+  position:relative;
+  z-index:3;
+}
+/* Text shadow suave para separar el texto del fuego */
+.team-name{
+  text-shadow: 3px 1px 0px rgba(0, 0, 0, .95), 0 0 0px rgba(0, 0, 0, .8);
+}
+.team-score{
+  text-shadow:0 0 24px rgba(0,0,0,.95),0 0 48px rgba(0,0,0,.8);
+}
+.team-status{
+  text-shadow:0 0 12px rgba(0,0,0,.95);
+}
 
 /* ── TIMER CENTRAL — el corazón del scoreboard ── */
 .timer-center{
@@ -182,7 +247,7 @@ body{
 /* Oculto cuando timer no activo */
 .timer-center{opacity:0;transition:opacity .3s;}
 .timer-center.visible{opacity:1;}
-.spop{position:fixed;font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,36px);font-weight:800;pointer-events:none;animation:spop-fly 1.1s ease-out forwards;z-index:200;color:var(--green);}
+.spop{position:fixed;font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,36px);font-weight:800;pointer-events:none;animation:spop-fly 1.1s ease-out forwards;z-index:200;color:var(--blue);}
 @keyframes spop-fly{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(1.5)}}
 
 /* ── PRE-GAME — idle ocupa pantalla completa ── */
@@ -205,10 +270,25 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 /* Orbs multi-color */
 .orb-a{animation:orb-drift 20s ease-in-out infinite,orb-color-a 14s ease-in-out infinite;}
 .orb-b{animation:orb-drift 26s ease-in-out infinite reverse,orb-color-b 17s ease-in-out infinite;}
-.orb-c{position:absolute;width:600px;height:600px;background:rgba(0,217,126,.08);top:55%;left:15%;border-radius:50%;filter:blur(110px);animation:orb-drift 19s ease-in-out infinite -7s,orb-color-c 11s ease-in-out infinite;}
-@keyframes orb-color-a{0%,100%{background:rgba(107,95,255,.14)}33%{background:rgba(255,45,122,.12)}66%{background:rgba(255,184,0,.10)}}
-@keyframes orb-color-b{0%,100%{background:rgba(255,45,122,.10)}33%{background:rgba(14,165,255,.11)}66%{background:rgba(107,95,255,.12)}}
-@keyframes orb-color-c{0%,100%{background:rgba(0,217,126,.08)}50%{background:rgba(255,184,0,.09)}}
+.orb-c{position:absolute;width:min(600px,55vw);height:min(600px,55vw);background:rgba(255,180,0,.12);top:55%;left:15%;border-radius:50%;filter:blur(min(110px,10vw));animation:orb-drift 19s ease-in-out infinite -7s,orb-color-c 11s ease-in-out infinite;}
+/* Paleta Pentecostés: violeta sagrado — dorado — azul profundo
+   Orb A (grande, izquierda): violeta → dorado → índigo
+   Orb B (grande, derecha):  índigo → dorado cálido → violeta
+   Orb C (pequeño, centro):  dorado → blanco cálido */
+@keyframes orb-color-a{
+  0%,100%{background:rgba(120,90,255,.18)}
+  33%    {background:rgba(255,140,0,.14)}
+  66%    {background:rgba(60,60,200,.16)}
+}
+@keyframes orb-color-b{
+  0%,100%{background:rgba(50,80,220,.14)}
+  33%    {background:rgba(200,100,255,.13)}
+  66%    {background:rgba(255,160,20,.12)}
+}
+@keyframes orb-color-c{
+  0%,100%{background:rgba(255,180,0,.14)}
+  50%    {background:rgba(240,220,180,.10)}
+}
 
 /* Rayos */
 .idle-rays{
@@ -250,7 +330,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 /* Subtítulo del evento */
 .idle-event{
   font-family:'Cormorant Garamond',serif;font-style:italic;
-  font-size:clamp(18px,2.8vw,34px);
+  font-size:clamp(45px,2.8vw,34px);
   color:var(--gold);letter-spacing:.1em;
   margin-bottom:clamp(24px,4vh,48px);
   opacity:0;animation:fadeup .9s .7s ease-out forwards;
@@ -259,7 +339,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 /* Texto entre preguntas */
 .idle-waiting{
   font-family:'Cormorant Garamond',serif;font-style:italic;
-  font-size:clamp(15px,1.8vw,22px);
+  font-size:clamp(25px,1.8vw,22px);
   color:var(--muted);letter-spacing:.06em;
   margin-bottom:clamp(24px,4vh,48px);
 }
@@ -317,7 +397,6 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 }
 
 /* ── CURTAIN fix ── */
-#curtain{position:fixed;inset:0;z-index:80;pointer-events:none;display:grid;grid-template-rows:repeat(5,1fr);}
 #curtain:not(.open)~.stage #qPanel{opacity:0!important;}
 
 /* ── STAGE ── */
@@ -365,6 +444,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 .q-info{font-family:'Syne',sans-serif;font-size:10px;color:var(--dim);letter-spacing:.18em;font-weight:700;}
 .q-rule{width:100%;max-width:860px;height:1px;background:linear-gradient(90deg,transparent,var(--rim2),transparent);}
 .q-text{font-family:'Cormorant Garamond',serif;font-size:clamp(40px,5.5vw,76px);font-weight:600;text-align:center;line-height:1.25;letter-spacing:.025em;max-width:1000px;color:var(--white);}
+
 .qw{display:inline-block;opacity:0;filter:blur(4px);transform:translateY(5px);animation:qwapp .4s ease-out forwards;}
 @keyframes qwapp{to{opacity:1;filter:blur(0);transform:translateY(0)}}
 .ans-label{font-family:'Syne',sans-serif;font-size:9px;letter-spacing:.28em;color:var(--dim);font-weight:700;}
@@ -377,37 +457,115 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 .ans-box.show::before{animation:none;background:none;}
 .ans-box.show .ans-lock{display:none;}
 @keyframes ans-reveal{0%{transform:scale(.96);box-shadow:0 0 0 0 transparent}25%{box-shadow:0 0 60px rgba(255,184,0,.2)}100%{transform:scale(1);box-shadow:0 0 16px rgba(255,184,0,.06)}}
+
+/* ── OVERLAY DE RESPUESTA FULL-SCREEN ── */
+#ansOverlay{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:32px 8vw;gap:16px;
+  opacity:0;pointer-events:none;z-index:10;
+  background:var(--ink);
+  will-change:opacity,transform;
+}
+#ansOverlay.show{
+  opacity:1;pointer-events:all;
+  animation:ans-ov-in .9s cubic-bezier(.16,1,.3,1) both;
+}
+/* El qPanel se desvanece mientras el overlay emerge — transición coordinada */
+#qPanel.ans-revealed{
+  animation:q-fade-out .5s cubic-bezier(.4,0,1,1) both;
+  pointer-events:none;
+}
+/* Overlay emerge desde el centro hacia afuera — efecto cinematográfico */
+@keyframes ans-ov-in{
+  0%  {opacity:0;transform:scale(.96);}
+  15% {opacity:1;}
+  60% {transform:scale(1.005);}
+  100%{opacity:1;transform:scale(1);}
+}
+@keyframes q-fade-out{
+  0%  {opacity:1;transform:scale(1);}
+  100%{opacity:0;transform:scale(.97);}
+}
+.ans-ov-label{font-family:'Syne',sans-serif;font-size:10px;letter-spacing:.3em;color:var(--dim);font-weight:700;}
+.ans-ov-line{width:min(340px,50%);height:1px;background:linear-gradient(90deg,transparent,rgba(255,184,0,.5),transparent);animation:ans-line-grow .7s .2s cubic-bezier(.16,1,.3,1) both;}
+@keyframes ans-line-grow{0%{opacity:0;transform:scaleX(0);}100%{opacity:1;transform:scaleX(1);}}
+.ans-ov-text{
+  font-family:'Cormorant Garamond',serif;
+  font-weight:600;letter-spacing:.02em;text-align:center;line-height:1.32;
+  color:var(--gold);max-width:1100px;
+  animation:ans-text-in .8s .25s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes ans-text-in{0%{opacity:0;transform:translateY(12px)}100%{opacity:1;transform:translateY(0)}}
 #ansFlash{position:fixed;inset:0;z-index:79;pointer-events:none;background:rgba(255,184,0,0);}
 #ansFlash.pop{animation:aflash .7s ease-out forwards;}
 @keyframes aflash{0%{background:rgba(255,184,0,0)}10%{background:rgba(255,184,0,.07)}100%{background:rgba(255,184,0,0)}}
 
 /* ── OVERLAYS ── */
 #bzTint{position:fixed;inset:0;z-index:48;pointer-events:none;opacity:0;transition:opacity .25s;}
-#bzTint.show-a{background:rgba(0,217,126,.07);opacity:1;}
-#bzTint.show-b{background:rgba(14,165,255,.07);opacity:1;}
+#bzTint.show-a{background:rgba(14,165,255,.07);opacity:1;}
+#bzTint.show-b{background:rgba(255,68,68,.07);opacity:1;}
 #shockwave{position:fixed;top:50%;left:50%;width:0;height:0;border-radius:50%;transform:translate(-50%,-50%);pointer-events:none;z-index:55;opacity:0;}
 #shockwave.fire-a{animation:shock-a .9s ease-out forwards;}
 #shockwave.fire-b{animation:shock-b .9s ease-out forwards;}
-@keyframes shock-a{0%{width:0;height:0;opacity:.9;border:6px solid var(--green);box-shadow:0 0 60px var(--green-glow)}100%{width:220vmax;height:220vmax;opacity:0;border:1px solid var(--green)}}
-@keyframes shock-b{0%{width:0;height:0;opacity:.9;border:6px solid var(--blue);box-shadow:0 0 60px var(--blue-glow)}100%{width:220vmax;height:220vmax;opacity:0;border:1px solid var(--blue)}}
+@keyframes shock-a{0%{width:0;height:0;opacity:.9;border:6px solid var(--blue);box-shadow:0 0 60px var(--blue-glow)}100%{width:220vmax;height:220vmax;opacity:0;border:1px solid var(--blue)}}
+@keyframes shock-b{0%{width:0;height:0;opacity:.9;border:6px solid var(--red);box-shadow:0 0 60px rgba(255,68,68,.4)}100%{width:220vmax;height:220vmax;opacity:0;border:1px solid var(--red)}}
 #wrongFlash{position:fixed;inset:0;z-index:60;pointer-events:none;display:flex;align-items:center;justify-content:center;}
 #wrongFlash.show{animation:wflash .9s ease-out forwards;}
 @keyframes wflash{0%{background:rgba(255,68,68,0)}15%{background:rgba(255,68,68,.12)}100%{background:rgba(255,68,68,0)}}
 .wi{font-size:clamp(60px,12vw,120px);opacity:0;font-weight:800;color:var(--red);}
 #wrongFlash.show .wi{animation:wi-in .9s ease-out forwards;}
 @keyframes wi-in{0%{opacity:0;transform:scale(.2)}15%{opacity:1;transform:scale(1.15)}55%{opacity:.7;transform:scale(1)}100%{opacity:0}}
-#bombOv{position:fixed;inset:0;z-index:70;pointer-events:none;display:flex;align-items:center;justify-content:center;}
-#bombOv.boom{animation:boom-bg .9s ease-out forwards;}
-@keyframes boom-bg{0%{background:rgba(0,0,0,0)}10%{background:rgba(255,68,68,.15)}100%{background:rgba(0,0,0,0)}}
-.bomb-ico{font-size:clamp(80px,15vw,160px);opacity:0;pointer-events:none;}
-#bombOv.boom .bomb-ico{animation:bomb-in 1.1s ease-out forwards;}
-@keyframes bomb-in{0%{opacity:0;transform:scale(.2)}12%{opacity:1;transform:scale(1.4)}45%{opacity:1;transform:scale(1)}100%{opacity:0}}
+#bombOv{position:fixed;inset:0;z-index:70;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;}
+#bombOv.boom{animation:tiempo-bg 2.2s ease-out forwards;}
+@keyframes tiempo-bg{0%{background:rgba(0,0,0,0)}10%{background:rgba(180,0,0,.18)}55%{background:rgba(120,0,0,.12)}100%{background:rgba(0,0,0,0)}}
+
+/* Texto TIEMPO */
+.tiempo-word{
+  font-family:'Syne',sans-serif;
+  font-size:clamp(56px,10vw,130px);
+  font-weight:800;
+  letter-spacing:.25em;
+  text-transform:uppercase;
+  color:#FF4444;
+  opacity:0;
+  pointer-events:none;
+}
+#bombOv.boom .tiempo-word{
+  animation:tiempo-word-in 2.2s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes tiempo-word-in{
+  0%  {opacity:0;letter-spacing:.8em;transform:scaleY(1.3);}
+  18% {opacity:1;letter-spacing:.22em;transform:scaleY(1);}
+  60% {opacity:1;letter-spacing:.22em;}
+  85% {opacity:.6;}
+  100%{opacity:0;transform:translateY(-18px);}
+}
+
+/* Línea debajo del texto */
+.tiempo-line{
+  height:2px;
+  width:0;
+  background:#FF4444;
+  opacity:0;
+  pointer-events:none;
+}
+#bombOv.boom .tiempo-line{
+  animation:tiempo-line-in 2.2s cubic-bezier(.16,1,.3,1) forwards;
+}
+@keyframes tiempo-line-in{
+  0%  {width:0;opacity:0;}
+  18% {width:clamp(160px,22vw,320px);opacity:1;}
+  60% {opacity:1;}
+  85% {opacity:.4;}
+  100%{opacity:0;width:clamp(160px,22vw,320px);}
+}
 
 /* ── BUZZER BANNER ── */
 #bzBanner{position:fixed;top:0;left:0;right:0;padding:20px 40px;text-align:center;font-family:'Syne',sans-serif;font-size:clamp(16px,2.5vw,32px);font-weight:800;letter-spacing:.07em;z-index:60;transform:translateY(-110%);transition:transform .45s cubic-bezier(.34,1.56,.64,1);backdrop-filter:blur(20px);}
 #bzBanner.show{transform:translateY(0);}
-#bzBanner.ba{background:rgba(0,217,126,.12);border-bottom:2px solid rgba(0,217,126,.5);color:var(--green);}
-#bzBanner.bb{background:rgba(14,165,255,.12);border-bottom:2px solid rgba(14,165,255,.5);color:var(--blue);}
+#bzBanner.ba{background:rgba(14,165,255,.12);border-bottom:2px solid rgba(14,165,255,.5);color:var(--blue);}
+#bzBanner.bb{background:rgba(255,68,68,.12);border-bottom:2px solid rgba(255,68,68,.5);color:var(--red);}
 #bzBanner.bx{background:rgba(255,68,68,.1);border-bottom:2px solid rgba(255,68,68,.4);color:var(--red);}
 
 /* ── GANADOR ── */
@@ -424,8 +582,8 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 .won-name{font-family:'Cormorant Garamond',serif;font-size:clamp(56px,10vw,128px);font-weight:700;text-align:center;letter-spacing:.01em;margin-bottom:12px;opacity:0;}
 #wonOv.show .won-name{animation:won-name-in .8s 1.05s cubic-bezier(.16,1,.3,1) forwards;}
 @keyframes won-name-in{0%{opacity:0;transform:translateY(24px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
-.won-name.an{color:var(--green);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
-.won-name.bn{color:var(--blue);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
+.won-name.an{color:var(--blue);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
+.won-name.bn{color:var(--red);animation:won-pulse 2s 1.9s ease-in-out infinite!important;}
 @keyframes won-pulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.6) drop-shadow(0 0 40px currentColor)}}
 .won-score{font-family:'Syne',sans-serif;font-size:clamp(18px,2.5vw,32px);font-weight:700;color:var(--muted);letter-spacing:.06em;margin-bottom:22px;opacity:0;font-variant-numeric:tabular-nums;}
 #wonOv.show .won-score{animation:fadeup .5s 1.4s ease-out forwards;}
@@ -475,8 +633,8 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 <div id="bzTint"></div>
 <div id="bzBanner"></div>
 <div id="shockwave"></div>
-<div id="wrongFlash"><div class="wi">✕</div></div>
-<div id="bombOv"><div class="bomb-ico">💥</div></div>
+<div id="wrongFlash"><div class="wi"></div></div>
+<div id="bombOv"><div class="tiempo-word">TIEMPO</div><div class="tiempo-line"></div></div>
 
 <!-- Ganador -->
 <div id="wonOv">
@@ -513,6 +671,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 <!-- SCOREBOARD -->
 <div class="scoreboard" id="scoreboard">
   <div class="team team-a" id="teamA">
+    <video class="flame-video" id="flameA" src="fuegoazul.webm" muted playsinline loop preload="auto"></video>
     <div class="team-info-a">
       <div class="team-name" id="nameA">EQUIPO A</div>
       <div class="team-status" id="stA">Listos para competir</div>
@@ -535,6 +694,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
   </div>
 
   <div class="team team-b" id="teamB">
+    <video class="flame-video" id="flameB" src="fuegorojo.webm" muted playsinline loop preload="auto"></video>
     <div class="team-score" id="scoreB">0</div>
     <div class="team-info-b">
       <div class="team-name" id="nameB">EQUIPO B</div>
@@ -545,6 +705,13 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 
 <!-- STAGE -->
 <div class="stage">
+  <!-- Overlay respuesta full-screen -->
+  <div id="ansOverlay">
+    <div class="ans-ov-label">RESPUESTA</div>
+    <div class="ans-ov-line"></div>
+    <div class="ans-ov-text" id="ansOvText"></div>
+  </div>
+
   <!-- IDLE -->
   <div id="idle" class="visible">
     <svg class="idle-rays" viewBox="0 0 420 420" fill="none">
@@ -572,8 +739,8 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
       <rect x="2" y="18" width="52" height="12" rx="6" fill="#FFB800"/>
     </svg>
     <div class="idle-headline">
-      <span class="idle-hl-line"><span class="idle-hl-word">DESAFÍO</span></span>
-      <span class="idle-hl-line"><span class="idle-hl-word">BÍBLICO</span></span>
+      <span class="idle-hl-line"><span class="idle-hl-word">EL SABER</span></span>
+      <span class="idle-hl-line"><span class="idle-hl-word">VA CONTIGO</span></span>
     </div>
     <div class="idle-event" id="idleEvent">Pneumatología</div>
     <div class="idle-waiting" id="idleWaiting" style="display:none">
@@ -597,7 +764,7 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
     <div class="q-rule"></div>
     <div class="ans-label">RESPUESTA</div>
     <div class="ans-box" id="ansBox">
-      <div class="ans-lock">🔒</div>
+      <div class="ans-lock"></div>
       Noé — Génesis 6:13-14
     </div>
   </div>
@@ -606,6 +773,15 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 <script>
 const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timerLeft:30,sounds:true,buzzerLocked:false,currentQuestionId:null,questionActive:false};
 let timerInt=null,timerStartPending=null,bombFired=false,bombTimeout=null,bgMode='idle';
+let _anticipating=false; // true mientras el anticOv está visible
+// ── Fondo reactivo: transición suave de color ──
+let bgHueCurrent=250;   // hue actual interpolado
+let bgHueTarget=250;    // hue objetivo
+let bgSatCurrent=60;    // saturación actual
+let bgSatTarget=60;
+let bgSpeedMult=1;      // multiplicador de velocidad de partículas
+let bgSpeedTarget=1;
+let bgWash={alpha:0,r:0,g:0,b:0,side:0}; // color wash lateral
 let isFirstQuestion=true; // controla la transición de entrada especial
 
 // Al cargar: ocultar header y scoreboard — solo se muestran al iniciar el juego
@@ -644,6 +820,7 @@ ch.onmessage=e=>handle(e.data);
 
 /* ── HANDLER ── */
 function handle(m){
+  // AudioContext se maneja solo por eventos del usuario (ver listeners arriba)
   switch(m.type){
     case 'START_GAME':startGameSequence();break;
     case 'SHOW_QUESTION':showQ(m);break;
@@ -677,7 +854,22 @@ function handle(m){
       if(m.questionActive&&m.currentQuestion){
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});
-        if(m.answerRevealed)revealAns();
+        if(m.answerRevealed){
+          // Poblar el overlay directamente — showQ tarda ~2420ms en populate
+          // así que no podemos esperar su callback interno
+          const ansOv=el('ansOverlay');
+          const ansOvTxt=el('ansOvText');
+          if(ansOv&&ansOvTxt){
+            const len=(q.a||'').length;
+            ansOvTxt.style.fontSize=len<=60?'clamp(48px,6vw,80px)':len<=100?'clamp(38px,5vw,64px)':len<=160?'clamp(30px,4vw,52px)':len<=240?'clamp(24px,3.2vw,42px)':'clamp(20px,2.6vw,34px)';
+            ansOvTxt.textContent=q.a||'';
+          }
+          // Esperar a que showQ termine para mostrar el overlay
+          setTimeout(()=>{
+            el('qPanel').classList.add('ans-revealed');
+            ansOv&&ansOv.classList.add('show');
+          }, 2600);
+        }
       } else {el('idle').classList.add('visible');el('qPanel').classList.remove('active');}
       if(m.activeBuzzerTeam)highlightTeam(m.activeBuzzerTeam);else clearActive();
       if(m.timerTotal&&m.timerTotal>0){
@@ -834,29 +1026,41 @@ function showQ(m){
   _subsequentQuestionEntry(m);
 }
 
-/* TODAS LAS PREGUNTAS — cortina limpia */
+/* TODAS LAS PREGUNTAS — cortina limpia sin desfase */
 function _subsequentQuestionEntry(m){
+  const curtain=el('curtain');
+  const qp=el('qPanel');
+
+  // ── OPCIÓN A: Cortina y anticOv en PARALELO ───────────────────────
+  // 1. Ocultar qPanel inmediatamente (style inline = máxima prioridad)
+  qp.classList.remove('active');
+  qp.style.opacity='0';
+  qp.style.pointerEvents='none';
+
+  // 2. Cerrar la cortina YA — simultáneo con el anticOv
+  //    La cortina (z:80) trabaja en silencio detrás del anticOv (z:90)
+  curtain.classList.remove('open');
+
+  // 3. Mostrar anticOv — cubre todo mientras la cortina cierra debajo
+  //    Cuando el anticOv desaparezca (2100+320=2420ms), la cortina
+  //    lleva 1720ms cerrada → completamente cerrada desde hace ~1000ms
   _anticipation(m, ()=>{
-    const curtain=el('curtain');
+    // Cortina ya está cerrada — actualizar contenido de forma segura
+    el('idle').classList.remove('visible');
+    _populateQuestion(m);
 
-    // 1. Cerrar cortina PRIMERO — ocultamos qPanel antes para evitar desfase
-    el('qPanel').classList.remove('active');
-    el('qPanel').style.opacity='0';
-    curtain.classList.remove('open');
-
-    // 2. Esperar que la cortina cierre completamente (820ms) antes de tocar contenido
+    // Pequeño hold para que el browser pinte el nuevo contenido
     setTimeout(()=>{
-      el('idle').classList.remove('visible');
-      _populateQuestion(m);
+      curtain.classList.add('open');
 
-      // 3. Pequeño hold y abrir cortina
+      // Revelar qPanel cuando la cortina terminó de abrirse
       setTimeout(()=>{
-        el('qPanel').style.opacity='';
-        el('qPanel').classList.add('active');
+        qp.style.opacity='';
+        qp.style.pointerEvents='';
+        qp.classList.add('active');
         clearActive();
-        curtain.classList.add('open');
-      }, 60);
-    }, 820);
+      }, 750);
+    }, 80);
   });
 }
 
@@ -871,10 +1075,32 @@ function _populateQuestion(m){
   const words=(m.question||'').split(' ');
   el('qText').innerHTML=words.map((w,i)=>`<span class="qw" style="animation-delay:${.3+i*.06}s">${w}</span>`).join(' ');
   const ab=el('ansBox');ab.classList.remove('show');
-  ab.innerHTML=`<div class="ans-lock">🔒</div>${m.answer||''}`;
+  ab.innerHTML=`<div class="ans-lock"></div>${m.answer||''}`;
+  // Resetear overlay de respuesta
+  el('ansOverlay').classList.remove('show');
+  el('qPanel').classList.remove('ans-revealed');
+  // Resetear la animación de la línea dorada para próxima vez
+  const line=el('ansOverlay').querySelector('.ans-ov-line');
+  if(line){line.style.animation='none';void line.offsetWidth;line.style.animation='';}
+  // Tamaño dinámico según longitud de la pregunta
+  _fitQTextSize(m.question||'');
+}
+
+/* Ajusta el font-size del texto de pregunta según cantidad de caracteres */
+function _fitQTextSize(text){
+  const len=text.length;
+  const qt=el('qText');
+  let size;
+  if(len<=60)       size='clamp(52px,6.5vw,82px)';   // corta — grande
+  else if(len<=100) size='clamp(42px,5.5vw,68px)';   // media
+  else if(len<=160) size='clamp(34px,4.5vw,56px)';   // larga
+  else if(len<=220) size='clamp(28px,3.8vw,46px)';   // muy larga
+  else              size='clamp(23px,3.2vw,38px)';   // extra larga
+  qt.style.fontSize=size;
 }
 
 function _anticipation(m,cb){
+  _anticipating=true;
   const ov=el('anticOv');
   el('anticNum').textContent=m.index||'?';
   el('anticRound').textContent=(m.round||'RONDA').toUpperCase();
@@ -882,33 +1108,75 @@ function _anticipation(m,cb){
   el('anticDiff').className='antic-diff '+(diff.includes('fácil')||diff==='facil'?'df':diff.includes('medio')||diff.includes('media')?'dm':'dd');
   el('anticDiff').textContent=(m.difficulty||'NORMAL').toUpperCase();
   ov.classList.add('show');
-  setTimeout(()=>{ov.classList.remove('show');setTimeout(cb,320);},2100);
+  setTimeout(()=>{
+    _anticipating=false;
+    ov.classList.remove('show');
+    // 320ms = duración del fade-out del anticOv (transition:.3s + margen)
+    // Para este punto la cortina ya lleva ~1720ms cerrada — seguro
+    setTimeout(cb,320);
+  },2100);
 }
 
 function revealAns(){
   const ab=el('ansBox');
-  ab.style.border='1px solid rgba(255,184,0,.7)';ab.style.boxShadow='0 0 30px rgba(255,184,0,.2)';
-  setTimeout(()=>{
-    ab.style.border='';ab.style.boxShadow='';ab.classList.add('show');
-    const f=el('ansFlash');f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');
-    if(S.sounds)playCorrect();
-  },200);
+  // Extraer el texto de la respuesta del ansBox (sin el lock icon)
+  const rawAns=ab.textContent.trim();
+  const ov=el('ansOverlay');
+  const ovText=el('ansOvText');
+
+  // Calcular tamaño dinámico de la respuesta según su longitud
+  const len=rawAns.length;
+  let size;
+  if(len<=60)        size='clamp(48px,6vw,80px)';
+  else if(len<=100)  size='clamp(38px,5vw,64px)';
+  else if(len<=160)  size='clamp(30px,4vw,52px)';
+  else if(len<=240)  size='clamp(24px,3.2vw,42px)';
+  else               size='clamp(20px,2.6vw,34px)';
+  ovText.style.fontSize=size;
+  ovText.textContent=rawAns;
+
+  // Flash dorado
+  const f=el('ansFlash');f.classList.remove('pop');void f.offsetWidth;f.classList.add('pop');
+  if(S.sounds)playCorrect();
+
+  // qPanel se desvanece, overlay emerge
+  el('qPanel').classList.add('ans-revealed');
+  ov.classList.remove('show');void ov.offsetWidth;
+  ov.classList.add('show');
 }
 
 function hideQ(){
   S.buzzerLocked=false;S.currentQuestionId=null;S.questionActive=false;bgMode='idle';
   if(bombTimeout){clearTimeout(bombTimeout);bombTimeout=null;el('bombOv').className='';}
   bombFired=false;
+  bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;bgWash.alpha=0;
   const curtain=el('curtain');
-  el('qPanel').classList.remove('active');
-  el('qPanel').style.opacity='0';
+  const qp=el('qPanel');
+
+  // 1. Cerrar cortina — el ansOverlay sigue visible mientras la cortina baja
+  //    No tocar el overlay ni el qPanel todavía
   curtain.classList.remove('open');
+
+  // 2. Cuando la cortina está completamente cerrada (800ms), limpiar todo
   setTimeout(()=>{
+    // Ahora la cortina cubre todo — es seguro quitar el overlay y el panel
+    el('ansOverlay').classList.remove('show');
+    qp.classList.remove('active','ans-revealed');
+    qp.style.opacity='0';
+    qp.style.pointerEvents='none';
+
     el('idle').classList.add('visible');
-    el('qPanel').style.opacity='';
     stopTimer();clearActive();
-    setTimeout(()=>curtain.classList.add('open'),60);
-  },820);
+
+    setTimeout(()=>{
+      curtain.classList.add('open');
+      // Restaurar qPanel para la próxima pregunta
+      setTimeout(()=>{
+        qp.style.opacity='';
+        qp.style.pointerEvents='';
+      }, 750);
+    }, 80);
+  }, 800);
 }
 
 /* ── SCORES ── */
@@ -965,19 +1233,87 @@ function showWrong(m){
   if(te){te.style.outline='2px solid var(--red)';te.style.animation='wshake .5s ease';setTimeout(()=>{te.style.outline='';te.style.animation='';},1000);}
   const b=el('bzBanner'),nm=m.team==='a'?S.nameA:S.nameB;
   b.style.cssText='background:rgba(255,68,68,.1);border-bottom:2px solid rgba(255,68,68,.4);color:var(--red);';
-  b.className='bx show';b.textContent='✕  '+nm.toUpperCase()+'  —  RESPUESTA INCORRECTA';
+  b.className='bx show';b.textContent='  '+nm.toUpperCase()+'  —  RESPUESTA INCORRECTA';
   setTimeout(()=>{wf.className='';if(te){te.style.outline='';te.style.animation='';}b.className='';b.style.cssText='';},1500);
 }
 function highlightTeam(t){
-  el('teamA').classList.remove('active-a','active-b');el('teamB').classList.remove('active-a','active-b');
-  if(t==='a'){el('teamA').classList.add('active-a');el('stA').textContent='Respondiendo...';el('stB').textContent='En espera...';}
-  else if(t==='b'){el('teamB').classList.add('active-b');el('stB').textContent='Respondiendo...';el('stA').textContent='En espera...';}
+  el('teamA').classList.remove('active-a','active-b');
+  el('teamB').classList.remove('active-a','active-b');
+  if(t==='a'){
+    el('teamA').classList.add('active-a');
+    el('stA').textContent='Respondiendo...';
+    el('stB').textContent='En espera...';
+    startFlame('a'); stopFlame('b');
+    // Fondo reactivo: azul (equipo A)
+    bgHueTarget=210; bgSatTarget=90; bgSpeedTarget=2.2;
+    bgWash={alpha:0.18,r:14,g:165,b:255,side:-1}; // side -1 = izquierda
+  } else if(t==='b'){
+    el('teamB').classList.add('active-b');
+    el('stB').textContent='Respondiendo...';
+    el('stA').textContent='En espera...';
+    startFlame('b'); stopFlame('a');
+    // Fondo reactivo: rojo (equipo B)
+    bgHueTarget=0; bgSatTarget=95; bgSpeedTarget=2.2;
+    bgWash={alpha:0.18,r:255,g:68,b:68,side:1}; // side 1 = derecha
+  }
 }
 function clearActive(){
   S.buzzerLocked=false;
-  el('teamA').classList.remove('active-a','active-b');el('teamB').classList.remove('active-a','active-b');
-  el('stA').textContent='Listos para competir';el('stB').textContent='Listos para competir';
+  el('teamA').classList.remove('active-a','active-b');
+  el('teamB').classList.remove('active-a','active-b');
+  el('stA').textContent='Listos para competir';
+  el('stB').textContent='Listos para competir';
+  stopFlame('a'); stopFlame('b');
+  // Volver al modo neutro
+  bgHueTarget=250; bgSatTarget=60; bgSpeedTarget=1;
+  bgWash.alpha=0;
 }
+
+/* ── LLAMAS — video loop ── */
+function startFlame(team){
+  const v=el(team==='a'?'flameA':'flameB');
+  if(!v) return;
+  v.muted=true;
+  v.loop=true;
+  v.currentTime=0;
+  const p=v.play();
+  if(p instanceof Promise){
+    p.then(()=>{
+      v.classList.add('flame-on');
+    }).catch(err=>{
+      // Si falla el autoplay, mostrar igual y reintentar
+      console.warn('Flame play failed:',err);
+      v.classList.add('flame-on');
+    });
+  } else {
+    v.classList.add('flame-on');
+  }
+}
+
+function stopFlame(team){
+  const v=el(team==='a'?'flameA':'flameB');
+  if(!v) return;
+  v.classList.remove('flame-on');
+  setTimeout(()=>{
+    if(!v.classList.contains('flame-on')) v.pause();
+  },650);
+}
+
+// Precargar los videos silenciosamente en el primer evento
+// Los videos muted no tienen restricción de autoplay en ningún browser moderno
+document.addEventListener('DOMContentLoaded',()=>{
+  ['flameA','flameB'].forEach(id=>{
+    const v=el(id);
+    if(!v) return;
+    v.muted=true;
+    v.load();
+  });
+});
+
+/* ── SCROLL AUTOMÁTICO DE PREGUNTA ───────────────────────────────
+   Umbral: si el texto supera el alto del contenedor, scrollea.
+   Velocidad: lenta, con pausas arriba y abajo. Ciclo continuo.
+   ─────────────────────────────────────────────────────────────── */
 
 /* ── GANADOR ── */
 function showWinner(m){
@@ -992,6 +1328,12 @@ function showWinner(m){
 /* ── TIMER ── */
 function startTimer(s){
   if(timerStartPending){clearTimeout(timerStartPending);timerStartPending=null;}
+  // Si hay anticipación activa, el timerCenter no debe mostrarse aún
+  if(_anticipating){
+    // Encolar el timer para cuando termine la anticipación
+    timerStartPending=setTimeout(()=>startTimer(s),2600);
+    return;
+  }
   if(timerInt){clearInterval(timerInt);timerInt=null;}
   S.timerTotal=s;S.timerLeft=s;
   const isAnimating=!el('curtain').classList.contains('open');
@@ -1043,14 +1385,33 @@ function bombExplosion(){
 }
 
 /* ── AUDIO ── */
-const AC=new(window.AudioContext||window.webkitAudioContext)();
-document.addEventListener('click',()=>{if(AC.state==='suspended')AC.resume();},{once:true});
-function resume(){if(AC.state==='suspended')AC.resume();}
-function playBuzzerSfx(){resume();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='square';o.frequency.setValueAtTime(1100,AC.currentTime);o.frequency.exponentialRampToValueAtTime(550,AC.currentTime+.13);g.gain.setValueAtTime(.45,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.36);o.start();o.stop(AC.currentTime+.4);}
-function playCorrect(){resume();[523,659,784,1047].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='sine';o.frequency.value=f;const t=AC.currentTime+i*.11;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.28,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.start(t);o.stop(t+.4);});}
-function playWrong(){resume();[220,180,150].forEach((f,i)=>{const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='sawtooth';o.frequency.value=f;const t=AC.currentTime+i*.09;g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.start(t);o.stop(t+.32);});}
-function playTick(){resume();const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.type='square';o.frequency.value=880+S.timerLeft*20;g.gain.setValueAtTime(.18,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+.09);o.start();o.stop(AC.currentTime+.11);}
-function playBomb(){resume();for(let i=0;i<6;i++){const o=AC.createOscillator(),g=AC.createGain();o.connect(g);g.connect(AC.destination);o.frequency.value=700+i*130;const t=AC.currentTime+i*.13;g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.11);o.start(t);o.stop(t+.13);}const buf=AC.createBuffer(1,AC.sampleRate*.9,AC.sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);const s=AC.createBufferSource();s.buffer=buf;const gn=AC.createGain();gn.gain.value=.9;s.connect(gn);gn.connect(AC.destination);s.start(AC.currentTime+.78);}
+let AC=null;
+// Crear el AudioContext SOLO desde eventos reales del usuario
+// para cumplir con la política de autoplay de los browsers modernos.
+function _initAC(){
+  if(AC) return;
+  try{AC=new(window.AudioContext||window.webkitAudioContext)({latencyHint:'interactive'});}
+  catch(e){AC=null;}
+}
+function _getAC(){return AC;}
+function resume(){
+  // Crear si no existe (ya estamos en un gesto de usuario)
+  _initAC();
+  if(AC&&AC.state==='suspended') AC.resume();
+}
+// Inicializar en el primer gesto real del usuario
+['click','keydown','touchstart','pointerdown'].forEach(evt=>{
+  document.addEventListener(evt,()=>{_initAC();if(AC&&AC.state==='suspended')AC.resume();},{once:false,passive:true});
+});
+// Resumir en cualquier interacción o evento del juego
+document.addEventListener('click',resume);
+document.addEventListener('keydown',resume);
+// AudioContext: resume() se llama en handle() y en eventos de usuario
+function playBuzzerSfx(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.setValueAtTime(1100,_getAC().currentTime);o.frequency.exponentialRampToValueAtTime(550,_getAC().currentTime+.13);g.gain.setValueAtTime(.45,_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.36);o.start();o.stop(_getAC().currentTime+.4);}
+function playCorrect(){resume();[523,659,784,1047].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sine';o.frequency.value=f;const t=_getAC().currentTime+i*.11;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.28,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+.32);o.start(t);o.stop(t+.4);});}
+function playWrong(){resume();[220,180,150].forEach((f,i)=>{const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='sawtooth';o.frequency.value=f;const t=_getAC().currentTime+i*.09;g.gain.setValueAtTime(.3,t);g.gain.exponentialRampToValueAtTime(.001,t+.28);o.start(t);o.stop(t+.32);});}
+function playTick(){resume();const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.type='square';o.frequency.value=880+S.timerLeft*20;g.gain.setValueAtTime(.18,_getAC().currentTime);g.gain.exponentialRampToValueAtTime(.001,_getAC().currentTime+.09);o.start();o.stop(_getAC().currentTime+.11);}
+function playBomb(){resume();for(let i=0;i<6;i++){const o=_getAC().createOscillator(),g=_getAC().createGain();o.connect(g);g.connect(_getAC().destination);o.frequency.value=700+i*130;const t=_getAC().currentTime+i*.13;g.gain.setValueAtTime(.5,t);g.gain.exponentialRampToValueAtTime(.001,t+.11);o.start(t);o.stop(t+.13);}const buf=_getAC().createBuffer(1,_getAC().sampleRate*.9,_getAC().sampleRate);const d=buf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.5);const s=_getAC().createBufferSource();s.buffer=buf;const gn=_getAC().createGain();gn.gain.value=.9;s.connect(gn);gn.connect(_getAC().destination);s.start(_getAC().currentTime+.78);}
 
 /* ── CANVAS — fondo reactivo + bursts + ascuas ── */
 const bgC=document.getElementById('bgC'),bgX=bgC.getContext('2d');
@@ -1169,32 +1530,45 @@ function drawBg(){
   if(bgScrollActive){
     bgScrollSpeed=Math.min(BG_SCROLL_TARGET, bgScrollSpeed+BG_SCROLL_RAMP);
   } else if(bgScrollSpeed>0){
-    // Frena suavemente cuando se detiene
     bgScrollSpeed=Math.max(0, bgScrollSpeed-BG_SCROLL_RAMP*0.5);
   }
   bgScrollY+=bgScrollSpeed;
 
-  const sm=bgMode==='danger'?3.2:bgMode==='question'?1.3:1;
-  const sat=bgMode==='danger'?95:bgMode==='a'||bgMode==='b'?85:60;
+  // ── Lerp de color y velocidad del fondo reactivo ──
+  const LERP=0.035;
+  bgHueCurrent+=(bgHueTarget-bgHueCurrent)*LERP;
+  bgSatCurrent+=(bgSatTarget-bgSatCurrent)*LERP;
+  bgSpeedMult+=(bgSpeedTarget-bgSpeedMult)*LERP;
+
+  const sm=bgMode==='danger'?3.2:bgSpeedMult;
+  const sat=bgMode==='danger'?95:Math.round(bgSatCurrent);
 
   pts.forEach(p=>{
     p.phase+=p.speed*sm;
     p.x+=p.vx*sm;
-    // La deriva de fondo se suma al movimiento propio
     p.y+=p.vy*sm + bgScrollSpeed;
     if(p.x<0)p.x=bgC.width; if(p.x>bgC.width)p.x=0;
-    // Wrap vertical — partículas que salen por abajo reaparecen arriba
     if(p.y<0)p.y=bgC.height; if(p.y>bgC.height)p.y=0;
-    let hue=p.hue;
-    if(bgMode==='danger')hue=0;
-    else if(bgMode==='a')hue=152;
-    else if(bgMode==='b')hue=204;
+    const hue=bgMode==='danger'?0:Math.round(bgHueCurrent);
     const a=(Math.sin(p.phase)+1)/2*.26+.03;
     bgX.beginPath();
     bgX.arc(p.x,p.y,p.r,0,Math.PI*2);
     bgX.fillStyle=`hsla(${hue},${sat}%,70%,${a})`;
     bgX.fill();
   });
+
+  // ── Color wash lateral — pulsa desde el lado del equipo activo ──
+  if(bgWash.alpha>0.005){
+    const W=bgC.width,H=bgC.height;
+    const fromLeft=bgWash.side===-1;
+    const g=bgX.createLinearGradient(fromLeft?0:W,0,fromLeft?W*0.7:W*0.3,0);
+    g.addColorStop(0,`rgba(${bgWash.r},${bgWash.g},${bgWash.b},${bgWash.alpha})`);
+    g.addColorStop(1,'rgba(0,0,0,0)');
+    bgX.fillStyle=g;
+    bgX.fillRect(0,0,W,H);
+    // Decaer suavemente cuando el objetivo es 0
+    if(bgWash.alpha>bgSatTarget/300) bgWash.alpha+=(0-bgWash.alpha)*0.015;
+  }
 
   // ── Ascuas ──────────────────────────────────────────────
   embers=embers.filter(e=>{

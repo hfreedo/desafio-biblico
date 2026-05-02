@@ -2,380 +2,643 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Desafío Bíblico  Moderador</title>
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-<style>
-:root{--gold:#D4A843;--gold-l:#F0C96A;--bg:#0F1117;--panel:#161B28;--panel2:#1C2236;--border:rgba(212,168,67,.18);--border2:rgba(255,255,255,.07);--green:#2ECC71;--red:#E74C3C;--blue:#3498DB;--orange:#E67E22;--parchment:#F5E6C8;--text:#E8E8F0;--dim:rgba(232,232,240,.45);}
-*{margin:0;padding:0;box-sizing:border-box;}
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Cinzel',serif;overflow:hidden;}
-.app{display:grid;grid-template-rows:54px 1fr;height:100vh;}
-.topbar{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
-.tb-title{font-family:'Cinzel Decorative',serif;font-size:15px;color:var(--gold-l);letter-spacing:2px;display:flex;align-items:center;gap:10px;}
-.badge-mod{background:rgba(231,76,60,.2);border:1px solid rgba(231,76,60,.5);color:#E74C3C;font-size:10px;padding:2px 10px;border-radius:20px;letter-spacing:2px;}
-.tb-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
-.dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pu 2s infinite;}
-@keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
-.main{display:grid;grid-template-columns:310px 1fr 340px;height:100%;overflow:hidden;}
-.side{overflow-y:auto;border-right:1px solid var(--border2);}
-.side:last-child{border-right:none;border-left:1px solid var(--border2);}
-.sec{padding:12px 14px;border-bottom:1px solid var(--border2);}
-.stitle{font-size:10px;letter-spacing:3px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border2);}
-input[type=text],input[type=number],select{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'Cinzel',serif;font-size:12px;width:100%;outline:none;transition:border-color .2s;}
-input:focus,select:focus{border-color:var(--gold);}
-.btn{border:none;border-radius:7px;cursor:pointer;font-family:'Cinzel',serif;font-size:11px;letter-spacing:1px;font-weight:600;padding:8px 14px;transition:all .2s;display:flex;align-items:center;gap:6px;white-space:nowrap;}
-.btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
-.btn:active{transform:translateY(0);}
-.gold{background:linear-gradient(135deg,var(--gold),#9A7420);color:#0A0A0F;}
-.grn{background:linear-gradient(135deg,#1B6B3A,#2ECC71);color:#fff;}
-.red{background:linear-gradient(135deg,#6B1A1A,#E74C3C);color:#fff;}
-.blu{background:linear-gradient(135deg,#1A3A6B,#3498DB);color:#fff;}
-.gry{background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--border2);}
-.orn{background:linear-gradient(135deg,#6B3A1A,#E67E22);color:#fff;}
-.btn-sm{padding:5px 10px;font-size:10px;}
-.brow{display:flex;gap:6px;flex-wrap:wrap;}
-.team-row{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
-.tlbl{font-size:11px;letter-spacing:2px;min-width:18px;text-align:center;font-weight:700;}
-.la{color:var(--green);}.lb{color:var(--blue);}
-.snum{font-family:'Cinzel Decorative',serif;font-size:30px;font-weight:900;min-width:50px;text-align:center;}
-.sna{color:var(--green);text-shadow:0 0 12px rgba(46,204,113,.5);}
-.snb{color:var(--blue);text-shadow:0 0 12px rgba(52,152,219,.5);}
-.sc-row{display:flex;align-items:center;gap:8px;}
-.icon-btn{width:34px;height:34px;padding:0;justify-content:center;border-radius:8px;flex-shrink:0;}
-.slim{font-size:10px;color:var(--dim);letter-spacing:2px;margin-bottom:6px;}
-.mod-t{font-family:'Cinzel Decorative',serif;font-size:40px;font-weight:900;color:var(--gold-l);text-align:center;text-shadow:0 0 20px rgba(212,168,67,.4);line-height:1;}
-.mod-t.dng{color:var(--red);text-shadow:0 0 20px rgba(231,76,60,.6);}
-.tv{background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--gold-l);padding:6px 12px;font-family:'Cinzel Decorative',serif;font-size:22px;min-width:62px;text-align:center;}
-.sep{height:1px;background:var(--border2);margin:6px 0;}
-
-/* QUESTION LIST */
-.cen{display:flex;flex-direction:column;overflow:hidden;}
-.qlist-hdr{padding:10px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;}
-.stabs{display:flex;gap:4px;flex-wrap:wrap;}
-.tab{padding:4px 11px;border-radius:4px;font-size:10px;letter-spacing:1px;cursor:pointer;border:1px solid var(--border2);background:transparent;color:var(--dim);font-family:'Cinzel',serif;transition:all .2s;}
-.tab.active{background:rgba(212,168,67,.15);border-color:var(--gold);color:var(--gold-l);}
-.tab:hover{color:var(--text);}
-.qlist{overflow-y:auto;flex:1;padding:8px;display:grid;grid-template-columns:1fr;gap:6px;align-content:start;}
-.qcard{background:var(--panel2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;cursor:pointer;transition:all .2s;position:relative;}
-.qcard:hover{border-color:rgba(212,168,67,.4);background:#222840;}
-.qcard.sel{border-color:var(--gold);background:rgba(212,168,67,.07);}
-.qcard.ans-a{border-left:3px solid var(--green);opacity:.65;}
-.qcard.ans-b{border-left:3px solid var(--blue);opacity:.65;}
-.qcard.ans-w{border-left:3px solid var(--red);opacity:.55;}
-.qcard-hdr{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
-.qnum{font-size:10px;color:var(--dim);min-width:26px;}
-.pip{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
-.pf{background:var(--green);}.pm{background:#F1C40F;}.pd{background:var(--red);}
-.qctext{font-family:'Crimson Text',serif;font-size:12px;color:var(--parchment);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
-.qround{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:4px;}
-.abadge{position:absolute;top:5px;right:7px;font-size:13px;}
-
-/* RIGHT PANEL */
-.cq-box{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;}
-.cq-q{font-family:'Crimson Text',serif;font-size:14px;color:var(--parchment);line-height:1.5;margin:6px 0;}
-.cq-a{font-size:12px;color:var(--gold-l);font-family:'Crimson Text',serif;font-style:italic;margin-top:6px;padding-top:6px;border-top:1px solid var(--border2);}
-.htable{width:100%;border-collapse:collapse;font-size:11px;}
-.htable th{color:var(--dim);letter-spacing:1px;font-size:9px;padding:4px 8px;border-bottom:1px solid var(--border2);text-align:left;}
-.htable td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-family:'Crimson Text',serif;font-size:12px;}
-.htable tr:hover td{background:rgba(255,255,255,.02);}
-.sta{color:var(--green);}.stb{color:var(--blue);}
-.toast{position:fixed;bottom:20px;right:20px;background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:11px 18px;font-size:13px;color:var(--gold-l);z-index:999;transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);font-family:'Crimson Text',serif;}
-.toast.show{transform:translateX(0);}
-::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:rgba(212,168,67,.25);border-radius:4px;}
-
-/* SOUND TOGGLE */
-.tog{display:flex;align-items:center;gap:10px;cursor:pointer;}
-.tog-track{position:relative;width:36px;height:20px;background:rgba(255,255,255,.15);border-radius:10px;transition:background .2s;flex-shrink:0;}
-.tog-track.on{background:#2ECC71;}
-.tog-knob{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
-.tog-track.on .tog-knob{transform:translateX(16px);}
-.tog-lbl{font-size:11px;color:var(--dim);letter-spacing:1px;}
-
-/* MUSIC */
-.music-presets{display:flex;flex-direction:column;gap:4px;margin-top:6px;}
-.preset-btn{background:rgba(255,255,255,.05);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:6px 10px;font-family:'Crimson Text',serif;font-size:12px;cursor:pointer;text-align:left;transition:all .2s;}
-.preset-btn:hover{background:rgba(212,168,67,.1);border-color:var(--gold);color:var(--gold-l);}
-</style>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Moderador — Desafío Bíblico</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#0D0D12; --panel:#16161E; --panel2:#1C1C26; --panel3:#22222E;
+  --border:rgba(255,255,255,.07); --border2:rgba(255,255,255,.12);
+  --text:#E8E8F0; --dim:#5A5A72; --muted:#8888A0;
+  --gold:#D4A843; --gold2:#F5C842; --gold-bg:rgba(212,168,67,.08);
+  --green:#22C55E; --green-bg:rgba(34,197,94,.08);
+  --blue:#3B82F6; --blue-bg:rgba(59,130,246,.08);
+  --red:#EF4444; --red-bg:rgba(239,68,68,.08);
+  --orange:#F97316; --orange-bg:rgba(249,115,22,.08);
+  --purple:#A855F7; --purple-bg:rgba(168,85,247,.08);
+  --a-color:#0EA5FF; --b-color:#FF4444;
+  --radius:6px; --radius-lg:10px;
+  --font:'Inter',sans-serif; --mono:'JetBrains Mono',monospace;
+}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);font-size:13px;}
+
+/* ── TOPBAR ─────────────────────────────────────── */
+#topbar{
+  height:52px;display:flex;align-items:center;gap:0;
+  background:var(--panel);border-bottom:1px solid var(--border);
+  flex-shrink:0;z-index:50;
+}
+.tb-brand{padding:0 16px;display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.tb-brand-name{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--gold2);}
+.tb-brand-sub{font-size:9px;letter-spacing:.15em;color:var(--dim);margin-top:1px;}
+
+.tb-live{
+  display:flex;align-items:center;gap:16px;padding:0 20px;flex:1;
+  justify-content:center;
+}
+.tb-score-block{display:flex;align-items:center;gap:10px;}
+.tb-team-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--dim);}
+.tb-score{font-family:var(--mono);font-size:28px;font-weight:700;min-width:36px;text-align:center;line-height:1;}
+.tb-score.sa{color:var(--a-color);}
+.tb-score.sb{color:var(--b-color);}
+.tb-timer-block{
+  display:flex;flex-direction:column;align-items:center;
+  padding:0 20px;border-left:1px solid var(--border);border-right:1px solid var(--border);
+}
+.tb-timer{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--text);line-height:1;}
+.tb-timer.dng{color:var(--red);}
+.tb-timer-label{font-size:8px;letter-spacing:.2em;color:var(--dim);margin-top:2px;}
+
+.tb-status{padding:0 16px;display:flex;flex-direction:column;gap:4px;}
+.tb-room{font-size:10px;font-weight:600;letter-spacing:.08em;}
+.tb-buzzer-ind{
+  display:flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:600;letter-spacing:.06em;color:var(--dim);
+}
+.tb-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+.tb-dot.libre{background:var(--green);box-shadow:0 0 6px var(--green);}
+.tb-dot.respondiendo{background:var(--orange);box-shadow:0 0 6px var(--orange);animation:pulse 1s infinite;}
+.tb-dot.bloqueado{background:var(--red);box-shadow:0 0 6px var(--red);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+.tb-actions{padding:0 16px;display:flex;gap:8px;border-left:1px solid var(--border);}
+
+/* ── MAIN LAYOUT ─────────────────────────────────── */
+#layout{display:flex;flex:1;min-height:0;height:calc(100vh - 52px);}
+.panel{display:flex;flex-direction:column;overflow:hidden;background:var(--panel);}
+
+.divider{
+  width:4px;background:var(--border);cursor:col-resize;flex-shrink:0;
+  transition:background .15s;position:relative;
+}
+.divider:hover,.divider.dragging{background:var(--gold);opacity:.6;}
+
+#panelLeft{width:300px;min-width:180px;max-width:480px;border-right:1px solid var(--border);}
+#panelCenter{flex:1;min-width:380px;border-right:1px solid var(--border);}
+#panelRight{width:260px;min-width:180px;max-width:400px;}
+
+/* ── PANEL HEADER ──────────────────────────────── */
+.ph{
+  display:flex;align-items:center;gap:8px;padding:8px 12px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  font-size:10px;font-weight:700;letter-spacing:.15em;color:var(--dim);
+}
+.ph-title{flex:1;}
+.ph-badge{font-size:9px;padding:2px 7px;border-radius:100px;font-weight:700;letter-spacing:.08em;}
+
+/* ── SCROLL AREA ──────────────────────────────── */
+.scroll{overflow-y:auto;flex:1;min-height:0;}
+.scroll::-webkit-scrollbar{width:3px;}
+.scroll::-webkit-scrollbar-track{background:transparent;}
+.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
+
+/* ── SECTION BLOCKS ──────────────────────────── */
+.sec{padding:10px 12px;border-bottom:1px solid var(--border);}
+.sec-title{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--dim);margin-bottom:8px;text-transform:uppercase;}
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  border:none;border-radius:var(--radius);
+  font-family:var(--font);font-size:11px;font-weight:600;
+  letter-spacing:.04em;cursor:pointer;padding:0 12px;height:32px;
+  transition:filter .12s,transform .08s;white-space:nowrap;
+}
+.btn:hover{filter:brightness(1.12);}
+.btn:active{transform:scale(.97);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-full{width:100%;}
+.btn-gold{background:linear-gradient(135deg,#D4A843,#8A6820);color:#07080F;}
+.btn-green{background:linear-gradient(135deg,#16A34A,#22C55E);color:#fff;}
+.btn-blue{background:linear-gradient(135deg,#1D4ED8,#3B82F6);color:#fff;}
+.btn-red{background:linear-gradient(135deg,#B91C1C,#EF4444);color:#fff;}
+.btn-orange{background:linear-gradient(135deg,#C2410C,#F97316);color:#fff;}
+.btn-ghost{background:var(--panel3);border:1px solid var(--border2);color:var(--muted);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);background:var(--panel2);}
+.btn-a{background:linear-gradient(135deg,#0369A1,#0EA5FF);color:#fff;}
+.btn-b{background:linear-gradient(135deg,#991B1B,#FF4444);color:#fff;}
+.btn-sm{height:28px;font-size:10px;padding:0 10px;}
+.btn-xs{height:24px;font-size:10px;padding:0 8px;border-radius:4px;}
+
+/* ── GRID DE BOTONES ─────────────────────────── */
+.btn-grid{display:grid;gap:6px;}
+.btn-grid-2{grid-template-columns:1fr 1fr;}
+.btn-grid-3{grid-template-columns:1fr 1fr 1fr;}
+.btn-grid-4{grid-template-columns:1fr 1fr 1fr 1fr;}
+
+/* ── SCOREBOARD CONTROL ──────────────────────── */
+.score-ctrl{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:8px;
+  align-items:center;
+}
+.score-team{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.score-name{font-size:9px;font-weight:700;letter-spacing:.12em;}
+.score-name.a{color:var(--a-color);}
+.score-name.b{color:var(--b-color);}
+.score-row{display:flex;align-items:center;gap:6px;}
+.score-num{
+  font-family:var(--mono);font-size:32px;font-weight:700;min-width:42px;
+  text-align:center;background:var(--panel3);border-radius:var(--radius);
+  padding:2px 6px;line-height:1.1;
+}
+.score-num.a{color:var(--a-color);}
+.score-num.b{color:var(--b-color);}
+.score-sep{font-size:20px;color:var(--border2);text-align:center;}
+
+/* ── TIMER CONTROL ───────────────────────────── */
+.timer-ctrl{display:flex;align-items:center;gap:6px;margin-bottom:8px;}
+.timer-val{
+  flex:1;text-align:center;font-family:var(--mono);font-size:20px;
+  font-weight:700;background:var(--panel3);border-radius:var(--radius);
+  padding:6px;border:1px solid var(--border2);
+}
+.adj-group{display:flex;gap:3px;}
+
+/* ── SELECTED QUESTION ───────────────────────── */
+#selQBox{
+  background:var(--panel3);border-radius:var(--radius-lg);
+  border:1px solid var(--border2);padding:12px;margin-bottom:8px;
+  min-height:80px;
+}
+.sq-meta{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+.sq-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.08em;}
+.sq-badge.facil{background:var(--green-bg);color:var(--green);}
+.sq-badge.medio{background:rgba(234,179,8,.1);color:#EAB308;}
+.sq-badge.dificil{background:var(--red-bg);color:var(--red);}
+.sq-badge.prueba{background:var(--purple-bg);color:var(--purple);}
+.sq-round{font-size:9px;color:var(--dim);letter-spacing:.06em;}
+.sq-q{font-size:13px;line-height:1.5;color:var(--text);margin-bottom:6px;}
+.sq-sep{height:1px;background:var(--border);margin:6px 0;}
+.sq-a-label{font-size:8px;letter-spacing:.2em;color:var(--dim);margin-bottom:3px;}
+.sq-a{font-size:12px;color:var(--gold);line-height:1.4;}
+
+/* ── BUZZER STATUS ───────────────────────────── */
+#bzStatus{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:var(--radius);background:var(--panel3);
+  border:1px solid var(--border2);margin-bottom:8px;
+}
+#bzStatusDot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0;}
+#bzStatusTxt{font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--dim);flex:1;}
+#bzTimingTxt{font-size:9px;color:var(--dim);}
+
+/* ── QUESTION BANK ───────────────────────────── */
+.qlist-toolbar{
+  display:flex;align-items:center;gap:6px;padding:8px 10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.search-inp{
+  flex:1;background:var(--panel3);border:1px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);padding:5px 10px;
+  font-family:var(--font);font-size:11px;outline:none;
+}
+.search-inp:focus{border-color:var(--gold);}
+.search-inp::placeholder{color:var(--dim);}
+
+.filter-bar{
+  display:flex;gap:4px;padding:6px 10px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+  flex-wrap:wrap;
+}
+.ftab{
+  padding:3px 10px;border-radius:4px;font-size:9px;font-weight:700;
+  letter-spacing:.06em;cursor:pointer;border:1px solid var(--border2);
+  background:transparent;color:var(--dim);font-family:var(--font);
+  transition:all .15s;
+}
+.ftab:hover{color:var(--text);}
+.ftab.active{background:var(--gold-bg);border-color:var(--gold);color:var(--gold2);}
+.ftab.fprueba.active{background:var(--purple-bg);border-color:var(--purple);color:var(--purple);}
+
+#qList{overflow-y:auto;flex:1;}
+.qcard{
+  padding:8px 10px;border-bottom:1px solid var(--border);
+  cursor:pointer;transition:background .1s;position:relative;
+}
+.qcard:hover{background:rgba(255,255,255,.03);}
+.qcard.sel{background:rgba(212,168,67,.07);border-left:2px solid var(--gold);}
+.qcard.ans-a{border-left:2px solid var(--a-color);opacity:.6;}
+.qcard.ans-b{border-left:2px solid var(--b-color);opacity:.6;}
+.qcard.ans-w{border-left:2px solid var(--red);opacity:.5;}
+.qcard.excluded{opacity:.3;}
+.qcard-hdr{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
+.qnum{font-size:9px;font-weight:700;color:var(--dim);font-family:var(--mono);}
+.pip{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.pip.pf{background:var(--green);}
+.pip.pm{background:#EAB308;}
+.pip.pd{background:var(--red);}
+.pip.pp{background:var(--purple);}
+.qlabel{font-size:9px;color:var(--dim);}
+.qexcl-btn{
+  margin-left:auto;font-size:8px;padding:1px 5px;border-radius:3px;
+  cursor:pointer;font-family:var(--font);border:1px solid var(--border2);
+  background:transparent;color:var(--dim);transition:all .15s;
+}
+.qexcl-btn:hover,.qcard.excluded .qexcl-btn{border-color:var(--purple);color:var(--purple);background:var(--purple-bg);}
+.qctext{font-size:11px;line-height:1.4;color:var(--text);}
+.qround{font-size:9px;color:var(--dim);margin-top:3px;}
+
+/* ── FORM ELEMENTS ───────────────────────────── */
+input[type=text],input[type=number],select,textarea{
+  background:var(--panel3);border:1px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);
+  padding:6px 10px;font-family:var(--font);font-size:11px;
+  width:100%;outline:none;transition:border-color .15s;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--gold);}
+input::placeholder,textarea::placeholder{color:var(--dim);}
+select option{background:var(--panel2);}
+textarea{resize:vertical;min-height:52px;}
+
+/* ── HISTORY TABLE ───────────────────────────── */
+.htable{width:100%;border-collapse:collapse;font-size:10px;}
+.htable th{text-align:left;color:var(--dim);padding:4px 6px;font-weight:600;letter-spacing:.06em;border-bottom:1px solid var(--border);}
+.htable td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.03);}
+.htable tr:hover td{background:rgba(255,255,255,.02);}
+.sta{color:var(--a-color);font-weight:600;}
+.stb{color:var(--b-color);font-weight:600;}
+
+/* ── TOGGLE ──────────────────────────────────── */
+.tog{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.tog-track{position:relative;width:32px;height:18px;background:rgba(255,255,255,.12);border-radius:9px;transition:background .2s;flex-shrink:0;}
+.tog-track.on{background:var(--green);}
+.tog-knob{position:absolute;top:2px;left:2px;width:14px;height:14px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.tog-track.on .tog-knob{transform:translateX(14px);}
+.tog-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);}
+
+/* ── TOAST ───────────────────────────────────── */
+.toast{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
+  background:var(--panel2);border:1px solid var(--border2);border-radius:var(--radius-lg);
+  padding:8px 16px;font-size:12px;color:var(--text);z-index:999;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1);pointer-events:none;white-space:nowrap;
+  box-shadow:0 4px 20px rgba(0,0,0,.4);
+}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── STAT CARDS ──────────────────────────────── */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-card{
+  background:var(--panel3);border-radius:var(--radius);
+  padding:8px 10px;text-align:center;
+}
+.stat-val{font-family:var(--mono);font-size:22px;font-weight:700;}
+.stat-lbl{font-size:8px;letter-spacing:.15em;color:var(--dim);margin-top:2px;}
+
+/* ── MUSIC ───────────────────────────────────── */
+#trackInfo{font-size:10px;color:var(--muted);margin:4px 0 6px;min-height:14px;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;}
+.vol-row{display:flex;align-items:center;gap:8px;}
+.vol-lbl{font-size:9px;color:var(--dim);white-space:nowrap;}
+input[type=range]{
+  width:100%;height:4px;accent-color:var(--gold);cursor:pointer;padding:0;
+}
+
+/* ── KEYBOARD HINTS ──────────────────────────── */
+.kbd{
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--panel3);border:1px solid var(--border2);border-radius:3px;
+  font-size:8px;font-family:var(--mono);color:var(--dim);
+  padding:0 4px;height:14px;margin-left:4px;
+}
+
+/* ── NEW Q FORM ──────────────────────────────── */
+#newQForm{display:none;}
+#newQForm.open{display:flex;flex-direction:column;gap:6px;}
+</style>
 </head>
 <body>
-<div class="app">
-  <div class="topbar">
-    <div class="tb-title"><span>DESAFÍO BÍBLICO</span><span class="badge-mod">MODERADOR</span></div>
-    <div class="tb-right"><div class="dot"></div><span style="font-size:11px;color:var(--dim);letter-spacing:2px;">ACTIVO</span></div>
+
+<!-- ═══ TOP BAR ═══════════════════════════════════════════════════ -->
+<div id="topbar">
+  <div class="tb-brand">
+    <span class="tb-brand-name">DESAFÍO BÍBLICO</span>
+    <span class="tb-brand-sub">MODERADOR</span>
   </div>
-  <div class="main">
 
-    <!-- LEFT -->
-    <div class="side">
-
-      <!-- TEAMS -->
-      <div class="sec">
-        <div class="stitle">Equipos</div>
-        <div class="team-row">
-          <div class="tlbl la">A</div>
-          <input type="text" id="nameA" value="EQUIPO A" placeholder="Nombre A" oninput="liveTeamName('a',this.value)">
-        </div>
-        <div class="team-row">
-          <div class="tlbl lb">B</div>
-          <input type="text" id="nameB" value="EQUIPO B" placeholder="Nombre B" oninput="liveTeamName('b',this.value)">
-        </div>
-        <div class="brow" style="margin-top:8px"><button class="btn gold btn-sm" onclick="applyTeams()">Aplicar nombres</button></div>
-        <div class="sep"></div>
-        <div class="slim">PUNTUACIÓN MANUAL</div>
-        <div style="display:flex;gap:14px;align-items:center;justify-content:space-between">
-          <div class="sc-row">
-            <button class="btn gry icon-btn btn-sm" onclick="chScore('a',-1)"></button>
-            <div class="snum sna" id="mScA">0</div>
-            <button class="btn grn icon-btn btn-sm" onclick="chScore('a',1)">+</button>
-          </div>
-          <div style="font-size:20px;color:var(--dim)"></div>
-          <div class="sc-row">
-            <button class="btn gry icon-btn btn-sm" onclick="chScore('b',-1)"></button>
-            <div class="snum snb" id="mScB">0</div>
-            <button class="btn blu icon-btn btn-sm" onclick="chScore('b',1)">+</button>
-          </div>
-        </div>
-        <div class="brow" style="margin-top:8px">
-          <button class="btn grn btn-sm" id="btnCA" onclick="awardPoint('a')">Correcto A</button>
-          <button class="btn blu btn-sm" id="btnCB" onclick="awardPoint('b')">Correcto B</button>
-        </div>
-        <div class="brow" style="margin-top:6px">
-          <button class="btn red btn-sm" id="btnWA" onclick="wrongAns('a')">Incorrecto A</button>
-          <button class="btn red btn-sm" id="btnWB" onclick="wrongAns('b')">Incorrecto B</button>
-        </div>
-        <!-- Pasar turno al equipo contrario -->
-        <div class="brow" style="margin-top:6px">
-          <button class="btn orn btn-sm" id="btnPassA" onclick="passTurn('a')" style="flex:1" title="A falla, pasa a B">A falla → B</button>
-          <button class="btn orn btn-sm" id="btnPassB" onclick="passTurn('b')" style="flex:1" title="B falla, pasa a A">B falla → A</button>
-        </div>
-        <!-- Estado del buzzer -->
-        <div id="buzzerTiming" style="margin-top:4px;font-size:9px;color:var(--dim);text-align:center;min-height:12px;letter-spacing:1px;"></div>
-        <div id="buzzerStatus" style="margin-top:8px;padding:7px 10px;border-radius:7px;font-size:10px;letter-spacing:1px;text-align:center;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--dim);">BUZZER LIBRE</div>
-      </div>
-
-      <!-- TIMER -->
-      <div class="sec">
-        <div class="stitle">Cronómetro</div>
-        <div class="mod-t" id="modTimer">30</div>
-        <div style="margin-top:8px">
-          <div class="slim">SEGUNDOS</div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button class="btn gry btn-sm" onclick="adjTimer(-10)">10</button>
-            <button class="btn gry btn-sm" onclick="adjTimer(-5)">5</button>
-            <div class="tv" id="timerVal">30</div>
-            <button class="btn gry btn-sm" onclick="adjTimer(5)">+5</button>
-            <button class="btn gry btn-sm" onclick="adjTimer(10)">+10</button>
-          </div>
-          <input type="number" id="timerInput" value="30" min="5" max="180" style="margin-top:6px;text-align:center" oninput="setTimerVal(this.value)">
-        </div>
-        <div class="brow" style="margin-top:10px">
-          <button class="btn gold" onclick="sendTimer()">Iniciar</button>
-          <button class="btn red" onclick="stopTimerMod()">Detener</button>
-        </div>
-      </div>
-
-      <!-- QUESTION CTRL -->
-      <div class="sec">
-        <div class="stitle">Control de Pregunta</div>
-        <div class="brow" style="margin-bottom:8px">
-          <button class="btn gold" onclick="showSelQ()">Mostrar</button>
-          <button class="btn orn" onclick="revealAns()">Revelar respuesta</button>
-        </div>
-        <div class="brow">
-          <button class="btn gry btn-sm" onclick="hideQ()">Ocultar</button>
-          <button class="btn gry btn-sm" onclick="clearActive()">Limpiar</button>
-        </div>
-      </div>
-
-      <!-- BUZZER -->
-      <div class="sec">
-        <div class="stitle">Buzzer Manual</div>
-        <div class="brow">
-          <button class="btn grn" id="bzA" onclick="manualBz('a')">Buzzer A</button>
-          <button class="btn blu" id="bzB" onclick="manualBz('b')">Buzzer B</button>
-        </div>
-      </div>
-
-      <!-- SUPABASE ROOM -->
-      <div class="sec">
-        <div class="stitle">Sala Remota</div>
-        <div style="margin-bottom:8px;font-size:11px;color:var(--dim)" id="roomStatus">Sin sala remota</div>
-        <div class="brow">
-          <button class="btn gold btn-sm" onclick="startSupabaseRoom()">Crear sala</button>
-          <button class="btn red btn-sm" onclick="stopSupabaseRoom()">Cerrar</button>
-        </div>
-        <div style="margin-top:6px;font-size:9px;color:rgba(255,255,255,.3);line-height:1.4">
-          Permite que gente desde otros dispositivos se conecte usando el código de sala.
-        </div>
-      </div>
-
-      <!-- ROUND -->
-      <div class="sec">
-        <div class="stitle">Ronda Activa</div>
-        <select id="roundSel" onchange="changeRound()">
-          <option value="1">Ronda 1  Rápido y Preciso</option>
-          <option value="2">Ronda 2  Completa el Versículo</option>
-          <option value="3">Ronda 3  ¿Quién soy?</option>
-          <option value="4">Ronda 4  Verdadero o Falso</option>
-          <option value="5">Ronda 5  Versus Final</option>
-        </select>
-      </div>
-
-      <!-- MUSIC -->
-      <div class="sec">
-        <div class="stitle">Música de Fondo</div>
-        <input type="text" id="musicUrl" placeholder="Link de YouTube (video o playlist)">
-        <!-- Estado de reproducción -->
-        <div id="musicStatus" style="margin-top:5px;font-size:10px;color:var(--dim);letter-spacing:1px;height:14px;"></div>
-        <!-- Controles principales -->
-        <div class="brow" style="margin-top:4px">
-          <button class="btn gold btn-sm" onclick="playMusic()" style="flex:1">Reproducir</button>
-          <button class="btn gry btn-sm" onclick="pauseMusic()" style="flex:1" id="btnPause">Pausa</button>
-          <button class="btn orn btn-sm" onclick="resumeMusic()" style="flex:1" id="btnResume" disabled>Reanudar</button>
-          <button class="btn red btn-sm" onclick="stopMusic()">Detener</button>
-        </div>
-        <!-- Playlist nav -->
-        <div class="brow" style="margin-top:6px">
-          <button class="btn gry btn-sm" onclick="prevTrack()" style="flex:1">Ant.</button>
-          <button class="btn gry btn-sm" onclick="nextTrack()" style="flex:1">Sig.</button>
-        </div>
-        <!-- Volumen -->
-        <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
-          <div class="slim" style="margin:0;white-space:nowrap">VOL</div>
-          <input type="range" id="volSlider" min="0" max="100" value="40" oninput="setVol(this.value)"
-            style="flex:1;accent-color:var(--gold);height:4px;cursor:pointer;">
-          <div style="font-size:11px;color:var(--gold-l);min-width:30px;text-align:right;" id="volDisplay">40%</div>
-        </div>
-        <!-- Track info -->
-        <div id="trackInfo" style="margin-top:5px;font-size:10px;color:var(--dim);font-family:'Crimson Text',serif;font-style:italic;min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
-        <!-- Cola de la playlist (scrolleable) -->
-        <div class="slim" style="margin-top:8px">EN COLA</div>
-        <div id="queueList" style="max-height:110px;overflow-y:auto;display:flex;flex-direction:column;gap:3px;">
-          <div style="font-size:10px;color:var(--dim);font-style:italic;font-family:'Crimson Text',serif;">
-            Carga una playlist para ver los temas
-          </div>
-        </div>
-        <div id="ytHolder" style="position:fixed;bottom:0;right:0;width:2px;height:2px;overflow:hidden;opacity:0.01;pointer-events:none;z-index:1;"></div>
-      </div>
-
-      <!-- SOUND TOGGLE -->
-      <div class="sec">
-        <div class="stitle">Sonidos</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="tog" onclick="toggleSound()" id="soundToggle">
-            <div class="tog-track on" id="sTrack"><div class="tog-knob"></div></div>
-            <div class="tog-lbl" id="sLbl">SONIDOS ACTIVADOS</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- PREGUNTAS SUPABASE (S01/S02) -->
-      <div class="sec">
-        <div class="stitle">Banco de Preguntas <span id="qSourceBadge" style="font-size:9px;letter-spacing:1px;color:var(--dim)">LOCAL</span></div>
-        <div style="display:flex;gap:6px;margin-bottom:8px">
-          <button class="btn gold btn-sm" onclick="loadQuestionsFromSupabase()" style="flex:1">Recargar desde Supabase</button>
-        </div>
-        <div class="sep"></div>
-        <div class="slim">AGREGAR PREGUNTA</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-          <textarea id="newQText" placeholder="Pregunta..." style="background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'Crimson Text',serif;font-size:13px;width:100%;outline:none;resize:vertical;min-height:58px;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
-          <textarea id="newQAnswer" placeholder="Respuesta..." style="background:var(--panel2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'Crimson Text',serif;font-size:13px;width:100%;outline:none;resize:vertical;min-height:40px;transition:border-color .2s" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
-          <div style="display:flex;gap:6px">
-            <select id="newQDiff" style="flex:1">
-              <option value="Fácil">Fácil</option>
-              <option value="Medio">Medio</option>
-              <option value="Difícil">Difícil</option>
-            </select>
-            <select id="newQRound" style="flex:1">
-              <option value="1">Ronda 1</option>
-              <option value="2">Ronda 2</option>
-              <option value="3">Ronda 3</option>
-              <option value="4">Ronda 4</option>
-              <option value="5">Ronda 5</option>
-            </select>
-          </div>
-          <input type="text" id="newQCat" placeholder="Categoría (opcional)">
-          <button class="btn grn btn-sm" onclick="saveNewQuestion()">Guardar en Supabase</button>
-        </div>
-      </div>
-
-      <!-- INICIAR JUEGO -->
-      <div class="sec" id="secStartGame">
-        <div class="stitle">Partida</div>
-        <button class="btn gold" onclick="startGame()" style="width:100%;font-size:14px;padding:12px;letter-spacing:2px;">▶ INICIAR JUEGO</button>
-        <div style="font-size:10px;color:var(--dim);text-align:center;margin-top:6px;letter-spacing:1px;">Activa la pantalla principal</div>
-      </div>
-
-      <!-- WINNER -->
-      <div class="sec">
-        <div class="stitle">Finalizar</div>
-        <div class="brow">
-          <button class="btn grn" id="winA" onclick="declWinner('a')" style="flex:1">Ganador A</button>
-          <button class="btn blu" id="winB" onclick="declWinner('b')" style="flex:1">Ganador B</button>
-        </div>
-        <div style="margin-top:6px">
-          <button class="btn red btn-sm" onclick="newGame()" style="width:100%">Nueva partida</button>
-        </div>
-      </div>
-    </div><!-- /LEFT -->
-
-    <!-- CENTER -->
-    <div class="cen">
-      <div class="qlist-hdr">
-        <div style="font-size:12px;color:var(--gold-l);letter-spacing:2px;font-weight:600;">BANCO DE PREGUNTAS</div>
-        <input type="text" style="width:160px;font-size:11px;padding:5px 10px" id="searchQ" placeholder="Buscar..." oninput="renderList()">
-        <div class="stabs">
-          <button class="tab active" onclick="setFilter('all',this)">Todas</button>
-          <button class="tab" onclick="setFilter('facil',this)">Fácil</button>
-          <button class="tab" onclick="setFilter('medio',this)">Medio</button>
-          <button class="tab" onclick="setFilter('dificil',this)">Difícil</button>
-          <button class="tab" onclick="setFilter('pending',this)">Pendientes</button>
-          <button class="tab" onclick="setFilter('answered',this)">Respondidas</button>
-        </div>
-        <span style="margin-left:auto;font-size:11px;color:var(--dim)" id="qCount"></span>
-      </div>
-      <div class="qlist" id="qList"></div>
+  <div class="tb-live">
+    <!-- Score A -->
+    <div class="tb-score-block">
+      <span class="tb-team-label" id="tbNameA" style="color:var(--a-color)">EQUIPO A</span>
+      <span class="tb-score sa" id="mScA">0</span>
     </div>
 
-    <!-- RIGHT -->
-    <div class="side">
-      <div class="sec">
-        <div class="stitle">Pregunta Seleccionada</div>
-        <div class="cq-box" id="selQBox"><div style="color:var(--dim);font-family:'Crimson Text',serif;font-style:italic;font-size:12px;text-align:center">Selecciona una pregunta</div></div>
+    <!-- Timer -->
+    <div class="tb-timer-block">
+      <span class="tb-timer" id="modTimer">30</span>
+      <span class="tb-timer-label">TIEMPO</span>
+    </div>
+
+    <!-- Score B -->
+    <div class="tb-score-block">
+      <span class="tb-score sb" id="mScB">0</span>
+      <span class="tb-team-label" id="tbNameB" style="color:var(--b-color)">EQUIPO B</span>
+    </div>
+  </div>
+
+  <div class="tb-status">
+    <div class="tb-buzzer-ind">
+      <div class="tb-dot libre" id="tbDot"></div>
+      <span id="tbBzTxt">Buzzer libre</span>
+    </div>
+    <div style="font-size:9px;color:var(--dim)" id="tbRoom">Sin sala</div>
+  </div>
+
+  <div class="tb-actions">
+    <button class="btn btn-ghost btn-sm" onclick="startGame()" id="btnStart" title="Iniciar juego en display">▶ Iniciar</button>
+    <button class="btn btn-ghost btn-sm" onclick="newGame()" title="Nueva partida">↺ Reset</button>
+  </div>
+</div>
+
+<!-- ═══ MAIN LAYOUT ════════════════════════════════════════════════ -->
+<div id="layout">
+
+  <!-- ─── LEFT: BANCO DE PREGUNTAS ──────────────────────────────── -->
+  <div id="panelLeft" class="panel">
+    <div class="ph">
+      <span class="ph-title">BANCO</span>
+      <span id="qSourceBadge" class="ph-badge" style="background:rgba(255,255,255,.05);color:var(--dim)">LOCAL</span>
+      <span id="qCount" style="font-size:9px;color:var(--dim)"></span>
+      <button class="btn btn-xs btn-ghost" onclick="loadQuestionsFromSupabase()" title="Recargar desde Supabase">↻</button>
+      <button class="btn btn-xs btn-ghost" onclick="toggleNewQForm()" title="Agregar pregunta">+</button>
+    </div>
+
+    <!-- Formulario nueva pregunta (colapsable) -->
+    <div id="newQForm" style="padding:8px 10px;border-bottom:1px solid var(--border);flex-direction:column;gap:5px;">
+      <textarea id="newQText" placeholder="Pregunta..."></textarea>
+      <textarea id="newQAnswer" placeholder="Respuesta..." style="min-height:36px;"></textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+        <select id="newQDiff">
+          <option value="Fácil">Fácil</option>
+          <option value="Medio">Medio</option>
+          <option value="Difícil">Difícil</option>
+          <option value="Prueba">Prueba</option>
+        </select>
+        <select id="newQRound">
+          <option value="1">Ronda 1</option>
+          <option value="2">Ronda 2</option>
+          <option value="3">Ronda 3</option>
+          <option value="4">Ronda 4</option>
+          <option value="5">Ronda 5</option>
+        </select>
       </div>
+      <input type="text" id="newQCat" placeholder="Categoría (opcional)">
+      <button class="btn btn-green btn-sm btn-full" onclick="saveNewQuestion()">Guardar en Supabase</button>
+    </div>
+
+    <div class="qlist-toolbar">
+      <input class="search-inp" id="searchQ" type="text" placeholder="Buscar pregunta..." oninput="renderList()">
+    </div>
+    <div class="filter-bar">
+      <button class="ftab active" onclick="setFilter('all',this)">Todas</button>
+      <button class="ftab" onclick="setFilter('pending',this)">Pendientes</button>
+      <button class="ftab" onclick="setFilter('facil',this)">Fácil</button>
+      <button class="ftab" onclick="setFilter('medio',this)">Medio</button>
+      <button class="ftab" onclick="setFilter('dificil',this)">Difícil</button>
+      <button class="ftab fprueba" onclick="setFilter('prueba',this)">Prueba</button>
+      <button class="ftab" onclick="setFilter('answered',this)">Respondidas</button>
+    </div>
+    <div id="qList" style="overflow-y:auto;flex:1;"></div>
+  </div>
+
+  <div class="divider" id="div1"></div>
+
+  <!-- ─── CENTER: CONTROLES PRINCIPALES ─────────────────────────── -->
+  <div id="panelCenter" class="panel">
+    <div class="ph">
+      <span class="ph-title">CONTROL DE PARTIDA</span>
+      <select id="roundSel" onchange="changeRound()" style="width:auto;font-size:9px;padding:3px 8px;height:22px;">
+        <option value="1">Ronda 1 · Rápido y Preciso</option>
+        <option value="2">Ronda 2 · Completa el Versículo</option>
+        <option value="3">Ronda 3 · ¿Quién soy?</option>
+        <option value="4">Ronda 4 · Verdadero o Falso</option>
+        <option value="5">Ronda 5 · Versus Final</option>
+      </select>
+    </div>
+
+    <div class="scroll">
+
+      <!-- Pregunta seleccionada -->
       <div class="sec">
-        <div class="stitle">Historial</div>
+        <div class="sec-title">Pregunta seleccionada</div>
+        <div id="selQBox"><div style="color:var(--dim);font-style:italic;font-size:11px;text-align:center;padding:16px 0;">Selecciona una pregunta del banco</div></div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-gold" onclick="showSelQ()">Mostrar <span class="kbd">M</span></button>
+          <button class="btn btn-orange" onclick="revealAns()">Revelar <span class="kbd">R</span></button>
+          <button class="btn btn-ghost" onclick="hideQ()">Ocultar <span class="kbd">H</span></button>
+          <button class="btn btn-ghost" onclick="clearActive()">Limpiar buzzer</button>
+        </div>
+        <div class="btn-grid btn-grid-2" style="margin-top:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="skipQ()">Saltar →</button>
+          <button class="btn btn-ghost btn-sm" onclick="revealAndNext()">Revelar + Sig.</button>
+        </div>
+      </div>
+
+      <!-- Veredicto -->
+      <div class="sec">
+        <div class="sec-title">Veredicto</div>
+        <div class="btn-grid btn-grid-2" style="margin-bottom:6px;">
+          <button class="btn btn-a" id="btnCA" onclick="awardPoint('a')">✓ Correcto A</button>
+          <button class="btn btn-b" id="btnCB" onclick="awardPoint('b')">✓ Correcto B</button>
+        </div>
+        <div class="btn-grid btn-grid-2" style="margin-bottom:6px;">
+          <button class="btn btn-red" id="btnWA" onclick="wrongAns('a')">✗ Incorrecto A</button>
+          <button class="btn btn-red" id="btnWB" onclick="wrongAns('b')">✗ Incorrecto B</button>
+        </div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-orange btn-sm" id="btnPassA" onclick="passTurn('a')" title="A falla → pasa a B">A falla → B</button>
+          <button class="btn btn-orange btn-sm" id="btnPassB" onclick="passTurn('b')" title="B falla → pasa a A">B falla → A</button>
+        </div>
+      </div>
+
+      <!-- Cronómetro -->
+      <div class="sec">
+        <div class="sec-title">Cronómetro</div>
+        <div class="timer-ctrl">
+          <div class="adj-group">
+            <button class="btn btn-ghost btn-sm" onclick="adjTimer(-10)">−10</button>
+            <button class="btn btn-ghost btn-sm" onclick="adjTimer(-5)">−5</button>
+          </div>
+          <input type="number" id="timerInput" value="30" min="5" max="180"
+            class="timer-val" oninput="setTimerVal(this.value)">
+          <div class="adj-group">
+            <button class="btn btn-ghost btn-sm" onclick="adjTimer(5)">+5</button>
+            <button class="btn btn-ghost btn-sm" onclick="adjTimer(10)">+10</button>
+          </div>
+        </div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-gold" onclick="sendTimer()">▶ Iniciar <span class="kbd">K</span></button>
+          <button class="btn btn-red" onclick="stopTimerMod()">■ Detener</button>
+        </div>
+      </div>
+
+      <!-- Puntuación manual -->
+      <div class="sec">
+        <div class="sec-title">Puntuación</div>
+        <div class="score-ctrl">
+          <div class="score-team">
+            <span class="score-name a" id="scNameA">EQUIPO A</span>
+            <div class="score-row">
+              <button class="btn btn-ghost btn-xs" onclick="chScore('a',-1)">−</button>
+              <span class="score-num a" id="scA">0</span>
+              <button class="btn btn-xs btn-a" onclick="chScore('a',1)">+</button>
+            </div>
+          </div>
+          <div class="score-sep">vs</div>
+          <div class="score-team">
+            <span class="score-name b" id="scNameB">EQUIPO B</span>
+            <div class="score-row">
+              <button class="btn btn-ghost btn-xs" onclick="chScore('b',-1)">−</button>
+              <span class="score-num b" id="scB">0</span>
+              <button class="btn btn-xs btn-b" onclick="chScore('b',1)">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finalizar -->
+      <div class="sec">
+        <div class="sec-title">Finalizar</div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-a" id="winA" onclick="declWinner('a')">Ganador A</button>
+          <button class="btn btn-b" id="winB" onclick="declWinner('b')">Ganador B</button>
+        </div>
+      </div>
+
+      <!-- Buzzer manual -->
+      <div class="sec">
+        <div class="sec-title">Buzzer manual</div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-a btn-sm" id="bzA" onclick="manualBz('a')">Buzzer A</button>
+          <button class="btn btn-b btn-sm" id="bzB" onclick="manualBz('b')">Buzzer B</button>
+        </div>
+      </div>
+
+    </div><!-- /scroll -->
+  </div><!-- /panelCenter -->
+
+  <div class="divider" id="div2"></div>
+
+  <!-- ─── RIGHT: ESTADO, EQUIPOS, CONEXIÓN ──────────────────────── -->
+  <div id="panelRight" class="panel">
+    <div class="ph"><span class="ph-title">ESTADO Y CONFIGURACIÓN</span></div>
+    <div class="scroll">
+
+      <!-- Buzzer status -->
+      <div class="sec">
+        <div class="sec-title">Estado del buzzer</div>
+        <div id="bzStatus">
+          <div id="bzStatusDot" class="tb-dot libre"></div>
+          <span id="bzStatusTxt">Libre</span>
+          <span id="bzTimingTxt"></span>
+        </div>
+      </div>
+
+      <!-- Equipos -->
+      <div class="sec">
+        <div class="sec-title">Equipos</div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--a-color);flex-shrink:0;"></div>
+          <input type="text" id="nameA" value="EQUIPO A" placeholder="Nombre A" oninput="liveTeamName('a',this.value)" style="flex:1;">
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--b-color);flex-shrink:0;"></div>
+          <input type="text" id="nameB" value="EQUIPO B" placeholder="Nombre B" oninput="liveTeamName('b',this.value)" style="flex:1;">
+        </div>
+        <button class="btn btn-gold btn-sm btn-full" onclick="applyTeams()">Aplicar nombres</button>
+      </div>
+
+      <!-- Sala remota -->
+      <div class="sec">
+        <div class="sec-title">Sala remota</div>
+        <div id="roomStatus" style="font-size:10px;color:var(--dim);margin-bottom:6px;">Sin sala activa</div>
+        <div class="btn-grid btn-grid-2">
+          <button class="btn btn-gold btn-sm" onclick="startSupabaseRoom()">Crear sala</button>
+          <button class="btn btn-red btn-sm" onclick="stopSupabaseRoom()">Cerrar</button>
+        </div>
+      </div>
+
+      <!-- Sonidos -->
+      <div class="sec">
+        <div class="sec-title">Sonidos</div>
+        <div class="tog" onclick="toggleSound()" id="soundToggle">
+          <div class="tog-track on" id="sTrack"><div class="tog-knob"></div></div>
+          <span class="tog-lbl" id="sLbl">ACTIVADOS</span>
+        </div>
+      </div>
+
+      <!-- Música -->
+      <div class="sec">
+        <div class="sec-title">Música</div>
+        <input type="text" id="musicUrl" placeholder="Link YouTube" style="margin-bottom:6px;">
+        <div id="musicStatus" style="font-size:10px;color:var(--dim);margin-bottom:4px;min-height:14px;"></div>
+        <div id="trackInfo"></div>
+        <div class="btn-grid btn-grid-4" style="margin-bottom:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="prevTrack()">⏮</button>
+          <button class="btn btn-gold btn-sm" onclick="playMusic()">▶</button>
+          <button class="btn btn-ghost btn-sm" onclick="pauseMusic()" id="btnPause">⏸</button>
+          <button class="btn btn-ghost btn-sm" onclick="nextTrack()">⏭</button>
+        </div>
+        <div class="btn-grid btn-grid-2" style="margin-bottom:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="resumeMusic()" id="btnResume" disabled>Reanudar</button>
+          <button class="btn btn-ghost btn-sm" onclick="fadeMusic()">Fade</button>
+        </div>
+        <div class="vol-row">
+          <span class="vol-lbl">Vol</span>
+          <input type="range" id="volSlider" min="0" max="100" value="40" oninput="setVol(this.value)">
+          <span class="vol-lbl" id="volDisplay">40%</span>
+        </div>
+        <div id="queueList" style="margin-top:6px;display:flex;flex-direction:column;gap:3px;max-height:120px;overflow-y:auto;">
+          <div style="font-size:10px;color:var(--dim);font-style:italic;">Sin reproducción activa</div>
+        </div>
+        <button class="btn btn-red btn-sm btn-full" onclick="stopMusic()" style="margin-top:6px;">Detener música</button>
+      </div>
+
+      <!-- Stats -->
+      <div class="sec">
+        <div class="sec-title">Estadísticas</div>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="statA" style="color:var(--a-color)">0</div>
+            <div class="stat-lbl" id="statNA">EQUIPO A</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statB" style="color:var(--b-color)">0</div>
+            <div class="stat-lbl" id="statNB">EQUIPO B</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stTotal">0</div>
+            <div class="stat-lbl">RESPONDIDAS</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="stPend">100</div>
+            <div class="stat-lbl">PENDIENTES</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial -->
+      <div class="sec">
+        <div class="sec-title">Historial reciente</div>
         <table class="htable">
           <thead><tr><th>#</th><th>Pregunta</th><th>Equipo</th><th></th></tr></thead>
           <tbody id="histBody"></tbody>
         </table>
       </div>
-      <div class="sec">
-        <div class="stitle">Stats</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-          <div style="background:var(--panel2);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(46,204,113,.18)">
-            <div style="font-size:24px;font-family:'Cinzel Decorative',serif;color:var(--green)" id="statA">0</div>
-            <div style="font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:2px" id="statNA">EQUIPO A</div>
-          </div>
-          <div style="background:var(--panel2);border-radius:8px;padding:10px;text-align:center;border:1px solid rgba(52,152,219,.18)">
-            <div style="font-size:24px;font-family:'Cinzel Decorative',serif;color:var(--blue)" id="statB">0</div>
-            <div style="font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:2px" id="statNB">EQUIPO B</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;font-size:11px;color:var(--dim);display:flex;justify-content:space-between">
-          <span>Respondidas: <span style="color:var(--text)" id="stTotal">0</span></span>
-          <span>Pendientes: <span style="color:var(--text)" id="stPend">100</span></span>
-        </div>
-      </div>
-    </div>
 
-  </div><!-- /main -->
-</div>
+    </div><!-- /scroll -->
+  </div><!-- /panelRight -->
+
+</div><!-- /layout -->
+
 <div class="toast" id="toast"></div>
+<div id="ytHolder" style="position:fixed;bottom:0;right:0;width:2px;height:2px;overflow:hidden;opacity:.01;pointer-events:none;z-index:1;"></div>
+
 
 <script>
+function toggleNewQForm(){const f=document.getElementById('newQForm');f.classList.toggle('open');}
+
 /*  SUPABASE INTEGRATION  */
 const SUPABASE_URL = 'https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
@@ -490,7 +753,7 @@ function handleBuzzerHit(msg, supabaseTs){
   const _d=msg.clientTs ? Date.now()-msg.clientTs : null;
   const delayStr=delay!==null ? ` (${delay}ms red)` : '';
   toast(nm+' activó el buzzer'+delayStr);
-  const timingEl=document.getElementById('buzzerTiming');
+  const timingEl=document.getElementById('bzTimingTxt');
   if(timingEl&&delay!==null) timingEl.textContent='Latencia: '+delay+'ms';
   // Store for potential second-buzzer comparison
   ST.lastBuzzerTs=msg.clientTs||Date.now();
@@ -509,7 +772,8 @@ function activateRoom(code){
   startRealtimeMod(code);
   saveRoom(code);
   document.getElementById('roomStatus').textContent='Sala: '+code;
-  document.getElementById('roomStatus').style.color='#2ECC71';
+  document.getElementById('roomStatus').style.color='var(--green)';
+  const tbr=document.getElementById('tbRoom');if(tbr){tbr.textContent='● '+code;tbr.style.color='var(--green)';}
   bcast({type:'START_REMOTE',room:code});
   setTimeout(pushStateSnapshot, 300);
   toast('Sala activa: '+code);
@@ -520,8 +784,9 @@ function stopSupabaseRoom(){
   if(realtimeChannelMod){try{supabaseRtMod.removeChannel(realtimeChannelMod);}catch(e){}realtimeChannelMod=null;}
   roomCode='';
   clearSavedRoom();
-  document.getElementById('roomStatus').textContent='Sin sala remota';
-  document.getElementById('roomStatus').style.color='rgba(255,255,255,.45)';
+  document.getElementById('roomStatus').textContent='Sin sala activa';
+  document.getElementById('roomStatus').style.color='var(--dim)';
+  const tbr2=document.getElementById('tbRoom');if(tbr2){tbr2.textContent='Sin sala';tbr2.style.color='var(--dim)';}
   bcast({type:'STOP_REMOTE'});
   toast('Sala remota desconectada');
 }
@@ -655,7 +920,7 @@ const _sv=loadSavedState();
 const ST={
   scoreA:_sv.scoreA||0, scoreB:_sv.scoreB||0,
   nameA:_sv.nameA||'EQUIPO A', nameB:_sv.nameB||'EQUIPO B',
-  selQ:null, answered:_sv.answered||{}, history:_sv.history||[],
+  selQ:null, excluded:new Set(), answered:_sv.answered||{}, history:_sv.history||[],
   timerSec:_sv.timerSec||30, timerLeft:_sv.timerLeft||_sv.timerSec||30,
   timerInt:null, sounds:true,
   activeBuzzerTeam:null,
@@ -682,8 +947,8 @@ ch.onmessage=e=>{
 /*  TEAM NAMES  */
 function liveTeamName(t,v){
   const upper=v.toUpperCase();
-  if(t==='a'){ST.nameA=upper;document.getElementById('btnCA').textContent="Correcto "+upper;document.getElementById('btnWA').textContent="Incorrecto "+upper;document.getElementById('bzA').textContent="Buzzer "+upper;document.getElementById('winA').textContent=upper;document.getElementById('statNA').textContent=upper;}
-  else{ST.nameB=upper;document.getElementById('btnCB').textContent="Correcto "+upper;document.getElementById('btnWB').textContent="Incorrecto "+upper;document.getElementById('bzB').textContent="Buzzer "+upper;document.getElementById('winB').textContent=upper;document.getElementById('statNB').textContent=upper;}
+  if(t==='a'){ST.nameA=upper;document.getElementById('btnCA').textContent="Correcto "+upper;document.getElementById('btnWA').textContent="Incorrecto "+upper;document.getElementById('bzA').textContent="Buzzer "+upper;document.getElementById('winA').textContent=upper;document.getElementById('statNA').textContent=upper;const snA=document.getElementById('scNameA');if(snA)snA.textContent=upper;const tbA=document.getElementById('tbNameA');if(tbA)tbA.textContent=upper;}
+  else{ST.nameB=upper;document.getElementById('btnCB').textContent="Correcto "+upper;document.getElementById('btnWB').textContent="Incorrecto "+upper;document.getElementById('bzB').textContent="Buzzer "+upper;document.getElementById('winB').textContent=upper;document.getElementById('statNB').textContent=upper;const snB=document.getElementById('scNameB');if(snB)snB.textContent=upper;const tbB=document.getElementById('tbNameB');if(tbB)tbB.textContent=upper;}
 }
 function applyTeams(){
   ST.nameA=document.getElementById('nameA').value.toUpperCase()||'EQUIPO A';
@@ -704,10 +969,10 @@ function chScore(t,d){
   saveState();
 }
 function updScoreDisplay(){
-  document.getElementById('mScA').textContent=ST.scoreA;
-  document.getElementById('mScB').textContent=ST.scoreB;
-  document.getElementById('statA').textContent=ST.scoreA;
-  document.getElementById('statB').textContent=ST.scoreB;
+  ['mScA','scA'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=ST.scoreA;});
+  ['mScB','scB'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=ST.scoreB;});
+  const sa=document.getElementById('statA');if(sa)sa.textContent=ST.scoreA;
+  const sb=document.getElementById('statB');if(sb)sb.textContent=ST.scoreB;
 }
 function awardPoint(t){
   chScore(t,1);
@@ -720,24 +985,15 @@ function awardPoint(t){
   toast('Punto a '+(t==='a'?ST.nameA:ST.nameB));
 }
 function updBuzzerStatus(state, teamName){
-  const el=document.getElementById('buzzerStatus');
-  if(!el) return;
-  if(state==='respondiendo'){
-    el.textContent=(teamName||'Equipo')+' respondiendo...';
-    el.style.background='rgba(251,146,60,0.15)';
-    el.style.borderColor='rgba(251,146,60,0.5)';
-    el.style.color='var(--orange)';
-  } else if(state==='bloqueado'){
-    el.textContent='Buzzer bloqueado — decidir veredicto';
-    el.style.background='rgba(248,113,113,0.12)';
-    el.style.borderColor='rgba(248,113,113,0.4)';
-    el.style.color='var(--red)';
-  } else {
-    el.textContent='Buzzer libre';
-    el.style.background='rgba(255,255,255,.04)';
-    el.style.borderColor='var(--border2)';
-    el.style.color='var(--dim)';
-  }
+  const dot=document.getElementById('bzStatusDot');
+  const txt=document.getElementById('bzStatusTxt');
+  const tdot=document.getElementById('tbDot');
+  const ttxt=document.getElementById('tbBzTxt');
+  const clsDot=state==='respondiendo'?'tb-dot respondiendo':state==='bloqueado'?'tb-dot bloqueado':'tb-dot libre';
+  const label=state==='respondiendo'?(teamName||'Equipo')+' respondiendo...':state==='bloqueado'?'Buzzer bloqueado':'Libre';
+  const col=state==='respondiendo'?'var(--orange)':state==='bloqueado'?'var(--red)':'var(--dim)';
+  if(dot){dot.className=clsDot;} if(txt){txt.textContent=label;txt.style.color=col;}
+  if(tdot){tdot.className=clsDot;} if(ttxt){ttxt.textContent=state==='libre'||state===undefined?'Buzzer libre':label;}
 }
 
 function wrongAns(t){
@@ -786,8 +1042,8 @@ function testWrongB(){
 }
 
 /*  TIMER  */
-function adjTimer(d){ST.timerSec=Math.max(5,Math.min(180,ST.timerSec+d));document.getElementById('timerVal').textContent=ST.timerSec;document.getElementById('timerInput').value=ST.timerSec;}
-function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;document.getElementById('timerVal').textContent=n;}}
+function adjTimer(d){ST.timerSec=Math.max(5,Math.min(180,ST.timerSec+d));document.getElementById('timerInput').value=ST.timerSec;}
+function setTimerVal(v){const n=parseInt(v);if(n>=5&&n<=180){ST.timerSec=n;document.getElementById('timerInput').value=n;}}
 function sendTimer(){
   const s=parseInt(document.getElementById('timerInput').value)||ST.timerSec;
   ST.timerLeft=s;
@@ -814,6 +1070,8 @@ function updModTimer(){const e=document.getElementById('modTimer');e.textContent
 
 /*  QUESTION CTRL  */
 function showSelQ(){
+  if(ST.selQ&&ST.excluded.has(ST.selQ.id)){toast("Pregunta excluida — reincluila primero");return;}
+  if(ST.selQ&&ST.selQ.d==='Prueba'){toast("Pregunta de Prueba — no se puede mostrar en juego");return;}
   if(!ST.selQ){toast('Selecciona una pregunta');return;}
   const q=ST.selQ;
   ST.questionActive=true;
@@ -829,6 +1087,39 @@ function showSelQ(){
   toast("Pregunta #"+q.id+" en pantalla");
 }
 function revealAns(){ST.answerRevealed=true;bcast({type:'SHOW_ANSWER'});pushStateSnapshot();toast('Respuesta revelada');}
+function skipQ(){
+  // Marca la pregunta actual como usada y selecciona la siguiente sin mostrarla
+  if(ST.selQ){
+    const cur=ST.selQ;
+    cur.used=true;
+    if(ST.currentQuestionId===cur.id){
+      // si está en pantalla, ocultarla primero
+      bcast({type:'HIDE_QUESTION'});ST.questionActive=false;ST.answerRevealed=false;
+      pushStateSnapshot();
+    }
+    // Seleccionar la siguiente no usada de la misma ronda
+    const idx=QQ.findIndex(q=>q.id===cur.id);
+    const next=QQ.slice(idx+1).find(q=>!q.used&&q.r===cur.r&&q.d!=='Prueba'&&!ST.excluded.has(q.id));
+    if(next){selQ(next.id);toast('Saltada → '+next.id);}
+    else{toast('No hay más preguntas disponibles');}
+    renderList();updStats();
+  }
+}
+function revealAndNext(){
+  // Revelar respuesta actual y quedar listo para mostrar siguiente
+  if(ST.questionActive) revealAns();
+  setTimeout(()=>{
+    hideQ();
+    // Seleccionar siguiente
+    if(ST.selQ){
+      const cur=ST.selQ;
+      const idx=QQ.findIndex(q=>q.id===cur.id);
+      const next=QQ.slice(idx+1).find(q=>!q.used&&q.r===cur.r&&q.d!=='Prueba'&&!ST.excluded.has(q.id));
+      if(next) selQ(next.id);
+    }
+  },1800);
+}
+
 function hideQ(){
   ST.questionActive=false;ST.activeBuzzerTeam=null;ST.answerRevealed=false;
   updBuzzerStatus('libre');
@@ -1069,8 +1360,7 @@ function toggleSound(){
 function startGame(){
   bcast({type:'START_GAME'});
   // Ocultar el botón después de iniciarlo — ya no es necesario
-  document.getElementById('secStartGame').style.opacity='.4';
-  document.getElementById('secStartGame').style.pointerEvents='none';
+  const bs=document.getElementById('btnStart');if(bs){bs.disabled=true;bs.style.opacity='.4';}
   toast('¡Juego iniciado!');
   // Reactivar si se hace nueva partida
 }
@@ -1095,8 +1385,7 @@ function newGame(){
   pushStateSnapshot();
   resetAllQuestionsUsed(); // S03
   // Reactivar botón de inicio
-  const sg=document.getElementById('secStartGame');
-  if(sg){sg.style.opacity='';sg.style.pointerEvents='';}
+  const sg2=document.getElementById('btnStart');if(sg2){sg2.disabled=false;sg2.style.opacity='';}
   toast('Nuevo juego iniciado');
 }
 
@@ -1133,6 +1422,13 @@ async function _saveGameHistory(winnerTeam, winnerName){
 /*  LIST  */
 let curFilter='all';
 function setFilter(f,el){curFilter=f;document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');renderList();}
+
+function toggleExclude(id){
+  if(ST.excluded.has(id)) ST.excluded.delete(id);
+  else ST.excluded.add(id);
+  renderList();
+  toast(ST.excluded.has(id)?'Pregunta excluida del juego':'Pregunta reincluida');
+}
 function renderList(){
   const s=document.getElementById('searchQ').value.toLowerCase();
   const list=QQ.filter(q=>{
@@ -1142,7 +1438,8 @@ function renderList(){
     if(curFilter==='facil') return ms&&(d.includes('fácil')||d==='facil');
     if(curFilter==='medio') return ms&&(d.includes('medio')||d.includes('media'));
     if(curFilter==='dificil') return ms&&(d.includes('difícil')||d.includes('dificil'));
-    if(curFilter==='pending') return ms&&!isAns;
+    if(curFilter==='prueba') return ms&&d==='Prueba';
+    if(curFilter==='pending') return ms&&!isAns&&q.d!=='Prueba'&&!ST.excluded.has(q.id);
     if(curFilter==='answered') return ms&&isAns;
     return ms;
   });
@@ -1154,8 +1451,10 @@ function renderList(){
     const ac=ans?(ans.correct?(ans.team==='a'?'ans-a':'ans-b'):'ans-w'):'';
     const badge=ans?(ans.correct?'':''):'';
     const isSel=ST.selQ&&ST.selQ.id===q.id;
-    return `<div class="qcard ${ac} ${isSel?'sel':''}" onclick="selQ(${q.id})">
-      <div class="qcard-hdr"><span class="qnum">#${q.id}</span><span class="pip ${pc}"></span><span style="font-size:9px;color:var(--dim)">${q.d}</span>${badge?`<span class="abadge">${badge}</span>`:''}</div>
+    const isPrueba=q.d==='Prueba';
+    const isExcluded=ST.excluded&&ST.excluded.has(q.id);
+    return `<div class="qcard ${ac} ${isSel?'sel':''} ${isExcluded?'excluded':''}" onclick="selQ(${q.id})">
+      <div class="qcard-hdr"><span class="qnum">#${q.id}</span><span class="pip ${pc}"></span><span style="font-size:9px;color:var(--dim)">${q.d}</span>${badge?`<span class="abadge">${badge}</span>`:''}<button onclick="event.stopPropagation();toggleExclude(${q.id})" style="margin-left:auto;font-size:9px;background:${isExcluded?'rgba(168,85,247,.2)':'rgba(255,255,255,.05)'};border:1px solid ${isExcluded?'#A855F7':'var(--border2)'};border-radius:3px;padding:1px 6px;color:${isExcluded?'#A855F7':'var(--dim)'};cursor:pointer;" title="${isExcluded?'Reincluir':'Excluir'} pregunta">${isExcluded?'↺ Incl':'✕ Excl'}</button></div>
       <div class="qctext">${q.q}</div>
       <div class="qround">${q.r} · ${q.rn}</div>
     </div>`;
@@ -1279,7 +1578,7 @@ async function saveNewQuestion(){
   liveTeamName('b',ST.nameB);
   updScoreDisplay();
   document.getElementById('timerInput').value=ST.timerSec;
-  document.getElementById('timerVal').textContent=ST.timerSec;
+  
   document.getElementById('modTimer').textContent=ST.timerSec;
   renderList();updStats();renderHist();
   updBuzzerStatus('libre');
@@ -1291,6 +1590,37 @@ async function saveNewQuestion(){
   // S01: intentar cargar preguntas desde Supabase
   loadQuestionsFromSupabase();
 })();
+
+document.addEventListener('keydown',e=>{
+  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
+  if(e.key==='m'||e.key==='M') showSelQ();
+  if(e.key==='r'||e.key==='R') revealAns();
+  if(e.key==='h'||e.key==='H') hideQ();
+  if(e.key==='k'||e.key==='K') sendTimer();
+});
+(function(){
+  function makeResize(divId, panelId, fromRight){
+    const div=document.getElementById(divId);
+    const panel=document.getElementById(panelId);
+    if(!div||!panel) return;
+    div.addEventListener('mousedown',e=>{
+      const sx=e.clientX, sw=panel.offsetWidth;
+      div.classList.add('dragging');
+      function mv(e2){
+        const dx=fromRight?(sx-e2.clientX):(e2.clientX-sx);
+        panel.style.width=Math.max(180,Math.min(520,sw+dx))+'px';
+        panel.style.flex='none';
+      }
+      function up(){div.classList.remove('dragging');document.removeEventListener('mousemove',mv);document.removeEventListener('mouseup',up);}
+      document.addEventListener('mousemove',mv);
+      document.addEventListener('mouseup',up);
+      e.preventDefault();
+    });
+  }
+  makeResize('div1','panelLeft',false);
+  makeResize('div2','panelRight',true);
+})();
+
 </script>
 </body>
 </html>

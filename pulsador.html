@@ -12,9 +12,9 @@
   --white:#F6F4FF; --muted:rgba(246,244,255,0.45); --dim:rgba(246,244,255,0.22);
   --gold:#F5C842; --gold-glow:rgba(245,200,66,0.3);
   --violet:#7C6FFF; --violet-l:#9D93FF; --violet-glow:rgba(124,111,255,0.25);
-  --green:#34D399; --green-glow:rgba(52,211,153,0.3); --green-border:rgba(52,211,153,0.4);
-  --blue:#60A5FA; --blue-glow:rgba(96,165,250,0.3); --blue-border:rgba(96,165,250,0.4);
-  --red:#F87171;
+  --a-color:#0EA5FF; --a-glow:rgba(14,165,255,0.35); --a-border:rgba(14,165,255,0.45);
+  --b-color:#FF4444; --b-glow:rgba(255,68,68,0.35);  --b-border:rgba(255,68,68,0.45);
+  --green:#34D399; --blue:#0EA5FF; --red:#FF4444;
 }
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;touch-action:none;background:var(--ink);}
@@ -76,8 +76,8 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
   background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);
   border-radius:10px;padding:12px;text-align:center;
 }
-.room-active-code{font-size:18px;font-weight:800;color:var(--green);letter-spacing:0.1em;}
-.room-active-label{font-size:10px;color:rgba(52,211,153,0.7);margin-top:3px;letter-spacing:0.15em;}
+.room-active-code{font-size:18px;font-weight:800;color:var(--gold);letter-spacing:0.1em;}
+.room-active-label{font-size:10px;color:rgba(212,168,67,0.7);margin-top:3px;letter-spacing:0.15em;}
 
 /* ── TEAM PICK ── */
 .team-area{
@@ -93,12 +93,12 @@ body{font-family:'Syne',sans-serif;color:var(--white);display:flex;flex-directio
 .team-btn:active{transform:scale(.97);}
 .team-btn-name{font-size:clamp(12px,3vw,16px);font-weight:800;letter-spacing:0.06em;margin-bottom:4px;}
 .team-btn-action{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:clamp(11px,2.5vw,14px);color:var(--muted);}
-.team-btn.ta-sel{background:rgba(52,211,153,0.1);border-color:var(--green-border);}
-.team-btn.ta-sel .team-btn-name{color:var(--green);}
-.team-btn.tb-sel{background:rgba(96,165,250,0.1);border-color:var(--blue-border);}
-.team-btn.tb-sel .team-btn-name{color:var(--blue);}
-.team-btn-label-a{color:var(--green);}
-.team-btn-label-b{color:var(--blue);}
+.team-btn.ta-sel{background:rgba(14,165,255,0.1);border-color:var(--a-border);}
+.team-btn.ta-sel .team-btn-name{color:var(--a-color);}
+.team-btn.tb-sel{background:rgba(255,68,68,0.1);border-color:var(--b-border);}
+.team-btn.tb-sel .team-btn-name{color:var(--b-color);}
+.team-btn-label-a{color:var(--a-color);}
+.team-btn-label-b{color:var(--b-color);}
 
 /* ── BUZZER ── */
 .bz-area{display:flex;align-items:center;justify-content:center;width:100%;flex-shrink:0;margin:auto 0;}
@@ -364,6 +364,8 @@ function handleMsg(m){
       _startCountdown(m.seconds); // P02
       break;
     case 'BUZZER_HIT':
+      // Ignorar el eco de nuestro propio buzzer
+      if(m.team===ST.team && ST.triggered) break;
       if(!ST.triggered) disableBz((m.name||'Otro equipo')+' pulsó primero');
       break;
     case 'UPDATE_TEAMS':
@@ -555,7 +557,7 @@ function trigBz(e){
   const y=(e.clientY||rect.top+rect.height/2)-rect.top;
   const rip=document.createElement('div');
   rip.className='rip';
-  rip.style.cssText=`left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${ST.team==='a'?'rgba(52,211,153,.4)':'rgba(96,165,250,.4)'};`;
+  rip.style.cssText=`left:${x}px;top:${y}px;width:80px;height:80px;margin:-40px;background:${ST.team==='a'?'rgba(14,165,255,.4)':'rgba(255,68,68,.4)'};`;
   btn.appendChild(rip);
   setTimeout(()=>rip.remove(),700);
 
@@ -567,7 +569,7 @@ function trigBz(e){
   const ov=document.getElementById('trigOv');
   const tn=document.getElementById('trigName');
   tn.textContent=name;
-  tn.style.color=ST.team==='a'?'var(--green)':'var(--blue)';
+  tn.style.color=ST.team==='a'?'var(--a-color)':'var(--b-color)';
   ov.className='trig show t'+(ST.team);
   document.getElementById('sDot').className='sdot';
   document.getElementById('sTxt').textContent=name+' — BUZZEÓ';
