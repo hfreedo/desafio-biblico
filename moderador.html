@@ -760,26 +760,33 @@ function startRealtimeMod(room){
 }
 
 // Central buzzer handler — called from Realtime AND local BroadcastChannel
+let _bzTimes={first:null,second:null,firstTeam:null,secondTeam:null};
 function handleBuzzerHit(msg, supabaseTs){
-  if(ST.activeBuzzerTeam) return; // dedup: first hit wins
   if(msg.questionId && ST.selQ && msg.questionId!==ST.selQ.id) return; // stale
+  const now=msg.clientTs||Date.now();
   const nm=msg.team==='a'?ST.nameA:ST.nameB;
-  ST.activeBuzzerTeam=msg.team;
-  updBuzzerStatus('respondiendo', nm);
-  if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
-  document.getElementById('modTimer').classList.remove('dng');
-  // Show timing info if available
-  const delay=msg.clientTs ? Date.now()-msg.clientTs : null;
-  const _d=msg.clientTs ? Date.now()-msg.clientTs : null;
-  const delayStr=delay!==null ? ` (${delay}ms red)` : '';
-  toast(nm+' activó el buzzer'+delayStr);
-  const timingEl=document.getElementById('bzTimingTxt');
-  if(timingEl&&delay!==null) timingEl.textContent='Latencia: '+delay+'ms';
-  // Store for potential second-buzzer comparison
-  ST.lastBuzzerTs=msg.clientTs||Date.now();
-  ST.lastBuzzerSupaTs=supabaseTs||Date.now();
-  // Send STOP_TIMER to display — moderador is authoritative for timer stop
-  bcast({type:'STOP_TIMER'});
+  if(!ST.activeBuzzerTeam){
+    // Primer buzzer
+    ST.activeBuzzerTeam=msg.team;
+    _bzTimes={first:now,firstTeam:msg.team,second:null,secondTeam:null};
+    updBuzzerStatus('respondiendo', nm);
+    if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+    document.getElementById('modTimer').classList.remove('dng');
+    const delayStr=msg.clientTs ? ` (${Date.now()-msg.clientTs}ms red)` : '';
+    toast(nm+' activó el buzzer'+delayStr);
+    const timingEl=document.getElementById('bzTimingTxt');
+    if(timingEl&&msg.clientTs) timingEl.textContent='Latencia: '+(Date.now()-msg.clientTs)+'ms';
+    // Send STOP_TIMER to display — moderador is authoritative for timer stop
+    bcast({type:'STOP_TIMER'});
+    bcast({type:'BUZZER_HIT',team:msg.team,name:nm,clientTs:now,questionId:ST.selQ?ST.selQ.id:null});
+  } else if(!_bzTimes.second && msg.team!==ST.activeBuzzerTeam){
+    // Segundo buzzer — calcular diferencia
+    const diff=Math.round(now-_bzTimes.first);
+    _bzTimes={..._bzTimes,second:now,secondTeam:msg.team};
+    const loserNm=msg.team==='a'?ST.nameA:ST.nameB;
+    bcast({type:'BUZZER_DELAY',delay:diff,firstTeam:ST.activeBuzzerTeam,secondTeam:msg.team,secondName:loserNm});
+    toast(loserNm+' llegó '+diff+'ms después');
+  }
   saveState();
   pushStateSnapshot();
 }
@@ -1101,6 +1108,7 @@ function showSelQ(){
   ST.questionActive=true;
   ST.currentRound=q.r; ST.currentRoundName=q.rn;
   ST.activeBuzzerTeam=null;
+  _bzTimes={first:null,second:null,firstTeam:null,secondTeam:null};
   updBuzzerStatus('libre');
   bcast({type:'SHOW_QUESTION',question:q.q,answer:q.a,difficulty:q.d,round:`${q.r} · ${q.rn}`,index:q.id,total:QQ.length});
   bcast({type:'UPDATE_ROUND',round:q.r,name:q.rn});
@@ -1110,7 +1118,7 @@ function showSelQ(){
   pushStateSnapshot();
   toast("Pregunta #"+q.id+" en pantalla");
 }
-function revealAns(){ST.answerRevealed=true;bcast({type:'SHOW_ANSWER'});pushStateSnapshot();toast('Respuesta revelada');}
+function revealAns(){_bzTimes={first:null,second:null,firstTeam:null,secondTeam:null};ST.answerRevealed=true;bcast({type:'SHOW_ANSWER'});pushStateSnapshot();toast('Respuesta revelada');}
 function skipQ(){
   // Marca la pregunta actual como usada y selecciona la siguiente sin mostrarla
   if(ST.selQ){
@@ -1153,10 +1161,17 @@ function hideQ(){
 }
 function clearActive(){
   ST.activeBuzzerTeam=null;
+  _bzTimes={first:null,second:null,firstTeam:null,secondTeam:null};
   updBuzzerStatus('libre');
   bcast({type:'CLEAR_ACTIVE'});
 }
-function manualBz(t){const name=t==='a'?ST.nameA:ST.nameB;bcast({type:'BUZZER_HIT',team:t,name});toast("Buzzer: "+name);}
+function manualBz(t){
+  const name=t==='a'?ST.nameA:ST.nameB;
+  const ts=Date.now();
+  bcast({type:'BUZZER_HIT',team:t,name,clientTs:ts});
+  handleBuzzerHit({team:t,name,clientTs:ts},ts);
+  toast("Buzzer: "+name);
+}
 
 /*  ROUND  */
 function changeRound(){
@@ -1439,6 +1454,7 @@ function resetGameState(){
   ST.activeBuzzerTeam=null;
   ST.answerRevealed=false;
   ST.selQ=null;
+  _bzTimes={first:null,second:null,firstTeam:null,secondTeam:null};
   if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
   localStorage.removeItem('quiz_mod_state');
   bcast({type:'GOTO_IDLE'});

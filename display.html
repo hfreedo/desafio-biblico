@@ -124,21 +124,6 @@ body{
   font-size:19px;color:var(--dim);margin-top:3px;letter-spacing:.04em;
 }
 
-.team-lock{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'Syne',sans-serif;
-  font-size:clamp(28px,4vw,52px);
-  font-weight:800;letter-spacing:.15em;
-  background:rgba(4,4,10,.82);
-  backdrop-filter:blur(6px);
-  color:var(--red);
-  opacity:0;pointer-events:none;
-  transition:opacity .35s ease;
-  z-index:5;
-}
-.team.locked .team-lock{opacity:1;}
-
 /* Puntaje — el número más grande y más importante */
 .team-score{
   font-family:'Syne',sans-serif;
@@ -589,6 +574,36 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
 #bzBanner.bb{background:rgba(255,68,68,.12);border-bottom:2px solid rgba(255,68,68,.5);color:var(--red);}
 #bzBanner.bx{background:rgba(255,68,68,.1);border-bottom:2px solid rgba(255,68,68,.4);color:var(--red);}
 
+/* Badge de diferencia de tiempo entre buzzers */
+#bzDelayBadge{
+  position:fixed;
+  top:72px;left:50%;transform:translateX(-50%);
+  padding:8px 24px;
+  font-family:'Syne',sans-serif;
+  font-size:clamp(13px,1.8vw,22px);
+  font-weight:700;letter-spacing:.05em;
+  backdrop-filter:blur(16px);
+  border-radius:10px;
+  opacity:0;
+  transition:opacity .3s ease;
+  z-index:59;
+  white-space:nowrap;
+}
+#bzDelayBadge.show{opacity:1;}
+#bzDelayBadge.delay-a{background:rgba(14,165,255,.12);border:1px solid rgba(14,165,255,.3);color:var(--blue);}
+#bzDelayBadge.delay-b{background:rgba(255,68,68,.12);border:1px solid rgba(255,68,68,.3);color:var(--red);}
+.delay-first{opacity:1;}
+.delay-diff{
+  display:inline-block;
+  margin:0 6px;
+  padding:2px 10px;
+  border-radius:6px;
+  background:rgba(255,184,0,.15);
+  color:var(--gold);
+  font-variant-numeric:tabular-nums;
+}
+.delay-second{opacity:.6;}
+
 /* ── GANADOR ── */
 #wonOv{
   position:fixed;inset:0;z-index:200;
@@ -789,7 +804,6 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
       <div class="team-status" id="stA">Listos para competir</div>
     </div>
     <div class="team-score" id="scoreA">0</div>
-    <div class="team-lock" id="lockA">BLOQUEADO</div>
   </div>
 
   <!-- TIMER CENTRAL -->
@@ -813,7 +827,6 @@ body.pre-game{grid-template-rows:0px 0px 1fr;}
       <div class="team-name" id="nameB">EQUIPO B</div>
       <div class="team-status" id="stB">Listos para competir</div>
     </div>
-    <div class="team-lock" id="lockB">BLOQUEADO</div>
   </div>
 </div>
 
@@ -910,6 +923,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 const SUPABASE_URL='https://cnazxzkbckpqficngjex.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNuYXp4emtiY2twcWZpY25namV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU5MjA4OTIsImV4cCI6MjA5MTQ5Njg5Mn0.7b6G0O107iGSSYpDwKXd9LTcNRdey3XbQN5ielqbFZw';
 let realtimeChannel=null,currentRoom='',supabaseRt=null;
+let displayPollInterval=null,displayLastTs=Date.now();
 
 function startRealtimeEvents(room){
   if(realtimeChannel){try{supabaseRt.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
@@ -918,9 +932,47 @@ function startRealtimeEvents(room){
     .on('postgres_changes',{event:'INSERT',schema:'public',table:'quiz_events',filter:`room=eq.${room}`},payload=>{
       try{const msg=JSON.parse(payload.new.payload);const fm=msg._sender==='mod',fp=msg._sender==='puls',ns=!msg._sender;if(fm||ns)handle(msg);else if(fp&&msg.type==='BUZZER_HIT')handle(msg);}catch(e){}
     }).subscribe();
+  // HTTP polling fallback — recibe eventos aunque real-time falle
+  if(displayPollInterval) clearInterval(displayPollInterval);
+  displayLastTs=Date.now()-10000;
+  displayPollInterval=setInterval(pollDisplayEvents,400);
 }
-function startRemoteMode(room){if(!room||room===currentRoom&&realtimeChannel)return;currentRoom=room;startRealtimeEvents(room);}
-function stopRemoteMode(){if(realtimeChannel){try{supabaseRt.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}currentRoom='';}
+
+async function pollDisplayEvents(){
+  if(!currentRoom) return;
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_events?room=eq.${currentRoom}&ts=gt.${displayLastTs}&order=ts.asc`,{
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+    });
+    if(!r.ok) return;
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      data.forEach(row=>{
+        try{
+          const msg=JSON.parse(row.payload);
+          const fm=msg._sender==='mod',fp=msg._sender==='puls',ns=!msg._sender;
+          if(fm||ns) handle(msg);
+          else if(fp&&msg.type==='BUZZER_HIT') handle(msg);
+        }catch(e){}
+      });
+      displayLastTs=data[data.length-1].ts;
+    }
+  }catch(e){}
+}
+
+function stopDisplayPolling(){if(displayPollInterval){clearInterval(displayPollInterval);displayPollInterval=null;}}
+
+function startRemoteMode(room){
+  if(!room) return;
+  if(room===currentRoom&&realtimeChannel) return;
+  currentRoom=room;
+  startRealtimeEvents(room);
+}
+function stopRemoteMode(){
+  stopDisplayPolling();
+  if(realtimeChannel){try{supabaseRt.removeChannel(realtimeChannel);}catch(e){}realtimeChannel=null;}
+  currentRoom='';
+}
 async function autoRecoverState(){
   try{
     const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?order=ts.desc&limit=1`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
@@ -930,6 +982,25 @@ async function autoRecoverState(){
   }catch(e){}
 }
 setTimeout(autoRecoverState,600);
+// Fallback: si no hay snapshot, intentar descubrir la sala activa
+setTimeout(()=>{
+  if(!currentRoom) discoverActiveRoom();
+},3000);
+async function discoverActiveRoom(){
+  try{
+    const r=await fetch(`${SUPABASE_URL}/rest/v1/quiz_state?order=ts.desc&limit=5`,{headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    if(!r.ok) return;
+    const data=await r.json();
+    if(Array.isArray(data)&&data.length){
+      for(const row of data){
+        try{
+          const snap=JSON.parse(row.payload);
+          if(snap.room){startRemoteMode(snap.room);return;}
+        }catch(e){}
+      }
+    }
+  }catch(e){}
+}
 const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
@@ -939,6 +1010,7 @@ function handle(m){
   switch(m.type){
     case 'START_GAME':startGameSequence();break;
     case 'SHOW_QUESTION':showQ(m);break;
+    case 'CLEAR_ACTIVE':clearActive();break;
     case 'SHOW_ANSWER':revealAns();break;
     case 'GOTO_IDLE':
       _answerRevealed=false;
@@ -977,6 +1049,7 @@ function handle(m){
       }
       break;
     case 'BUZZER_HIT':showBuzzer(m);break;
+    case 'BUZZER_DELAY':showBuzzerDelay(m);break;
     case 'SHOW_WINNER':showWinner(m);break;
     case 'RESET_WINNER':
       if(el('wonOv').classList.contains('show')) hideWinner();
@@ -1398,17 +1471,26 @@ function showBuzzer(m){
   el('bzTint').className=isA?'show-a':'show-b';
   const sw=el('shockwave');sw.className='';void sw.offsetWidth;sw.className=isA?'fire-a':'fire-b';
   highlightTeam(m.team);stopTimer();
-  // Bloquear equipo contrario
-  el(isA?'teamB':'teamA').classList.add('locked');
   if(S.sounds)playBuzzerSfx();
   setTimeout(()=>{b.className='';el('bzTint').className='';bgMode='question';},3500);
 }
-function handlePassTurn(m){
-  showWrong({team:m.fromTeam});
-  // Desbloquear anterior y bloquear nuevo
-  el(m.fromTeam==='a'?'teamB':'teamA').classList.remove('locked');
-  el(m.fromTeam==='a'?'teamA':'teamB').classList.add('locked');
-  setTimeout(()=>highlightTeam(m.toTeam),1000);
+function handlePassTurn(m){showWrong({team:m.fromTeam});setTimeout(()=>highlightTeam(m.toTeam),1000);}
+let _delayTimeout=null;
+function showBuzzerDelay(m){
+  const firstNm=m.firstTeam==='a'?S.nameA:S.nameB;
+  const secondNm=m.secondName||(m.secondTeam==='a'?S.nameA:S.nameB);
+  const diff=m.delay;
+  // Crear badge de diferencia debajo del banner
+  let badge=document.getElementById('bzDelayBadge');
+  if(!badge){
+    badge=document.createElement('div');
+    badge.id='bzDelayBadge';
+    document.getElementById('bzBanner').after(badge);
+  }
+  badge.innerHTML='<span class="delay-first">'+firstNm.toUpperCase()+'</span><span class="delay-diff"> +'+diff+'ms </span><span class="delay-second">'+secondNm.toUpperCase()+'</span>';
+  badge.className='show delay-'+(m.firstTeam==='a'?'a':'b');
+  clearTimeout(_delayTimeout);
+  _delayTimeout=setTimeout(()=>{badge.className='';badge.innerHTML='';},3000);
 }
 function showWrong(m){
   const wf=el('wrongFlash');wf.className='';void wf.offsetWidth;wf.className='show';
@@ -1445,13 +1527,13 @@ function clearActive(){
   S.buzzerLocked=false;
   el('teamA').classList.remove('active-a','active-b');
   el('teamB').classList.remove('active-a','active-b');
-  el('teamA').classList.remove('locked');
-  el('teamB').classList.remove('locked');
   el('stA').textContent='Listos para competir';
   el('stB').textContent='Listos para competir';
   stopFlame('a'); stopFlame('b');
   bgHueTarget=250; bgSatTarget=60; bgSpeedTarget=1;
   bgWash.alpha=0;
+  const badge=document.getElementById('bzDelayBadge');
+  if(badge){badge.className='';badge.innerHTML='';}
 }
 
 /* ── LLAMAS — video loop ── */
