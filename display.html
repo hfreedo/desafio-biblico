@@ -847,6 +847,8 @@ function handle(m){
     case 'START_REMOTE':startRemoteMode(m.room);break;
     case 'STOP_REMOTE':stopRemoteMode();break;
     case 'STATE_SNAPSHOT':
+      // Si hay ganador declarado, mostrarlo y no hacer nada más
+      if(m.winner&&m.winner.team){showWinner(m.winner);break;}
       updTeams(m);
       S.scoreA=m.scoreA||0;S.scoreB=m.scoreB||0;
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
@@ -855,8 +857,6 @@ function handle(m){
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});
         if(m.answerRevealed){
-          // Poblar el overlay directamente — showQ tarda ~2420ms en populate
-          // así que no podemos esperar su callback interno
           const ansOv=el('ansOverlay');
           const ansOvTxt=el('ansOvText');
           if(ansOv&&ansOvTxt){
@@ -864,28 +864,31 @@ function handle(m){
             ansOvTxt.style.fontSize=len<=60?'clamp(48px,6vw,80px)':len<=100?'clamp(38px,5vw,64px)':len<=160?'clamp(30px,4vw,52px)':len<=240?'clamp(24px,3.2vw,42px)':'clamp(20px,2.6vw,34px)';
             ansOvTxt.textContent=q.a||'';
           }
-          // Esperar a que showQ termine para mostrar el overlay
-          setTimeout(()=>{
-            el('qPanel').classList.add('ans-revealed');
-            ansOv&&ansOv.classList.add('show');
-          }, 2600);
+          setTimeout(()=>{el('qPanel').classList.add('ans-revealed');ansOv&&ansOv.classList.add('show');},2600);
         }
       } else {el('idle').classList.add('visible');el('qPanel').classList.remove('active');}
       if(m.activeBuzzerTeam)highlightTeam(m.activeBuzzerTeam);else clearActive();
+      // Timer: SÓLO activar si timerRunning===true en el snapshot
       if(m.timerTotal&&m.timerTotal>0){
         S.timerTotal=m.timerTotal;
         let left=Math.max(0,m.timerLeft||0);
-        if(m.timerRunning&&m.timerSnapTs){const elapsed=Math.floor((Date.now()-m.timerSnapTs)/1000);left=Math.max(0,left-elapsed);}
+        if(m.timerRunning&&m.timerSnapTs){
+          const elapsed=Math.floor((Date.now()-m.timerSnapTs)/1000);
+          left=Math.max(0,left-elapsed);
+        }
         S.timerLeft=left;
-        const wasStarted=m.timerRunning||(left>0&&left<m.timerTotal);
-        if(wasStarted&&left>0){
+        if(m.timerRunning===true&&left>0){
+          // El timer estaba corriendo — retomarlo
           el('timerBar').classList.add('active');
           el('timerCenter').classList.add('visible');
           renderTimer();
-          if(m.timerRunning&&!timerInt){timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);}
+          if(!timerInt){timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);}
+        } else {
+          // Timer detenido — no animación, pero conservar el valor
+          if(left>0){S.timerLeft=left;renderTimer();}
+          el('timerBar').classList.remove('active');
+          el('timerCenter').classList.remove('visible');
         }
-        else if(m.timerRunning&&left<=0){bombExplosion();}
-        else{el('timerBar').classList.remove('active');el('timerCenter').classList.remove('visible');}
       }
       break;
   }

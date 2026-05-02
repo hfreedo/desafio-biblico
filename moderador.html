@@ -707,6 +707,7 @@ async function pushStateSnapshot(){
     timerTotal:ST.timerSec,
     timerRunning:!!(ST.timerInt),
     timerSnapTs:Date.now(),
+    winner:ST.winner||null,
   };
   try{
     await fetch(`${SUPABASE_URL}/rest/v1/quiz_state`,{
@@ -760,6 +761,8 @@ function handleBuzzerHit(msg, supabaseTs){
   ST.lastBuzzerSupaTs=supabaseTs||Date.now();
   // Send STOP_TIMER to display — moderador is authoritative for timer stop
   bcast({type:'STOP_TIMER'});
+  saveState();
+  pushStateSnapshot();
 }
 
 function activateRoom(code){
@@ -912,7 +915,8 @@ function saveState(){
       answered:ST.answered,
       history:ST.history.slice(0,30),
       timerSec:ST.timerSec,
-      timerLeft:ST.timerLeft
+      timerLeft:ST.timerLeft,
+      winner:ST.winner||null
     }));
   }catch(e){}
 }
@@ -928,6 +932,7 @@ const ST={
   lastBuzzerTs:null, lastBuzzerSupaTs:null,
   answerRevealed:false,
   currentRound:'', currentRoundName:'',
+  winner:_sv.winner||null,
 };
 
 const ch=new BroadcastChannel('quiz_channel');
@@ -1373,6 +1378,7 @@ function newGame(){
   ST.selQ=null; ST.questionActive=false;
   ST.activeBuzzerTeam=null; ST.answerRevealed=false;
   ST.timerLeft=ST.timerSec;
+  ST.winner=null;
   if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
   updScoreDisplay();
   updBuzzerStatus('libre');
@@ -1391,9 +1397,23 @@ function newGame(){
 
 function declWinner(t){
   const name=t==='a'?ST.nameA:ST.nameB;
+  // Detener timer si está corriendo
+  if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+  document.getElementById('modTimer').classList.remove('dng');
+  bcast({type:'STOP_TIMER'});
+  // Limpiar estado de juego activo
+  ST.questionActive=false;
+  ST.activeBuzzerTeam=null;
+  ST.answerRevealed=false;
+  updBuzzerStatus('libre');
+  // Guardar ganador en el estado (persistente)
+  ST.winner={team:t,name,scoreA:ST.scoreA,scoreB:ST.scoreB};
+  // Emitir al display
   bcast({type:'SHOW_WINNER',team:t,name,scoreA:ST.scoreA,scoreB:ST.scoreB});
+  // Persistir en localStorage y Supabase
+  saveState();
+  pushStateSnapshot();
   toast("Ganador: "+name);
-  // S06: guardar historial en Supabase
   _saveGameHistory(t, name);
 }
 
