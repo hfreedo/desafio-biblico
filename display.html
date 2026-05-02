@@ -1474,7 +1474,10 @@ function showBuzzer(m){
   if(S.sounds)playBuzzerSfx();
   setTimeout(()=>{b.className='';el('bzTint').className='';bgMode='question';},3500);
 }
-function handlePassTurn(m){showWrong({team:m.fromTeam});setTimeout(()=>highlightTeam(m.toTeam),1000);}
+function handlePassTurn(m){
+  S.buzzerLocked=false;
+  setTimeout(()=>highlightTeam(m.toTeam),1000);
+}
 let _delayTimeout=null;
 function showBuzzerDelay(m){
   const firstNm=m.firstTeam==='a'?S.nameA:S.nameB;
