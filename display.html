@@ -989,12 +989,19 @@ function handle(m){
     case 'STATE_SNAPSHOT':
       // Si hay ganador declarado y no hay un reset pendiente, mostrarlo
       if(m.winner&&m.winner.team){
-        // Solo mostrar si el snapshot es reciente (últimos 30 segundos)
         const isRecent = m.ts && (Date.now() - m.ts) < 30000;
         if(isRecent){
           showWinner(m.winner);
           break;
         }
+      }
+      // Si el juego ya está activo, quitar el estado pre-game para mostrar header/scoreboard
+      if(m.questionActive||m.scoreA>0||m.scoreB>0){
+        document.body.classList.remove('pre-game');
+        el('siteHeader').classList.remove('pre-game');
+        el('scoreboard').classList.remove('pre-game');
+        el('idle').classList.remove('visible');
+        isFirstQuestion=false;
       }
       updTeams(m);
       S.scoreA=m.scoreA||0;S.scoreB=m.scoreB||0;
