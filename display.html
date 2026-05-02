@@ -958,14 +958,24 @@ function handle(m){
       break;
     case 'BUZZER_HIT':showBuzzer(m);break;
     case 'SHOW_WINNER':showWinner(m);break;
+    case 'RESET_WINNER':
+      if(el('wonOv').classList.contains('show')) hideWinner();
+      break;
     case 'PASS_TURN':handlePassTurn(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;
     case 'CLEAR_ACTIVE':clearActive();break;
     case 'START_REMOTE':startRemoteMode(m.room);break;
     case 'STOP_REMOTE':stopRemoteMode();break;
     case 'STATE_SNAPSHOT':
-      // Si hay ganador declarado, mostrarlo y no hacer nada más
-      if(m.winner&&m.winner.team){showWinner(m.winner);break;}
+      // Si hay ganador declarado y no hay un reset pendiente, mostrarlo
+      if(m.winner&&m.winner.team){
+        // Solo mostrar si el snapshot es reciente (últimos 30 segundos)
+        const isRecent = m.ts && (Date.now() - m.ts) < 30000;
+        if(isRecent){
+          showWinner(m.winner);
+          break;
+        }
+      }
       updTeams(m);
       S.scoreA=m.scoreA||0;S.scoreB=m.scoreB||0;
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
@@ -1438,8 +1448,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 /* ── GANADOR ── */
 function showWinner(m){
   const isA=m.team==='a';const ov=el('wonOv');
-  // Usar el nombre real del equipo (del estado S o del mensaje)
-  const teamName=m.name||(isA?S.nameA:S.nameB)||m.name;
+  // Usar el nombre del ganador directamente del mensaje
+  const teamName=m.name||(isA?S.nameA:S.nameB)||'Equipo '+(isA?'A':'B');
   el('wonName').textContent=teamName;
   el('wonName').className='won-name '+(isA?'an':'bn');
   el('wonScore').textContent=`${m.scoreA} — ${m.scoreB}`;
@@ -1452,8 +1462,6 @@ function showWinner(m){
   el('qPanel').style.opacity='0';
   el('ansOverlay').classList.remove('show');
   el('curtain').classList.remove('open');
-  // Bursts de celebración
-  for(let i=0;i<20;i++) setTimeout(()=>bgBurst(isA?'a':'b',true), i*200);
 }
 function hideWinner(){
   const ov=el('wonOv');

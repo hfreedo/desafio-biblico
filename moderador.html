@@ -512,6 +512,9 @@ input[type=range]{
           <button class="btn btn-a" id="winA" onclick="declWinner('a')">Ganador A</button>
           <button class="btn btn-b" id="winB" onclick="declWinner('b')">Ganador B</button>
         </div>
+        <div style="margin-top:10px">
+          <button class="btn btn-reset" onclick="resetGameState()" style="width:100%;background:transparent;border:1px solid var(--border2);color:var(--dim);padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px">Reiniciar juego</button>
+        </div>
       </div>
 
       <!-- Buzzer manual -->
@@ -1417,6 +1420,25 @@ function newGame(){
   // Reactivar botón de inicio
   const sg2=document.getElementById('btnStart');if(sg2){sg2.disabled=false;sg2.style.opacity='';}
   toast('Nuevo juego iniciado');
+}
+
+function resetGameState(){
+  ST.winner=null;
+  ST.scoreA=0;ST.scoreB=0;
+  ST.answered={};ST.history=[];
+  ST.questionActive=false;
+  ST.activeBuzzerTeam=null;
+  ST.answerRevealed=false;
+  ST.selQ=null;
+  if(ST.timerInt){clearInterval(ST.timerInt);ST.timerInt=null;}
+  localStorage.removeItem('quiz_mod_state');
+  bcast({type:'GOTO_IDLE'});
+  bcast({type:'RESET_WINNER'});
+  if(roomCode){
+    pushStateSnapshot();
+  }
+  saveState();
+  toast('Juego reiniciado');
 }
 
 function declWinner(t){
