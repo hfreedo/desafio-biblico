@@ -1004,9 +1004,14 @@ ch.onmessage=e=>handle(e.data);
 /* ── HANDLER ── */
 const _seenMsgs=new Set();
 const _DUP_WINDOW=800; // ms para considerar un msg como duplicado
+let _lastStateVersion=0; // última versión de estado procesada (state reconciliation)
 function handle(m){
-  // Deduplicación por UID — ignora mensajes duplicados dentro de ventana de 800ms
-  // Cubre: BC + Supabase simultáneos, realtime + polling, etc.
+  // STATE_SNAPSHOT: reconciliation por versión — ignora versiones viejas o iguales
+  if(m.type==='STATE_SNAPSHOT' && m.stateVersion){
+    if(m.stateVersion<=_lastStateVersion) return; // mensaje viejo/duplicado
+    _lastStateVersion=m.stateVersion;
+  }
+  // Eventos no-SNAPSHOT: deduplicación por UID
   if(m._uid){
     if(_seenMsgs.has(m._uid)) return;
     _seenMsgs.add(m._uid);
@@ -1076,11 +1081,12 @@ function handle(m){
           break;
         }
       }
-      // Si el juego ya está activo, quitar el estado pre-game para mostrar header/scoreboard
+      // Siempre quitar pre-game al recibir snapshot (significa que el juego existe)
+      document.body.classList.remove('pre-game');
+      el('siteHeader').classList.remove('pre-game');
+      el('scoreboard').classList.remove('pre-game');
+      // Si el juego ya está activo, ocultar el idle visual inicial
       if(m.questionActive||m.scoreA>0||m.scoreB>0){
-        document.body.classList.remove('pre-game');
-        el('siteHeader').classList.remove('pre-game');
-        el('scoreboard').classList.remove('pre-game');
         el('idle').classList.remove('visible');
         isFirstQuestion=false;
       }
@@ -1089,10 +1095,10 @@ function handle(m){
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
       if(m.round)updRound({round:m.round,name:m.roundName});
       if(m.questionActive&&m.currentQuestion){
-        // Solo mostrar pregunta si NO hay animación en curso Y la pregunta no está ya visible
-        // Esto evita que el snapshot dispare animaciones duplicadas durante el flujo normal
-        const qPanelVisible = el('qPanel').classList.contains('active');
-        if(_anticipating || qPanelVisible) break;
+        // No interrumpir animación en curso
+        if(_anticipating) break;
+        // No re-mostrar si es la misma pregunta ya en pantalla
+        if(m.currentQuestion.id===S.currentQuestionId) break;
         _answerRevealed=false;
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});

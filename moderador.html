@@ -733,8 +733,10 @@ async function pollSupabase(){
 async function pushStateSnapshot(){
   if(!roomCode) return;
   const q=ST.selQ;
+  ST.stateVersion++; // incrementa cada snapshot
   const snap={
     type:'STATE_SNAPSHOT',
+    stateVersion:ST.stateVersion,
     nameA:ST.nameA,nameB:ST.nameB,
     scoreA:ST.scoreA,scoreB:ST.scoreB,
     room:roomCode,ts:Date.now(),
@@ -972,7 +974,8 @@ function saveState(){
       history:ST.history.slice(0,30),
       timerSec:ST.timerSec,
       timerLeft:ST.timerLeft,
-      winner:ST.winner||null
+      winner:ST.winner||null,
+      stateVersion:ST.stateVersion
     }));
   }catch(e){}
 }
@@ -989,6 +992,7 @@ const ST={
   answerRevealed:false,
   currentRound:'', currentRoundName:'',
   winner:_sv.winner||null,
+  stateVersion:(_sv.stateVersion||0)+1, // incrementa con cada cambio de estado
 };
 
 const ch=new BroadcastChannel('quiz_channel');
