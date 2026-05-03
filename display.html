@@ -899,6 +899,56 @@ let timerInt=null,timerStartPending=null,bombFired=false,bombTimeout=null,bgMode
 let _anticipating=false;
 let _answerRevealed=false;
 let _animLock=false; // evita que animaciones se solapen
+
+/* ════════════════════════════════════════════════════════
+ * DISPLAY STATE MACHINE — sistema robusto para redes lentas
+ *
+ * Estados: idle | anticipating | question_shown | answer_revealed | winner
+ * Cada evento es una transición. Si el destino == estado actual → se ignora.
+ * Transiciones inválidas también se ignoran.
+ * _msgVersion: versión global del estado. Solo se procesa si > _lastVersion.
+ * ════════════════════════════════════════════════════════ */
+const State = {
+  IDLE:           'idle',
+  ANTICIPATING:   'anticipating',
+  QUESTION_SHOWN:'question_shown',
+  ANSWER_REVEAL:  'answer_revealed',
+  WINNER:         'winner',
+};
+
+const Transitions = {
+  /* Desde \ Evento       START_GAME  SHOW_QUESTION  SHOW_ANSWER   GOTO_IDLE  HIDE_QUESTION  SHOW_WINNER  STATE_SNAPSHOT */
+  idle:              { startGame: 'idle',         showQ: 'anticipating',  answer: null,      idle: 'idle',   hideQ: 'idle',      win: 'winner',    snap: 'snapshot' },
+  anticipating:      { startGame: null,            showQ: null,           answer: null,      idle: 'idle',   hideQ: 'idle',      win: null,        snap: 'snapshot' },
+  question_shown:    { startGame: null,            showQ: 'anticipating', answer: 'answer_revealed', idle: 'idle', hideQ: 'idle',  win: 'winner',    snap: 'snapshot' },
+  answer_revealed:   { startGame: null,            showQ: 'anticipating', answer: null,      idle: 'idle',   hideQ: 'idle',      win: 'winner',    snap: 'snapshot' },
+  winner:            { startGame: null,            showQ: null,           answer: null,      idle: 'idle',   hideQ: 'idle',      win: null,        snap: 'snapshot' },
+};
+
+let _state = State.IDLE;
+let _lastVersion = 0;   // stateVersion más reciente procesado
+let _lastQuestionId = 0; // última pregunta mostrada (evita re-show)
+let _pendingQuestion = null; // pregunta guardada durante snapshot recovery
+
+function _canTransition(event){
+  const row = Transitions[_state];
+  if(!row) return false;
+  const target = row[event];
+  return target !== null; // null = transición inválida
+}
+function _transition(event, next){
+  if(!_canTransition(event)) {
+    console.log('[SM] bloqueado:', _state, '+', event);
+    return false;
+  }
+  if(next && _state === next) {
+    console.log('[SM] ya en estado:', next);
+    return false;
+  }
+  _state = next || _state;
+  return true;
+}
+
 // ── Fondo reactivo: transición suave de color ──
 let bgHueCurrent=250;   // hue actual interpolado
 let bgHueTarget=250;    // hue objetivo
@@ -1001,153 +1051,268 @@ async function discoverActiveRoom(){
 const ch=new BroadcastChannel('quiz_channel');
 ch.onmessage=e=>handle(e.data);
 
-/* ── HANDLER ── */
+/* ════════════════════════════════════════════════════════
+ * HANDLER — State Machine Router
+ * Cada mensaje pasa por:
+ *   1. Dedup por UID (eventos)
+ *   2. Version check (snapshots)
+ *   3. Transición de estado (solo si válida)
+ *   4. Ejecución de la acción asociada
+ * ════════════════════════════════════════════════════════ */
 const _seenMsgs=new Set();
-const _DUP_WINDOW=800; // ms para considerar un msg como duplicado
-let _lastStateVersion=0; // última versión de estado procesada (state reconciliation)
-let _lastShownQId=0; // último ID de pregunta mostrado (evita repetición de SHOW_QUESTION)
+const _DUP_WINDOW=800;
+
 function handle(m){
-  // STATE_SNAPSHOT: reconciliation por versión — ignora versiones viejas o iguales
-  if(m.type==='STATE_SNAPSHOT' && m.stateVersion){
-    if(m.stateVersion<=_lastStateVersion) return; // mensaje viejo/duplicado
-    _lastStateVersion=m.stateVersion;
-  }
-  // SHOW_QUESTION: no repetir si es la misma pregunta ya mostrada
-  if(m.type==='SHOW_QUESTION'){
-    const qid=m.index||0;
-    if(qid<=_lastShownQId) return; // misma o vieja pregunta
-  }
-  // Eventos no-SNAPSHOT: deduplicación por UID
+  // ── FILTRO 1: Dedup por UID ──
   if(m._uid){
     if(_seenMsgs.has(m._uid)) return;
     _seenMsgs.add(m._uid);
     setTimeout(()=>_seenMsgs.delete(m._uid), _DUP_WINDOW);
   }
-  // AudioContext se maneja solo por eventos del usuario (ver listeners arriba)
+
+  // ── FILTRO 2: Version check para snapshots ──
+  if(m.type==='STATE_SNAPSHOT' && m.stateVersion){
+    if(m.stateVersion<=_lastVersion) return;
+    _lastVersion=m.stateVersion;
+  }
+
+  // ── EVENTOS DE DATOS (no afectan estado, se ejecutan siempre) ──
   switch(m.type){
-    case 'START_GAME':_lastShownQId=0;startGameSequence();break;
-    case 'SHOW_QUESTION':
-      if(_anticipating) return;
-      _lastShownQId=m.index||0; // registrar que esta pregunta ya se mostró
-      showQ(m);
-      break;
-    case 'CLEAR_ACTIVE':clearActive();break;
-    case 'SHOW_ANSWER':revealAns();break;
-    case 'GOTO_IDLE':
-      _answerRevealed=false;
-      _lastShownQId=0; // reset para nueva partida
-      // Volver al idle sin recargar — útil tras ganador o cualquier estado
-      if(el('wonOv').classList.contains('show')) hideWinner();
-      else {
-        el('qPanel').classList.remove('active','ans-revealed');
-        el('qPanel').style.opacity='0';
-        el('ansOverlay').classList.remove('show');
-        el('curtain').classList.remove('open');
-        setTimeout(()=>{
-          el('idle').classList.add('visible');
-          el('curtain').classList.add('open');
-          el('qPanel').style.opacity='';
-          bgMode='idle';
-          bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;bgWash.alpha=0;
-          stopTimer();clearActive();
-        },820);
-      }
-      break;
-    case 'HIDE_QUESTION':hideQ();break;
-    case 'UPDATE_SCORE':updScore(m);break;
-    case 'UPDATE_TEAMS':updTeams(m);break;
-    case 'UPDATE_ROUND':updRound(m);break;
+    case 'UPDATE_SCORE': updScore(m); return;
+    case 'UPDATE_TEAMS': updTeams(m); return;
+    case 'UPDATE_ROUND': updRound(m); return;
     case 'SOUND_VOLUME':
       if(typeof m.volume==='number') S.soundVol=Math.max(0,Math.min(1,m.volume));
+      return;
+    case 'SOUND_TOGGLE': S.sounds=m.enabled; return;
+    case 'START_REMOTE': startRemoteMode(m.room); return;
+    case 'STOP_REMOTE': stopRemoteMode(); return;
+    case 'BUZZER_DELAY': showBuzzerDelay(m); return;
+    case 'BUZZER_HIT':
+      S.buzzerLocked=true;
+      S.activeBuzzerTeam=m.team;
+      showBuzzer(m);
+      return;
+    case 'PASS_TURN':
+      S.buzzerLocked=false;
+      handlePassTurn(m);
+      return;
+    case 'WRONG_ANSWER':
+      showWrong(m);
+      return;
+  }
+
+  // ── TRANSICIONES DE ESTADO ──
+  let ok = false;
+  switch(m.type){
+
+    case 'START_GAME':
+      ok = _transition('startGame', State.ANTICIPATING);
+      if(ok){
+        _lastQuestionId=0;
+        _answerRevealed=false;
+        startGameSequence();
+      }
       break;
-    case 'SOUND_TOGGLE':S.sounds=m.enabled;break;
-    case 'START_TIMER':startTimer(m.seconds);break;
+
+    case 'SHOW_QUESTION':
+      // No repetir si es la misma pregunta ya mostrada
+      if((m.index||0) <= _lastQuestionId) return;
+      ok = _transition('showQ', State.ANTICIPATING);
+      if(ok){
+        _lastQuestionId=m.index||0;
+        _answerRevealed=false;
+        S.buzzerLocked=false;
+        S.currentQuestionId=m.index||null;
+        S.questionActive=true;
+        _subsequentQuestionEntry(m);
+      }
+      break;
+
+    case 'SHOW_ANSWER':
+      ok = _transition('answer', State.ANSWER_REVEAL);
+      if(ok){
+        _answerRevealed=true;
+        revealAns();
+      }
+      break;
+
+    case 'SHOW_WINNER':
+      ok = _transition('win', State.WINNER);
+      if(ok) showWinner(m);
+      break;
+
+    case 'GOTO_IDLE':
+    case 'HIDE_QUESTION':
+      ok = _transition('idle', State.IDLE);
+      if(ok){
+        _answerRevealed=false;
+        S.questionActive=false;
+        S.buzzerLocked=false;
+        bgMode='idle';
+        bgHueTarget=250; bgSatTarget=60; bgSpeedTarget=1; bgWash.alpha=0;
+        hideQ();
+        el('idle').classList.add('visible');
+        el('qPanel').classList.remove('active','ans-revealed');
+        el('ansOverlay').classList.remove('show');
+        stopTimer();
+        clearActive();
+      }
+      break;
+
+    case 'STATE_SNAPSHOT':
+      ok = _applySnapshot(m);
+      break;
+
+    case 'START_TIMER':
+      startTimer(m.seconds);
+      break;
+
     case 'STOP_TIMER':
       stopTimer();
-      if(S.timerLeft>0&&S.questionActive){
-        el('timerBar').classList.add('active');
-        el('timerCenter').classList.add('visible');
-        renderTimer();
-      }
       break;
-    case 'BUZZER_HIT':showBuzzer(m);break;
-    case 'BUZZER_DELAY':showBuzzerDelay(m);break;
-    case 'SHOW_WINNER':showWinner(m);break;
+
     case 'RESET_WINNER':
-      if(el('wonOv').classList.contains('show')) hideWinner();
-      break;
-    case 'PASS_TURN':handlePassTurn(m);break;
-    case 'WRONG_ANSWER':showWrong(m);break;
-    case 'START_REMOTE':startRemoteMode(m.room);break;
-    case 'STOP_REMOTE':stopRemoteMode();break;
-    case 'STATE_SNAPSHOT':
-      // Si hay ganador declarado y no hay un reset pendiente, mostrarlo
-      if(m.winner&&m.winner.team){
-        const isRecent = m.ts && (Date.now() - m.ts) < 30000;
-        if(isRecent){
-          showWinner(m.winner);
-          break;
-        }
-      }
-      // Siempre quitar pre-game al recibir snapshot (significa que el juego existe)
-      document.body.classList.remove('pre-game');
-      el('siteHeader').classList.remove('pre-game');
-      el('scoreboard').classList.remove('pre-game');
-      // Si el juego ya está activo, ocultar el idle visual inicial
-      if(m.questionActive||m.scoreA>0||m.scoreB>0){
-        el('idle').classList.remove('visible');
-        isFirstQuestion=false;
-      }
-      updTeams(m);
-      S.scoreA=m.scoreA||0;S.scoreB=m.scoreB||0;
-      el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
-      if(m.round)updRound({round:m.round,name:m.roundName});
-      if(m.questionActive&&m.currentQuestion){
-        const qid=m.currentQuestion.id;
-        // No interrumpir animación en curso
-        if(_anticipating) break;
-        // No re-mostrar si es la misma pregunta ya mostrada
-        if(qid<=_lastShownQId) break;
-        _lastShownQId=qid;
-        _answerRevealed=false;
-        const q=m.currentQuestion;
-        showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});
-        if(m.answerRevealed && !_answerRevealed){
-          _answerRevealed=true;
-          const ansOv=el('ansOverlay');
-          const ansOvTxt=el('ansOvText');
-          if(ansOv&&ansOvTxt){
-            const len=(q.a||'').length;
-            ansOvTxt.style.fontSize=len<=60?'clamp(48px,6vw,80px)':len<=100?'clamp(38px,5vw,64px)':len<=160?'clamp(30px,4vw,52px)':len<=240?'clamp(24px,3.2vw,42px)':'clamp(20px,2.6vw,34px)';
-            ansOvTxt.textContent=q.a||'';
-          }
-          setTimeout(()=>{el('qPanel').classList.add('ans-revealed');ansOv&&ansOv.classList.add('show');},2600);
-        }
-      } else {el('idle').classList.add('visible');el('qPanel').classList.remove('active');}
-      if(m.activeBuzzerTeam)highlightTeam(m.activeBuzzerTeam);else clearActive();
-      // Timer: SÓLO activar si timerRunning===true en el snapshot
-      if(m.timerTotal&&m.timerTotal>0){
-        S.timerTotal=m.timerTotal;
-        let left=Math.max(0,m.timerLeft||0);
-        if(m.timerRunning&&m.timerSnapTs){
-          const elapsed=Math.floor((Date.now()-m.timerSnapTs)/1000);
-          left=Math.max(0,left-elapsed);
-        }
-        S.timerLeft=left;
-        if(m.timerRunning===true&&left>0){
-          // El timer estaba corriendo — retomarlo
-          el('timerBar').classList.add('active');
-          el('timerCenter').classList.add('visible');
-          renderTimer();
-          if(!timerInt){timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);}
-        } else {
-          // Timer detenido — no animación, pero conservar el valor
-          if(left>0){S.timerLeft=left;renderTimer();}
-          el('timerBar').classList.remove('active');
-          el('timerCenter').classList.remove('visible');
-        }
+      if(_state===State.WINNER && el('wonOv').classList.contains('show')){
+        hideWinner();
+        _state=State.IDLE;
       }
       break;
+
+    case 'CLEAR_ACTIVE':
+      clearActive();
+      break;
+  }
+}
+
+/* ── APPLY STATE SNAPSHOT ── */
+function _applySnapshot(m){
+  // Siempre quitar pre-game
+  document.body.classList.remove('pre-game');
+  el('siteHeader').classList.remove('pre-game');
+  el('scoreboard').classList.remove('pre-game');
+
+  // Actualizar datos básicos
+  updTeams(m);
+  S.scoreA=m.scoreA||0; S.scoreB=m.scoreB||0;
+  el('scoreA').textContent=S.scoreA; el('scoreB').textContent=S.scoreB;
+  if(m.round) updRound({round:m.round, name:m.roundName});
+
+  // Ganador
+  if(m.winner && m.winner.team){
+    const isRecent = m.ts && (Date.now() - m.ts) < 30000;
+    if(isRecent && _state !== State.WINNER){
+      showWinner(m.winner);
+      _state=State.WINNER;
+      return true;
+    }
+  }
+
+  // Sin pregunta activa → idle
+  if(!m.questionActive || !m.currentQuestion){
+    if(_state !== State.IDLE){
+      _state=State.IDLE;
+      S.questionActive=false;
+      el('idle').classList.add('visible');
+      el('qPanel').classList.remove('active');
+      clearActive();
+    }
+    return true;
+  }
+
+  // Hay pregunta activa
+  const qid = m.currentQuestion.id;
+  if(qid <= _lastQuestionId){
+    // Ya mostrada → solo actualizar estado visual sin re-animar
+    _syncVisualState(m);
+    return true;
+  }
+
+  // Nueva pregunta → transicionar y mostrar
+  if(m.answerRevealed){
+    _state = State.ANSWER_REVEAL;
+  } else {
+    _state = State.QUESTION_SHOWN;
+  }
+  _lastQuestionId = qid;
+  _answerRevealed = m.answerRevealed||false;
+  S.questionActive = true;
+  S.currentQuestionId = qid;
+  el('idle').classList.remove('visible');
+
+  const q = m.currentQuestion;
+  _populateQuestion({
+    question:q.q, answer:q.a, difficulty:q.d,
+    round:(m.round||q.r)+' · '+(m.roundName||q.rn),
+    index:q.id, total:100
+  });
+
+  // Revelar cortina con el panel listo
+  const curtain=el('curtain');
+  curtain.classList.remove('open');
+  setTimeout(()=>{
+    curtain.classList.add('open');
+    setTimeout(()=>{
+      const qp=el('qPanel');
+      qp.style.opacity='';
+      qp.style.pointerEvents='';
+      qp.classList.add('active');
+      clearActive();
+      if(m.answerRevealed){
+        _answerRevealed=true;
+        const ansOv=el('ansOverlay');
+        const ansOvTxt=el('ansOvText');
+        if(ansOv&&ansOvTxt){
+          const len=(q.a||'').length;
+          ansOvTxt.style.fontSize=len<=60?'clamp(48px,6vw,80px)':len<=100?'clamp(38px,5vw,64px)':len<=160?'clamp(30px,4vw,52px)':len<=240?'clamp(24px,3.2vw,42px)':'clamp(20px,2.6vw,34px)';
+          ansOvTxt.textContent=q.a||'';
+        }
+        el('qPanel').classList.add('ans-revealed');
+        ansOv&&ansOv.classList.add('show');
+      }
+    }, 750);
+  }, 80);
+
+  // Buzzer state
+  if(m.activeBuzzerTeam) highlightTeam(m.activeBuzzerTeam); else clearActive();
+
+  // Timer
+  if(m.timerTotal&&m.timerTotal>0){
+    S.timerTotal=m.timerTotal;
+    let left=Math.max(0,m.timerLeft||0);
+    if(m.timerRunning&&m.timerSnapTs){
+      const elapsed=Math.floor((Date.now()-m.timerSnapTs)/1000);
+      left=Math.max(0,left-elapsed);
+    }
+    S.timerLeft=left;
+    if(m.timerRunning===true&&left>0){
+      el('timerBar').classList.add('active');
+      el('timerCenter').classList.add('visible');
+      renderTimer();
+      if(!timerInt){timerInt=setInterval(()=>{S.timerLeft--;renderTimer();if(S.timerLeft<=5&&S.timerLeft>0&&S.sounds)playTick();if(S.timerLeft<=0){stopTimer();bombExplosion();}},1000);}
+    } else {
+      if(left>0){S.timerLeft=left;renderTimer();}
+      el('timerBar').classList.remove('active');
+      el('timerCenter').classList.remove('visible');
+    }
+  }
+
+  return true;
+}
+function _syncVisualState(m){
+  // Actualizar timer, buzzer, scores sin tocar la pregunta visible
+  const qid = m.currentQuestion && m.currentQuestion.id;
+  if(m.answerRevealed && !_answerRevealed && qid){
+    _answerRevealed=true;
+    const ansOv=el('ansOverlay');
+    const ansOvTxt=el('ansOvText');
+    if(ansOv&&ansOvTxt){
+      const len=(m.currentQuestion.a||'').length;
+      ansOvTxt.style.fontSize=len<=60?'clamp(48px,6vw,80px)':len<=100?'clamp(38px,5vw,64px)':len<=160?'clamp(30px,4vw,52px)':len<=240?'clamp(24px,3.2vw,42px)':'clamp(20px,2.6vw,34px)';
+      ansOvTxt.textContent=m.currentQuestion.a||'';
+    }
+    el('qPanel').classList.add('ans-revealed');
+    ansOv&&ansOv.classList.add('show');
   }
 }
 
