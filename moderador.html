@@ -996,8 +996,7 @@ let _msgSeq=0;
 // Modo de comunicación: 'local' = solo BroadcastChannel, 'remote' = solo Supabase
 let BROADCAST_MODE = localStorage.getItem('quiz_mode') || 'local';
 function bcast(m){
-  m._seq=++_msgSeq;
-  m._uid=Date.now()+'-'+m._seq;
+  m._uid=Date.now()+'-'+(++_msgSeq);
   if(BROADCAST_MODE==='local'){
     ch.postMessage(m);
   } else {

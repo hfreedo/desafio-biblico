@@ -1004,15 +1004,9 @@ ch.onmessage=e=>handle(e.data);
 /* ── HANDLER ── */
 const _seenMsgs=new Set();
 const _DUP_WINDOW=800; // ms para considerar un msg como duplicado
-let _lastSeq=0; // último número de secuencia procesado (anti-desorden de red)
-let _animLock=null; // timeout ID que indica una animación en curso
 function handle(m){
-  // Deduplicación por secuencia — ignora mensajes viejos o fuera de orden
-  if(m._seq){
-    if(m._seq<=_lastSeq) return;
-    _lastSeq=m._seq;
-  }
-  // Deduplicación por UID — ventana de 800ms
+  // Deduplicación por UID — ignora mensajes duplicados dentro de ventana de 800ms
+  // Cubre: BC + Supabase simultáneos, realtime + polling, etc.
   if(m._uid){
     if(_seenMsgs.has(m._uid)) return;
     _seenMsgs.add(m._uid);
