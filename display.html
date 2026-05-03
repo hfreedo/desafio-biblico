@@ -1061,10 +1061,7 @@ function handle(m){
       break;
 
     case 'SHOW_ANSWER':
-      if(!_answerRevealed){
-        _answerRevealed=true;
-        revealAns();
-      }
+      revealAns();
       break;
 
     case 'SHOW_WINNER':
