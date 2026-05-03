@@ -1005,11 +1005,17 @@ ch.onmessage=e=>handle(e.data);
 const _seenMsgs=new Set();
 const _DUP_WINDOW=800; // ms para considerar un msg como duplicado
 let _lastStateVersion=0; // última versión de estado procesada (state reconciliation)
+let _lastShownQId=0; // último ID de pregunta mostrado (evita repetición de SHOW_QUESTION)
 function handle(m){
   // STATE_SNAPSHOT: reconciliation por versión — ignora versiones viejas o iguales
   if(m.type==='STATE_SNAPSHOT' && m.stateVersion){
     if(m.stateVersion<=_lastStateVersion) return; // mensaje viejo/duplicado
     _lastStateVersion=m.stateVersion;
+  }
+  // SHOW_QUESTION: no repetir si es la misma pregunta ya mostrada
+  if(m.type==='SHOW_QUESTION'){
+    const qid=m.index||0;
+    if(qid<=_lastShownQId) return; // misma o vieja pregunta
   }
   // Eventos no-SNAPSHOT: deduplicación por UID
   if(m._uid){
@@ -1019,15 +1025,17 @@ function handle(m){
   }
   // AudioContext se maneja solo por eventos del usuario (ver listeners arriba)
   switch(m.type){
-    case 'START_GAME':startGameSequence();break;
+    case 'START_GAME':_lastShownQId=0;startGameSequence();break;
     case 'SHOW_QUESTION':
-      if(_anticipating) return; // ignorar si ya hay animación en curso
+      if(_anticipating) return;
+      _lastShownQId=m.index||0; // registrar que esta pregunta ya se mostró
       showQ(m);
       break;
     case 'CLEAR_ACTIVE':clearActive();break;
     case 'SHOW_ANSWER':revealAns();break;
     case 'GOTO_IDLE':
       _answerRevealed=false;
+      _lastShownQId=0; // reset para nueva partida
       // Volver al idle sin recargar — útil tras ganador o cualquier estado
       if(el('wonOv').classList.contains('show')) hideWinner();
       else {
@@ -1095,10 +1103,12 @@ function handle(m){
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
       if(m.round)updRound({round:m.round,name:m.roundName});
       if(m.questionActive&&m.currentQuestion){
+        const qid=m.currentQuestion.id;
         // No interrumpir animación en curso
         if(_anticipating) break;
-        // No re-mostrar si es la misma pregunta ya en pantalla
-        if(m.currentQuestion.id===S.currentQuestionId) break;
+        // No re-mostrar si es la misma pregunta ya mostrada
+        if(qid<=_lastShownQId) break;
+        _lastShownQId=qid;
         _answerRevealed=false;
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});
