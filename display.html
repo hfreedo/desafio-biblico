@@ -1039,12 +1039,8 @@ function handle(m){
     _lastStateVersion = m.stateVersion;
   }
 
-  // FILTRO 3: questionId (SHOW_QUESTION + snapshot question)
-  if(m.type==='SHOW_QUESTION'){
-    const qid = m.index || 0;
-    if(qid <= _lastQuestionId) return;
-    _lastQuestionId = qid;
-  }
+  // FILTRO 3: REMOVIDO — se permite re-show de preguntas anteriores
+  // El UID dedup (filtro 1) ya previene duplicados del mismo mensaje
 
   // ── Ejecutar acción ──
   switch(m.type){
@@ -1059,6 +1055,7 @@ function handle(m){
         S.buzzerLocked=false;
         S.currentQuestionId=m.index||null;
         S.questionActive=true;
+        _lastQuestionId=m.index||0;
         _subsequentQuestionEntry(m);
       }
       break;
@@ -1076,14 +1073,10 @@ function handle(m){
 
     case 'GOTO_IDLE':
     case 'HIDE_QUESTION':
-      _answerRevealed=false; _lastQuestionId=0;
+      _answerRevealed=false;
       S.questionActive=false; S.buzzerLocked=false;
       bgMode='idle'; bgHueTarget=250; bgSatTarget=60; bgSpeedTarget=1; bgWash.alpha=0;
       hideQ();
-      el('idle').classList.add('visible');
-      el('qPanel').classList.remove('active','ans-revealed');
-      el('ansOverlay').classList.remove('show');
-      stopTimer(); clearActive();
       break;
 
     case 'STATE_SNAPSHOT':
@@ -1167,7 +1160,6 @@ function _applySnapshot(m){
 
   // Nueva pregunta → mostrar (solo si no hay anticipación activa)
   _lastQuestionId = qid;
-  _answerRevealed = m.answerRevealed||false;
   S.questionActive = true;
   S.currentQuestionId = qid;
   el('idle').classList.remove('visible');
@@ -1458,20 +1450,18 @@ function revealAns(){
 
 function hideQ(){
   S.buzzerLocked=false;S.currentQuestionId=null;S.questionActive=false;bgMode='idle';
-  _answerRevealed=false;
+  _answerRevealed=false;_lastQuestionId=0;
   if(bombTimeout){clearTimeout(bombTimeout);bombTimeout=null;el('bombOv').className='';}
   bombFired=false;
   bgHueTarget=250;bgSatTarget=60;bgSpeedTarget=1;bgWash.alpha=0;
   const curtain=el('curtain');
   const qp=el('qPanel');
 
-  // 1. Cerrar cortina — el ansOverlay sigue visible mientras la cortina baja
-  //    No tocar el overlay ni el qPanel todavía
+  // 1. Cerrar cortina — tapa todo mientras se limpia detrás
   curtain.classList.remove('open');
 
-  // 2. Cuando la cortina está completamente cerrada (800ms), limpiar todo
+  // 2. Cuando la cortina está completamente cerrada (~800ms), limpiar y mostrar idle
   setTimeout(()=>{
-    // Ahora la cortina cubre todo — es seguro quitar el overlay y el panel
     el('ansOverlay').classList.remove('show');
     qp.classList.remove('active','ans-revealed');
     qp.style.opacity='0';
@@ -1480,9 +1470,9 @@ function hideQ(){
     el('idle').classList.add('visible');
     stopTimer();clearActive();
 
+    // 3. Reabrir cortina tras breve pausa
     setTimeout(()=>{
       curtain.classList.add('open');
-      // Restaurar qPanel para la próxima pregunta
       setTimeout(()=>{
         qp.style.opacity='';
         qp.style.pointerEvents='';

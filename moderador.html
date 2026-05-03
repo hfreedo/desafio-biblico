@@ -222,6 +222,7 @@ html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);fon
 .qcard.ans-b{border-left:2px solid var(--b-color);opacity:.6;}
 .qcard.ans-w{border-left:2px solid var(--red);opacity:.5;}
 .qcard.excluded{opacity:.3;}
+.qcard.shown{border-left:2px solid rgba(255,184,0,.35);background:rgba(255,184,0,.04);}
 .qcard-hdr{display:flex;align-items:center;gap:5px;margin-bottom:4px;}
 .qnum{font-size:9px;font-weight:700;color:var(--dim);font-family:var(--mono);}
 .pip{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
@@ -983,7 +984,7 @@ const _sv=loadSavedState();
 const ST={
   scoreA:_sv.scoreA||0, scoreB:_sv.scoreB||0,
   nameA:_sv.nameA||'EQUIPO A', nameB:_sv.nameB||'EQUIPO B',
-  selQ:null, excluded:new Set(), answered:_sv.answered||{}, history:_sv.history||[],
+  selQ:null, excluded:new Set(), shown:new Set(), answered:_sv.answered||{}, history:_sv.history||[],
   timerSec:_sv.timerSec||30, timerLeft:_sv.timerLeft||_sv.timerSec||30,
   timerInt:null, sounds:true, soundVol:0.7,
   activeBuzzerTeam:null,
@@ -1190,6 +1191,7 @@ function showSelQ(){
   bcast({type:'UPDATE_ROUND',round:q.r,name:q.rn});
   const rv=q.r.replace('Ronda ','');
   document.getElementById('roundSel').value=rv;
+  ST.shown.add(q.id);
   markQuestionUsed(q.id); // S03
   pushStateSnapshot();
   toast("Pregunta #"+q.id+" en pantalla");
@@ -1671,7 +1673,8 @@ function renderList(){
     const isSel=ST.selQ&&ST.selQ.id===q.id;
     const isPrueba=q.d==='Prueba';
     const isExcluded=ST.excluded&&ST.excluded.has(q.id);
-    return `<div class="qcard ${ac} ${isSel?'sel':''} ${isExcluded?'excluded':''}" onclick="selQ(${q.id})">
+    const isShown=ST.shown&&ST.shown.has(q.id);
+    return `<div class="qcard ${ac} ${isSel?'sel':''} ${isExcluded?'excluded':''} ${isShown?'shown':''}" onclick="selQ(${q.id})">
       <div class="qcard-hdr"><span class="qnum">#${q.id}</span><span class="pip ${pc}"></span><span style="font-size:9px;color:var(--dim)">${q.d}</span>${badge?`<span class="abadge">${badge}</span>`:''}<button onclick="event.stopPropagation();toggleExclude(${q.id})" style="margin-left:auto;font-size:9px;background:${isExcluded?'rgba(168,85,247,.2)':'rgba(255,255,255,.05)'};border:1px solid ${isExcluded?'#A855F7':'var(--border2)'};border-radius:3px;padding:1px 6px;color:${isExcluded?'#A855F7':'var(--dim)'};cursor:pointer;" title="${isExcluded?'Reincluir':'Excluir'} pregunta">${isExcluded?'↺ Incl':'✕ Excl'}</button></div>
       <div class="qctext">${q.q}</div>
       <div class="qround">${q.r} · ${q.rn}</div>
@@ -1686,7 +1689,8 @@ function renderSelQ(){
   const q=ST.selQ;if(!q)return;
   const d=q.d.toLowerCase();
   const c=d.includes('fácil')||d==='facil'?'var(--green)':d.includes('medio')||d.includes('media')?'#F1C40F':'var(--red)';
-  document.getElementById('selQBox').innerHTML=`<div style="font-size:10px;color:${c};letter-spacing:2px;margin-bottom:6px">${q.d.toUpperCase()} · ${q.r}</div><div class="cq-q">${q.q}</div><div class="cq-a">${q.a}</div>`;
+  const isShown=ST.shown&&ST.shown.has(q.id);
+  document.getElementById('selQBox').innerHTML=`<div style="font-size:10px;color:${c};letter-spacing:2px;margin-bottom:6px">${q.d.toUpperCase()} · ${q.r}${isShown?' <span style="color:var(--gold);opacity:.7">· YA MOSTRADA</span>':''}</div><div class="cq-q">${q.q}</div><div class="cq-a">${q.a}</div>`;
 }
 
 /*  HISTORY  */
