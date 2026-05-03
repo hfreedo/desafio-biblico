@@ -898,6 +898,7 @@ const S={scoreA:0,scoreB:0,nameA:'EQUIPO A',nameB:'EQUIPO B',timerTotal:30,timer
 let timerInt=null,timerStartPending=null,bombFired=false,bombTimeout=null,bgMode='idle';
 let _anticipating=false;
 let _answerRevealed=false;
+let _animLock=false; // evita que animaciones se solapen
 // ── Fondo reactivo: transición suave de color ──
 let bgHueCurrent=250;   // hue actual interpolado
 let bgHueTarget=250;    // hue objetivo
@@ -1013,7 +1014,10 @@ function handle(m){
   // AudioContext se maneja solo por eventos del usuario (ver listeners arriba)
   switch(m.type){
     case 'START_GAME':startGameSequence();break;
-    case 'SHOW_QUESTION':showQ(m);break;
+    case 'SHOW_QUESTION':
+      if(_anticipating) return; // ignorar si ya hay animación en curso
+      showQ(m);
+      break;
     case 'CLEAR_ACTIVE':clearActive();break;
     case 'SHOW_ANSWER':revealAns();break;
     case 'GOTO_IDLE':
@@ -1060,7 +1064,6 @@ function handle(m){
       break;
     case 'PASS_TURN':handlePassTurn(m);break;
     case 'WRONG_ANSWER':showWrong(m);break;
-    case 'CLEAR_ACTIVE':clearActive();break;
     case 'START_REMOTE':startRemoteMode(m.room);break;
     case 'STOP_REMOTE':stopRemoteMode();break;
     case 'STATE_SNAPSHOT':
@@ -1085,6 +1088,10 @@ function handle(m){
       el('scoreA').textContent=S.scoreA;el('scoreB').textContent=S.scoreB;
       if(m.round)updRound({round:m.round,name:m.roundName});
       if(m.questionActive&&m.currentQuestion){
+        // Solo mostrar pregunta si NO hay animación en curso Y la pregunta no está ya visible
+        // Esto evita que el snapshot dispare animaciones duplicadas durante el flujo normal
+        const qPanelVisible = el('qPanel').classList.contains('active');
+        if(_anticipating || qPanelVisible) break;
         _answerRevealed=false;
         const q=m.currentQuestion;
         showQ({question:q.q,answer:q.a,difficulty:q.d,round:(m.round||q.r)+' · '+(m.roundName||q.rn),index:q.id,total:100});

@@ -267,6 +267,20 @@ textarea{resize:vertical;min-height:52px;}
 .tog-track.on .tog-knob{transform:translateX(14px);}
 .tog-lbl{font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--muted);}
 
+/* ── MODE SWITCH (Local/Remoto) ───────────────── */
+.mode-switch{
+  display:flex;align-items:center;gap:8px;cursor:pointer;
+  padding:6px 10px;border-radius:8px;background:var(--panel3);
+  margin-bottom:4px;
+}
+.mode-switch:hover{background:var(--panel2);}
+.mode-track{position:relative;width:40px;height:22px;background:rgba(255,255,255,.12);border-radius:11px;transition:background .25s;flex-shrink:0;}
+.mode-track.remote{background:var(--green);}
+.mode-knob{position:absolute;top:3px;left:3px;width:16px;height:16px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 3px rgba(0,0,0,.4);}
+.mode-track.remote .mode-knob{transform:translateX(18px);}
+.mode-lbl{font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--text);min-width:56px;}
+.mode-hint{font-size:8px;color:var(--dim);line-height:1.2;}
+
 /* ── TOAST ───────────────────────────────────── */
 .toast{
   position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(60px);
@@ -563,9 +577,17 @@ input[type=range]{
 
       <!-- Sala remota -->
       <div class="sec">
-        <div class="sec-title">Sala remota</div>
-        <div id="roomStatus" style="font-size:10px;color:var(--dim);margin-bottom:6px;">Sin sala activa</div>
-        <div class="btn-grid btn-grid-2">
+        <div class="sec-title">Conexión</div>
+        <div id="roomStatus" style="font-size:10px;color:var(--dim);margin-bottom:8px;">Sin sala activa</div>
+        <!-- Switch Local / Remoto -->
+        <div class="mode-switch" id="modeSwitch" onclick="toggleMode()">
+          <div class="mode-track" id="modeTrack">
+            <div class="mode-knob" id="modeKnob"></div>
+          </div>
+          <span class="mode-lbl" id="modeLbl">LOCAL</span>
+          <span class="mode-hint" id="modeHint">Mismo PC — BroadcastChannel</span>
+        </div>
+        <div class="btn-grid btn-grid-2" style="margin-top:8px;">
           <button class="btn btn-gold btn-sm" onclick="startSupabaseRoom()">Crear sala</button>
           <button class="btn btn-red btn-sm" onclick="stopSupabaseRoom()">Cerrar</button>
         </div>
@@ -803,6 +825,10 @@ function activateRoom(code){
   document.getElementById('roomStatus').textContent='Sala: '+code;
   document.getElementById('roomStatus').style.color='var(--green)';
   const tbr=document.getElementById('tbRoom');if(tbr){tbr.textContent='● '+code;tbr.style.color='var(--green)';}
+  // Auto-switch to remote mode when room is created
+  BROADCAST_MODE='remote';
+  localStorage.setItem('quiz_mode','remote');
+  updateModeUI();
   bcast({type:'START_REMOTE',room:code});
   setTimeout(pushStateSnapshot, 300);
   toast('Sala activa: '+code);
@@ -816,6 +842,10 @@ function stopSupabaseRoom(){
   document.getElementById('roomStatus').textContent='Sin sala activa';
   document.getElementById('roomStatus').style.color='var(--dim)';
   const tbr2=document.getElementById('tbRoom');if(tbr2){tbr2.textContent='Sin sala';tbr2.style.color='var(--dim)';}
+  // Auto-switch back to local mode
+  BROADCAST_MODE='local';
+  localStorage.setItem('quiz_mode','local');
+  updateModeUI();
   bcast({type:'STOP_REMOTE'});
   toast('Sala remota desconectada');
 }
@@ -963,12 +993,52 @@ const ST={
 
 const ch=new BroadcastChannel('quiz_channel');
 let _msgSeq=0;
+// Modo de comunicación: 'local' = solo BroadcastChannel, 'remote' = solo Supabase
+let BROADCAST_MODE = localStorage.getItem('quiz_mode') || 'local';
 function bcast(m){
   m._uid=Date.now()+'-'+(++_msgSeq);
-  ch.postMessage(m);
-  // Also send to remote room if active
-  if(roomCode) sendToSupabase(m);
+  if(BROADCAST_MODE==='local'){
+    ch.postMessage(m);
+  } else {
+    if(roomCode) sendToSupabase(m);
+  }
 }
+function toggleMode(){
+  if(BROADCAST_MODE==='local'){
+    BROADCAST_MODE='remote';
+    if(!roomCode){
+      toast('Crea una sala primero para modo remoto');
+      BROADCAST_MODE='local';
+      updateModeUI();
+      return;
+    }
+  } else {
+    BROADCAST_MODE='local';
+  }
+  localStorage.setItem('quiz_mode', BROADCAST_MODE);
+  updateModeUI();
+  toast('Modo: ' + (BROADCAST_MODE==='local' ? 'Local (BroadcastChannel)' : 'Remoto (Supabase)'));
+}
+function updateModeUI(){
+  const track = document.getElementById('modeTrack');
+  const knob = document.getElementById('modeKnob');
+  const lbl = document.getElementById('modeLbl');
+  const hint = document.getElementById('modeHint');
+  if(!track) return;
+  if(BROADCAST_MODE==='remote'){
+    track.classList.add('remote');
+    lbl.textContent='REMOTO';
+    lbl.style.color='var(--green)';
+    hint.textContent='Red — Supabase Realtime';
+  } else {
+    track.classList.remove('remote');
+    lbl.textContent='LOCAL';
+    lbl.style.color='var(--text)';
+    hint.textContent='Mismo PC — BroadcastChannel';
+  }
+}
+// Inicializar UI del modo al cargar
+setTimeout(updateModeUI, 100);
 
 // Listen for buzzer from pulsador (local broadcast channel)
 ch.onmessage=e=>{
